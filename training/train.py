@@ -224,6 +224,20 @@ def main() -> None:
 
     torch.save({"model": model.state_dict(), "config": cfg}, art / "model.pth")
 
+    # Pin the held-out set. Without this the val split is only implicit — it
+    # depends on the manifest's split column and row order, both of which are
+    # rewritten whenever the manifest is regenerated. Once that happens the
+    # reported accuracy can never be reproduced, because every reconstructed
+    # split silently mixes training images back in. Keys are {slug}/{stem} so
+    # the file is portable across machines and storage backends.
+    (art / "val_split.json").write_text(json.dumps({
+        "seed": cfg["seed"],
+        "val_fraction": cfg["val_fraction"],
+        "n_train": len(train_s),
+        "n_val": len(val_s),
+        "val": sorted(f"{s.slug}/{Path(s.storage_path).stem}" for s in val_s),
+    }, indent=1))
+
     print("[train] computing prototypes…")
     protos = compute_prototypes(model, proto_dl, num_classes, device,
                                 cfg["model"]["embedding_dim"])

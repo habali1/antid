@@ -23,10 +23,20 @@ seen in training):
 | Cosine similarity over class prototypes | **66.6%** | **81.9%** |
 | + geographic re-ranking (`lat`/`lon` supplied) | **69.4%** | **84.9%** |
 
-Random chance on 50 classes is 2%. The base row is reproduced by
-`python evaluate.py`, which writes `artifacts/eval.json` with an overall and
-per-species breakdown; the geo row additionally uses `geo_index.json` and the
-observation coordinates carried in the image manifest.
+Random chance on 50 classes is 2%. Both rows are what the training run measured
+against its held-out split; the base row is recorded per-species in
+`artifacts/eval.json`. `python evaluate.py --geo` recomputes both — it re-embeds
+the val set, ranks by cosine, then re-ranks with the geo boost and reports the
+two side by side.
+
+> **Reproducing these requires the held-out split, and the split must be
+> pinned.** `train.py` now writes `artifacts/val_split.json` for exactly this
+> reason. Runs predating it did not, and their numbers cannot be regenerated:
+> the split was implied by the manifest's `split` column and row order, and
+> regenerating the manifest rewrites both, quietly mixing training images back
+> into "validation." A model that scores ~99.6% on data it trained on will
+> report ~93% on any 80/20 slice of a dataset it has fully seen — a number that
+> looks like a result and is really just memorization.
 
 **Per-species spread is wide, and the failures are the interesting part.**
 Accuracy runs from *Veromessor pergandei* at 90.3% top-1 / 100% top-3 down to
@@ -206,6 +216,16 @@ pip install -r requirements.txt
 python train.py --config config.yaml      # any config key is CLI-overridable
 python export.py                          # re-export ONNX from artifacts/model.pth
 python evaluate.py                        # top-1/top-3 under the serving cosine path
+python evaluate.py --geo                  # + geographic re-ranking, side by side
+```
+
+`evaluate.py` reads `artifacts/val_split.json` to recover the exact held-out set
+and warns loudly if it is missing. `--geo` uses the shipped `geo_index.json`,
+which `train.py` builds from train **and** val — so each val image's own
+coordinate votes for its own answer. For a leak-free measurement:
+
+```bash
+python evaluate.py --geo --geo-source train   # rebuild the index from train only
 ```
 
 Two-minute CPU smoke run that exercises the full interface end to end — set
@@ -272,7 +292,7 @@ things, and they map onto the failure modes that actually occur here:
 |---|---|
 | `python train.py --config config.smoke.yaml …` | interface breaks across the whole training→artifact path |
 | the ONNX checker inside `export.py` | shape/opset regressions in the exported graph |
-| `python evaluate.py` | preprocessing drift and prototype misalignment |
+| `python evaluate.py --geo` | preprocessing drift, prototype misalignment, geo-ranking drift |
 | `npm run typecheck` | client/API contract drift (strict TypeScript) |
 
 Trained weights and datasets are **not** committed — `training/artifacts/` and
