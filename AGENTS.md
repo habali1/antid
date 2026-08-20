@@ -25,7 +25,14 @@ required files, and the API consumes exactly those three:
   per class. **Row order == class index.**
 - `taxonomy.json` — `{class_idx: {species_name, common_name, taxon_id, slug}}`.
   Length must equal `prototypes.npy` row count or `AntIdentifier.__init__`
-  raises.
+  raises. Backfill it without retraining via `training/rebuild_taxonomy.py`
+  (`--fetch-common-names` pulls common names from the iNat API); it refuses to
+  write if slug ordering would change.
+- `val_split.json` — the pinned held-out set, written by `train.py` and read by
+  `evaluate.py`. Without it the val split is only implied by the manifest's
+  split column and row order, both of which are rewritten when the manifest is
+  regenerated — after which every reconstructed split mixes training images
+  back in and accuracy is inflated.
 - `geo_index.json` (optional 4th) — `{cell_size_deg, cells: {slug: [[lat,lon],…]}}`.
 
 Classification is **embedding + cosine similarity, not softmax**. The model
@@ -93,14 +100,18 @@ names and multi-GB, so they're streamed in chunks.
 python train.py --config config.yaml                  # any key overridable: --epochs --batch-size --lr --image-size --artifacts-dir
 python export.py                                       # re-export ONNX from artifacts/model.pth
 python evaluate.py                                     # top-1/top-3 under cosine inference
+python evaluate.py --geo                               # + geo re-ranking, side by side
+python evaluate.py --geo --geo-source train            # leak-free geo index (train split only)
 ```
-CPU smoke run that regenerates placeholder artifacts in ~2 min (set
+CPU smoke run that exercises the whole training→artifact path in ~2 min (set
 `LOCAL_DATA_DIR` to any `{slug}/{img}.jpg` folder first):
 ```bash
-python train.py --config config.smoke.yaml --epochs 1 --batch-size 2 --limit-batches 2
+python train.py --config config.smoke.yaml --epochs 1 --batch-size 2   --limit-batches 2 --artifacts-dir ../scratch/smoke
 ```
-The files in `training/artifacts/` are **synthetic placeholders** from a 1-epoch
-run — they verify the interface, not real weights. Real training overwrites them.
+`training/artifacts/` holds **real trained weights**: a 30-epoch B4 fine-tune
+over 50 species, top-1 66.6% / top-3 81.9% on its held-out split. Real training
+overwrites them. Note `config.smoke.yaml` writes to that same `artifacts/`
+directory, so pass `--artifacts-dir` to a smoke run or it clobbers them.
 
 **API** (`cd api`, `pip install -r requirements.txt`):
 ```bash
@@ -125,8 +136,14 @@ npm run typecheck  # strict tsc --noEmit — the closest thing to a test suite h
 `training/data.py` `load_manifest` picks its source in order: **(1)** the
 PostgreSQL `images`/`species` tables if `DATABASE_URL` is set (canonical;
 streams images from `gs://`/`s3://`, caching under `LOCAL_DATA_DIR`); **(2)** a
-local `LOCAL_DATA_DIR` laid out as `{species_slug}/{image}.jpg` for offline
-work. The pipeline writes to both DB and a manifest CSV so either path works.
+scraper manifest CSV if `MANIFEST_CSV` is set, resolved against
+`LOCAL_DATA_DIR` (`{slug}/{photo_id}.{ext}`); **(3)** a bare `LOCAL_DATA_DIR`
+walk laid out as `{species_slug}/{image}.jpg`.
+
+Prefer the manifest over the bare walk. The walk cannot recover `taxon_id`,
+coordinates, or the train/val split — which is how `taxonomy.json` ends up full
+of nulls and `geo_index.json` ends up empty. The pipeline writes to both DB and
+a manifest CSV so either path works.
 DB writes are idempotent via `ON CONFLICT` on `species.slug` and
 `images.storage_path` — both UNIQUE constraints are required for re-runnable
 scrapes.
