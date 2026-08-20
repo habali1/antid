@@ -1,0 +1,39 @@
+# AntID training configuration. Every key is overridable on the CLI, e.g.
+#   python train.py --config config.yaml --epochs 10 --batch-size 16
+model:
+  backbone: tf_efficientnet_b4      # timm model name
+  pretrained: true                  # ImageNet weights
+  embedding_dim: 1792               # B4 feature width (before final linear)
+
+lr: 0.0001
+weight_decay: 0.0001
+batch_size: 32
+epochs: 30
+image_size: 380
+dropout: 0.3
+num_workers: 4
+val_fraction: 0.2                   # used only if DB has no explicit split
+seed: 42
+
+augmentation:
+  random_horizontal_flip: true
+  random_rotation_degrees: 15
+  color_jitter:
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.1
+  random_resized_crop_scale: [0.8, 1.0]
+
+# ImageNet normalization — MUST match the API preprocessing exactly.
+normalize:
+  mean: [0.485, 0.456, 0.406]
+  std:  [0.229, 0.224, 0.225]
+
+# Geo index emitted alongside the model and consumed by api/inference.py.
+# Keep in step with data_pipeline/build_geo_from_manifest.py, which writes the
+# same file format from a scraper manifest.
+geo:
+  cell_size_deg: 1.0
+  min_obs_per_cell: 2               # drop cells with fewer observations (noise)
+
+artifacts_dir: artifacts

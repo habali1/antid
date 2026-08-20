@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AntID</title>
+    <style>
+      html, body, #root { height: 100%; margin: 0; background: #0d0d0d; }
+      /* react-native-web's app container is flex:1; #root must be a flex
+         container or that child collapses to height 0 (default display:block),
+         which clips ScrollView content to nothing on web. */
+      #root { display: flex; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Bundle served by Metro: `npm run web` (port 8081) -->
+    <script src="http://localhost:8081/index.bundle?platform=web&dev=true"></script>
+  </body>
+</html>

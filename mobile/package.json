@@ -1,0 +1,47 @@
+{
+  "name": "AntID",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "react-native start",
+    "ios": "react-native run-ios",
+    "android": "react-native run-android",
+    "web": "node scripts/web.js",
+    "typecheck": "tsc --noEmit",
+    "bootstrap:native": "bash scripts/bootstrap_native.sh"
+  },
+  "dependencies": {
+    "@react-navigation/native": "7.0.14",
+    "@react-navigation/native-stack": "7.1.14",
+    "axios": "^1.7.9",
+    "nativewind": "4.1.23",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.5",
+    "react-native-dotenv": "^3.4.11",
+    "react-native-geolocation-service": "5.3.1",
+    "react-native-gesture-handler": "2.21.2",
+    "react-native-image-picker": "7.2.3",
+    "react-native-reanimated": "3.16.5",
+    "react-native-safe-area-context": "5.0.0",
+    "react-native-screens": "4.4.0",
+    "react-native-web": "0.19.13",
+    "tailwindcss": "3.4.17"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "15.0.1",
+    "@react-native-community/cli-platform-android": "15.0.1",
+    "@react-native-community/cli-platform-ios": "15.0.1",
+    "@react-native/babel-preset": "0.76.5",
+    "@react-native/metro-config": "0.76.5",
+    "@react-native/typescript-config": "0.76.5",
+    "@types/react": "^18.3.12",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

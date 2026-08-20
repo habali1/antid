@@ -1,0 +1,74 @@
+# AntID target species — WAVE TWO (50 species; generated 2026-06-14)
+# ---------------------------------------------------------------
+# 20 wave-one species + 30 new chosen for GEO-SEPARABILITY: weighted
+# toward isolated/under-covered continents so geo re-ranking has signal,
+# and avoiding piling onto Camponotus/Atta (the genera that confuse the
+# wave-one model). Several congeneric-but-geo-separated sets are intentional
+# (Dolichoderus / Polyrhachis / Odontomachus / Crematogaster / Anoplolepis).
+# Scientific name is the canonical key across ALL data sources.
+# Format:  Genus species   [# Common name].  '#' starts a comment.
+# ---------------------------------------------------------------
+
+# ===== WAVE ONE (20) =====
+Camponotus pennsylvanicus    # Eastern Black Carpenter Ant
+Oecophylla smaragdina        # Asian Weaver Ant
+Solenopsis invicta           # Red Imported Fire Ant
+Prenolepis imparis           # American Winter Ant
+Linepithema humile           # Argentine Ant
+Camponotus castaneus         # Chestnut Carpenter Ant
+Tetramorium immigrans        # Immigrant Pavement Ant
+Camponotus chromaiodes       # Ferruginous Carpenter Ant
+Paratrechina longicornis     # Longhorn Crazy Ant
+Tapinoma sessile             # Odorous House Ant
+Crematogaster scutellaris    # Mediterranean Acrobat Ant
+Pogonomyrmex barbatus        # Red Harvester Ant
+Pseudomyrmex gracilis        # Graceful Twig Ant
+Pogonomyrmex rugosus         # Rough Harvester Ant
+Lasius fuliginosus           # Jet Ant
+Atta mexicana                # Chicatana Leafcutter Ant
+Anoplolepis gracilipes       # Yellow Crazy Ant
+Atta texana                  # Texas Leafcutter Ant
+Paraponera clavata           # Bullet Ant
+Veromessor pergandei         # Black Harvester Ant
+
+# ===== WAVE TWO — Oceania (5) =====
+Iridomyrmex purpureus        # Southern Meat Ant
+Rhytidoponera metallica      # Green-head Ant
+Myrmecia pilosula            # Jack Jumper Ant
+Myrmecia pyriformis          # Inch Ant
+Leptomyrmex erythrocephalus  # Red-headed Spider Ant
+
+# ===== WAVE TWO — Asia (6) =====
+Tetraponera rufonigra        # Arboreal Bicolored Slender Ant
+Dolichoderus thoracicus      # Cocoa Black Ant
+Polyrhachis dives            # Rich Spiny Sugar Ant
+Odontoponera denticulata     # Spined Ponerine Ant
+Pristomyrmex punctatus       # Japanese Queenless Ant
+Odontomachus simillimus      # Oriental Trap-jaw Ant
+
+# ===== WAVE TWO — Europe (6) =====
+Messor barbarus              # Barbary Harvester Ant
+Dolichoderus quadripunctatus # Four-Spotted Odorous Ant
+Pheidole pallidula           # Pallid Big-headed Ant
+Colobopsis truncata          # European Gate-keeper Ant
+Myrmica rubra                # European Fire Ant
+Formica rufa                 # Southern Wood Ant
+
+# ===== WAVE TWO — Africa (5) =====
+Crematogaster peringueyi     # Black Cocktail Ant
+Paltothyreus tarsatus        # African Stink Ant
+Polyrhachis schistacea       # Savanna Spiny Sugar Ant
+Megaponera analis            # Matabele Ant
+Anoplolepis custodiens       # Large Pugnacious Ant
+
+# ===== WAVE TWO — South America (5) =====
+Ectatomma tuberculatum       # Tuberculate Ectatomma
+Cephalotes atratus           # Giant Turtle Ant
+Eciton burchellii            # Burchell's Army Ant
+Dolichoderus bispinosus      # Two-spined Dolichoderus
+Odontomachus erythrocephalus # Red-headed Trap-jaw Ant
+
+# ===== WAVE TWO — North America (3, new genera) =====
+Dorymyrmex bureni            # Buren's Pyramid Ant
+Liometopum occidentale       # Western Velvety Tree Ant
+Brachymyrmex patagonicus     # Dark Rover Ant

@@ -1,0 +1,45 @@
+# AntID — WAVE TWO new species ONLY (30). Used for the scrape so the 20
+# wave-one species are NOT re-downloaded on a slow link. The canonical full
+# 50-species set lives in species_list.txt.
+
+# Oceania
+Iridomyrmex purpureus        # Southern Meat Ant
+Rhytidoponera metallica      # Green-head Ant
+Myrmecia pilosula            # Jack Jumper Ant
+Myrmecia pyriformis          # Inch Ant
+Leptomyrmex erythrocephalus  # Red-headed Spider Ant
+
+# Asia
+Tetraponera rufonigra        # Arboreal Bicolored Slender Ant
+Dolichoderus thoracicus      # Cocoa Black Ant
+Polyrhachis dives            # Rich Spiny Sugar Ant
+Odontoponera denticulata     # Spined Ponerine Ant
+Pristomyrmex punctatus       # Japanese Queenless Ant
+Odontomachus simillimus      # Oriental Trap-jaw Ant
+
+# Europe
+Messor barbarus              # Barbary Harvester Ant
+Dolichoderus quadripunctatus # Four-Spotted Odorous Ant
+Pheidole pallidula           # Pallid Big-headed Ant
+Colobopsis truncata          # European Gate-keeper Ant
+Myrmica rubra                # European Fire Ant
+Formica rufa                 # Southern Wood Ant
+
+# Africa
+Crematogaster peringueyi     # Black Cocktail Ant
+Paltothyreus tarsatus        # African Stink Ant
+Polyrhachis schistacea       # Savanna Spiny Sugar Ant
+Megaponera analis            # Matabele Ant
+Anoplolepis custodiens       # Large Pugnacious Ant
+
+# South America
+Ectatomma tuberculatum       # Tuberculate Ectatomma
+Cephalotes atratus           # Giant Turtle Ant
+Eciton burchellii            # Burchell's Army Ant
+Dolichoderus bispinosus      # Two-spined Dolichoderus
+Odontomachus erythrocephalus # Red-headed Trap-jaw Ant
+
+# North America (new genera)
+Dorymyrmex bureni            # Buren's Pyramid Ant
+Liometopum occidentale       # Western Velvety Tree Ant
+Brachymyrmex patagonicus     # Dark Rover Ant

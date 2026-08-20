@@ -1,0 +1,36 @@
+# Data & model artifacts
+data/
+training/artifacts/
+*.onnx
+*.npy
+*.pth
+*.pt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / React Native
+node_modules/
+mobile/ios/Pods/
+mobile/android/.gradle/
+mobile/.expo/
+dist/
+*.log
+
+# Env & secrets
+.env
+*.local
+service-account*.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Claude Code local settings
+.claude/settings.local.json
