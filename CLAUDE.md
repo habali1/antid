@@ -18,7 +18,9 @@ handful of artifact files — not through shared code (the one exception:
 Almost every non-obvious bug in this codebase comes from breaking one of these.
 
 **1. The artifact interface (training → serving).** Training emits exactly three
-required files, and the API consumes exactly those three:
+required files, and the API consumes exactly those three — and *only* those
+three; `model.pth` is a training checkpoint (full model incl. the discarded
+classifier head) that `api/inference.py` never loads:
 - `backbone.onnx` — input `"input"` `(batch,3,380,380)` float32 → output
   `"embedding"` `(batch,1792)`, opset 17, dynamic batch.
 - `prototypes.npy` — `(num_classes, 1792)` L2-normalized mean train embedding
@@ -28,12 +30,22 @@ required files, and the API consumes exactly those three:
   raises. Backfill it without retraining via `training/rebuild_taxonomy.py`
   (`--fetch-common-names` pulls common names from the iNat API); it refuses to
   write if slug ordering would change.
-- `val_split.json` — the pinned held-out set, written by `train.py` and read by
-  `evaluate.py`. Without it the val split is only implied by the manifest's
-  split column and row order, both of which are rewritten when the manifest is
-  regenerated — after which every reconstructed split mixes training images
-  back in and accuracy is inflated.
 - `geo_index.json` (optional 4th) — `{cell_size_deg, cells: {slug: [[lat,lon],…]}}`.
+
+Two more files live alongside these but are **not** part of the serving
+contract — training/eval bookkeeping only:
+- `val_split.json` — the pinned held-out set for *this training run*, written
+  by `train.py` and read by `evaluate.py`. Without it the val split is only
+  implied by the manifest's split column and row order, both of which are
+  rewritten when the manifest is regenerated — after which every reconstructed
+  split mixes training images back in and accuracy is inflated. (This is
+  exactly what happened to the current checkpoint's original split — see
+  `training/artifacts/README.md`.)
+- `data/benchmark_v1/` — a separate, frozen, independently-scraped evaluation
+  set (not tied to any one checkpoint) that exists because the point above
+  isn't hypothetical. Read via `training/eval_benchmark.py`; see "Results" in
+  the main README for the current number and `training/artifacts/README.md`
+  for full methodology.
 
 Classification is **embedding + cosine similarity, not softmax**. The model
 (`training/model.py`) trains a `Linear` classifier head with cross-entropy, but
@@ -89,6 +101,7 @@ python scrape_inat.py --auto-discover --species-limit 50   # top-N Formicidae fr
 python clean.py --input ../data/raw --output ../data/clean # NOT --src/--out
 python upload.py --src ../data/clean --bucket "$STORAGE_BUCKET"
 python build_geo_index.py --metadata-dir ../data/inat_metadata
+python scrape_benchmark.py --restore --out ../data/benchmark_v1  # repopulate benchmark_v1's images
 ```
 iNat data comes from the public `s3://inaturalist-open-data` bucket
 (`--no-sign-request`, no AWS creds). Manifests are TAB-separated despite `.csv`
@@ -102,6 +115,7 @@ python export.py                                       # re-export ONNX from art
 python evaluate.py                                     # top-1/top-3 under cosine inference
 python evaluate.py --geo                               # + geo re-ranking, side by side
 python evaluate.py --geo --geo-source train            # leak-free geo index (train split only)
+python eval_benchmark.py                                # the reproducible baseline -- see below
 ```
 CPU smoke run that exercises the whole training→artifact path in ~2 min (set
 `LOCAL_DATA_DIR` to any `{slug}/{img}.jpg` folder first):
@@ -109,9 +123,27 @@ CPU smoke run that exercises the whole training→artifact path in ~2 min (set
 python train.py --config config.smoke.yaml --epochs 1 --batch-size 2   --limit-batches 2 --artifacts-dir ../scratch/smoke
 ```
 `training/artifacts/` holds **real trained weights**: a 30-epoch B4 fine-tune
-over 50 species, top-1 66.6% / top-3 81.9% on its held-out split. Real training
-overwrites them. Note `config.smoke.yaml` writes to that same `artifacts/`
-directory, so pass `--artifacts-dir` to a smoke run or it clobbers them.
+over 50 species. Real training overwrites them. Note `config.smoke.yaml`
+writes to that same `artifacts/` directory, so pass `--artifacts-dir` to a
+smoke run or it clobbers them.
+
+**Current accuracy: cite `eval_benchmark.py`'s number, not the historical one.**
+This checkpoint reported top-1 66.6% / top-3 81.9% at training time, but that
+split was never pinned and the manifest was regenerated right after — the
+split is now unrecoverable, and re-deriving any split from today's manifest
+scores ~93% top-1 purely from memorization (**never report that 93% as
+performance**). `data/benchmark_v1/` is a separate, frozen, independently-
+scraped set built to give this model a trustworthy number instead: **60.8%
+top-1 / 79.3% top-3 micro** (raw cosine), **64.2% / 82.2%** with geo
+re-ranking — reproduce with `python eval_benchmark.py`, which refuses to run
+unless all 1,591 images verify against `benchmark_v1.csv`'s sha256 (restore
+them with `python data_pipeline/scrape_benchmark.py --restore --out
+data/benchmark_v1` if missing). Macro (unweighted per-species mean) is close
+but not a reliable secondary number here — two species have 1 benchmark image
+each and both happen to score 100%. Full detail in
+`training/artifacts/README.md`. Don't use this benchmark to pick among model
+candidates during development — tune against a freshly pinned
+`val_split.json` instead, and touch benchmark_v1 once, on the finalized model.
 
 **API** (`cd api`, `pip install -r requirements.txt`):
 ```bash

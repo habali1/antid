@@ -25,10 +25,25 @@ same-observation-in-both-splits risk that motivated this script.
 Output: {out}/{slug}/{photo_id}.{ext}  and  {out}/benchmark_v1.csv with columns
     photo_id, observation_uuid, species, slug, taxon_id, lat, lon, source, sha256
 
+--restore mode (the one you almost always want) does not select anything --
+it reads the already-committed benchmark_v1.csv, re-fetches those EXACT
+observation_uuid/photo_id records from the iNat API, and verifies every
+downloaded file's sha256 against the value already recorded in the CSV. It
+never writes or modifies benchmark_v1.csv; the CSV is the frozen ground truth
+and this mode only ever reproduces the image files it describes. Use this to
+repopulate data/benchmark_v1/{slug}/*.jpg on a fresh clone or after deleting
+the local images -- NOT the default (candidate-selecting) mode above, which
+would pick a different, newer set of observations if run today.
+
 Usage:
+    # Build a NEW benchmark version (selects fresh candidates -- do not use
+    # this to reproduce the existing frozen benchmark_v1.csv):
     python scrape_benchmark.py --taxonomy ../training/artifacts/taxonomy.json \
         --manifest ../data/manifest_all.csv --out ../data/benchmark_v1 \
         --per-species 35
+
+    # Restore the exact images the committed benchmark_v1.csv describes:
+    python scrape_benchmark.py --restore --out ../data/benchmark_v1
 """
 from __future__ import annotations
 
@@ -140,19 +155,136 @@ def download_one(client, photo_id, url, ext, dest_dir: Path, tries=3):
     return None
 
 
+# --------------------------------------------------------------------- restore
+def fetch_observations_by_uuid(client: httpx.Client, uuids: list[str],
+                                batch_size: int = 100) -> dict[str, dict]:
+    """observation_uuid -> observation object, for exactly the given UUIDs.
+
+    Batched (comma-separated `uuid=` accepts many at once) rather than one
+    request per row -- ~16 requests for a 1591-row benchmark instead of 1591.
+    """
+    found: dict[str, dict] = {}
+    for start in range(0, len(uuids), batch_size):
+        batch = uuids[start:start + batch_size]
+        r = get_with_retry(client, f"{API}/observations", params={
+            "uuid": ",".join(batch), "per_page": batch_size})
+        for obs in r.json().get("results", []):
+            u = obs.get("uuid")
+            if u:
+                found[u] = obs
+        time.sleep(1.0)
+    return found
+
+
+def restore_from_csv(client: httpx.Client, csv_path: Path, out_dir: Path):
+    """Re-download exactly the images benchmark_v1.csv already describes.
+
+    Never selects new candidates and never touches the CSV -- it is read-only
+    ground truth here. Returns (n_ok, errors) where errors is a list of
+    human-readable strings; the caller decides whether that's fatal.
+    """
+    rows = list(csv.DictReader(csv_path.open(newline="", encoding="utf-8")))
+    log(f"[restore] {len(rows)} rows in {csv_path}")
+
+    uuids = sorted({r["observation_uuid"] for r in rows if r.get("observation_uuid")})
+    obs_by_uuid = fetch_observations_by_uuid(client, uuids)
+    log(f"[restore] resolved {len(obs_by_uuid)}/{len(uuids)} observations from the API")
+
+    errors: list[str] = []
+    n_ok = 0
+    for r in rows:
+        slug, pid, want_hash = r["slug"], r["photo_id"], r["sha256"]
+        sdir = out_dir / slug
+        sdir.mkdir(parents=True, exist_ok=True)
+
+        existing = list(sdir.glob(f"{pid}.*"))
+        if len(existing) == 1:
+            digest = hashlib.sha256(existing[0].read_bytes()).hexdigest()
+            if digest == want_hash:
+                n_ok += 1
+                continue
+            log(f"    ! {slug}/{pid}: local file hash mismatch, re-downloading")
+            existing[0].unlink()
+        elif len(existing) > 1:
+            errors.append(f"{slug}/{pid}: {len(existing)} ambiguous local files, "
+                          f"expected exactly one -- resolve manually")
+            continue
+
+        obs = obs_by_uuid.get(r["observation_uuid"])
+        if obs is None:
+            errors.append(f"{slug}/{pid}: observation_uuid {r['observation_uuid']} "
+                          f"not found via the API (deleted, hidden, or moved)")
+            continue
+        photo = next((p for p in (obs.get("photos") or [])
+                     if str(p.get("id")) == pid), None)
+        if photo is None or not photo.get("url"):
+            errors.append(f"{slug}/{pid}: observation found but no matching "
+                          f"photo_id in its current photos[] -- photo may have "
+                          f"been removed from the observation")
+            continue
+
+        url = photo["url"].replace("square", "medium")
+        ext = _ext_from_url(url)
+        res = download_one(client, pid, url, ext, sdir)
+        if res is None:
+            errors.append(f"{slug}/{pid}: download failed after retries")
+            continue
+        fname, digest = res
+        if digest != want_hash:
+            errors.append(f"{slug}/{pid}: downloaded but sha256 mismatch "
+                          f"(got {digest[:12]}..., expected {want_hash[:12]}...) "
+                          f"-- the photo behind this URL has changed since the "
+                          f"benchmark was frozen")
+            (sdir / fname).unlink(missing_ok=True)
+            continue
+        n_ok += 1
+
+    return n_ok, errors
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--taxonomy", required=True, type=Path,
-                    help="taxonomy.json to source species/taxon_id from")
-    ap.add_argument("--manifest", required=True, type=Path,
-                    help="Training manifest CSV, for the photo_id exclusion set")
+    ap.add_argument("--restore", action="store_true",
+                    help="Re-download the exact images the committed benchmark_v1.csv "
+                         "already describes, verifying sha256 against it. Read-only "
+                         "with respect to the CSV -- never selects new candidates and "
+                         "never writes it. Only --out and --restore-csv apply.")
+    ap.add_argument("--restore-csv", type=Path, default=None,
+                    help="CSV to restore from (--restore only; default: {out}/benchmark_v1.csv)")
+    ap.add_argument("--taxonomy", type=Path,
+                    help="taxonomy.json to source species/taxon_id from (fresh-scrape mode only)")
+    ap.add_argument("--manifest", type=Path,
+                    help="Training manifest CSV, for the photo_id exclusion set (fresh-scrape mode only)")
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--per-species", type=int, default=35)
     ap.add_argument("--cutoff-date", default=DEFAULT_CUTOFF,
                     help="Only observations CREATED on/after this date are eligible "
                          "(YYYY-MM-DD). Must be after the training scrape completed.")
     args = ap.parse_args()
+
+    if args.restore:
+        csv_path = args.restore_csv or (args.out / "benchmark_v1.csv")
+        if not csv_path.exists():
+            raise SystemExit(f"--restore: {csv_path} does not exist")
+        args.out.mkdir(parents=True, exist_ok=True)
+        with httpx.Client(headers=HEADERS, timeout=90, follow_redirects=True) as client:
+            n_ok, errors = restore_from_csv(client, csv_path, args.out)
+        log(f"[restore] {n_ok} verified OK, {len(errors)} error(s)")
+        for e in errors[:50]:
+            log(f"  ! {e}")
+        if len(errors) > 50:
+            log(f"  ... and {len(errors) - 50} more")
+        if errors:
+            raise SystemExit(
+                f"[restore] FAILED: {len(errors)} row(s) could not be verified. "
+                f"benchmark_v1.csv was NOT modified. eval_benchmark.py will refuse "
+                f"to run against an incomplete local copy -- fix these before evaluating."
+            )
+        return
+
+    if not args.taxonomy or not args.manifest:
+        raise SystemExit("--taxonomy and --manifest are required unless --restore is set")
 
     taxonomy = json.loads(args.taxonomy.read_text())
     species = sorted(({"slug": v["slug"], "species": v["species_name"],

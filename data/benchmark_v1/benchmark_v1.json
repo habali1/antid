@@ -54,5 +54,13 @@
       "anoplolepis-custodiens",
       "polyrhachis-schistacea"
     ]
+  },
+  "scope": {
+    "note": "This benchmark measures classification accuracy among the 50 species the model was trained on -- nothing else. It is drawn entirely from photos of those 50 species, so it cannot and does not measure what happens when the input is an ant outside that set. The system has no 'unknown' or 'none of these' outcome: an out-of-scope ant is always forced into whichever of the 50 trained classes scores highest, confidently. Improving the classifier architecture does not address this by itself -- closing that gap needs both broader species coverage and an explicit low-confidence/reject path, which would need its own separate out-of-scope evaluation set to measure (this one cannot be repurposed for that).",
+    "measures": "accuracy among the 50 trained species only",
+    "does_not_measure": "behavior on ants outside the 50 trained species"
+  },
+  "tuning_policy": {
+    "note": "Do not use this benchmark as a tuning or model-selection signal. It exists to report one number for a finished model, not to pick among candidates during development -- repeatedly evaluating variants against it and keeping the best score would slowly turn it into a validation set the model is indirectly fit to. Tune against a freshly pinned val_split.json from the candidate's own training run instead, and evaluate only the finalized model here."
   }
 }

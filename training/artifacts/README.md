@@ -6,24 +6,49 @@ species), final training loss 0.056.
 
 ## Reproducible baseline: benchmark_v1
 
-    top-1 (raw cosine)   60.8% micro / 62.4% macro
-    top-3 (raw cosine)   79.3% micro / 80.4% macro
-    top-1 (+ geo)        64.2% micro / 65.9% macro
-    top-3 (+ geo)        82.2% micro / 83.0% macro
+    top-1 (raw cosine)   60.8% micro   (macro 62.4% -- see caveat below)
+    top-3 (raw cosine)   79.3% micro   (macro 80.4%)
+    top-1 (+ geo)        64.2% micro   (macro 65.9%)
+    top-3 (+ geo)        82.2% micro   (macro 83.0%)
     (n = 1591, 50 species, 100% with usable coordinates)
 
-This is the number to cite for this model. It comes from
-`data/benchmark_v1/` — an entirely fresh, independently-scraped, frozen
-evaluation set built specifically because the original training-time split
-(below) turned out to be unrecoverable. Full methodology, exclusion criteria,
-and a three-way overlap verification (photo_id / observation_uuid / image
-sha256, all zero) against the training set are in
+**Micro (image-weighted) is the number to cite.** Macro (unweighted mean
+across species) is close, but two of the 50 species have exactly 1 benchmark
+image each and both happened to land on the correct answer, pulling macro up
+by chance — a different pair of photos could just as easily have pulled it
+down. Macro here is informational, not a more-precise secondary metric.
+
+This comes from `data/benchmark_v1/` — an entirely fresh, independently-
+scraped, frozen evaluation set built specifically because the original
+training-time split (below) turned out to be unrecoverable. Full methodology,
+exclusion criteria, and a three-way overlap verification (photo_id /
+observation_uuid / image sha256, all zero) against the training set are in
 `data/benchmark_v1/benchmark_v1.json`. The full per-species breakdown and
 artifact hashes for this run are in `data/benchmark_v1/benchmark_v1_eval.json`.
+
+**This measures accuracy among these 50 species only.** An ant outside them is
+still forced into whichever of the 50 scores highest -- there is no "none of
+these" outcome, and nothing about model architecture changes that. See
+`benchmark_v1.json`'s `scope` field.
+
 Reproduce with:
 
     cd ..
     python eval_benchmark.py
+
+It **refuses to run** unless all 1,591 rows resolve to exactly one local image
+each with a verified sha256 match — never a silent partial evaluation. On a
+fresh clone, or if local images are missing/corrupted, restore the exact
+frozen set first:
+
+    cd ../data_pipeline
+    python scrape_benchmark.py --restore --out ../data/benchmark_v1
+
+`--restore` re-downloads only the specific `observation_uuid`/`photo_id`
+records `benchmark_v1.csv` already lists and verifies each against its
+recorded hash; it never selects new candidates and never modifies the CSV.
+Running `scrape_benchmark.py` *without* `--restore` builds a different, new
+benchmark version instead — do not use it to try to reproduce this one.
 
 Two species (`anoplolepis-custodiens`, `polyrhachis-schistacea`) have only 1
 benchmark image each — not enough recent iNat observations existed to reach
@@ -31,6 +56,15 @@ the target sample size. Their individual per-species figures are not
 statistically meaningful; see `low_sample_species` in the eval JSON. They are
 kept in the benchmark rather than dropped, so they do contribute to the
 overall micro/macro numbers above like any other class.
+
+**Do not use benchmark_v1 as a tuning signal.** It exists to report one number
+per finished model, not to pick among candidates during development.
+Repeatedly evaluating architecture/hyperparameter variants against it and
+keeping the best score would slowly turn this into a validation set the model
+is indirectly fit to, defeating the point. Any future architecture work
+(e.g. EfficientNetV2) should tune against a newly pinned validation split
+(`val_split.json` from that run) and touch benchmark_v1 exactly once, on the
+finalized candidate.
 
 ## Historical number — do not treat as reproducible
 
@@ -55,8 +89,12 @@ actually replaces it.
     val_split.json          the pinned held-out set ({slug}/{photo_id} keys) -- did not
                             exist for this run; present for future retrains
 
-Only the first four are needed to serve. `geo_index.json` is optional and
-enables geo re-ranking; the API reports `geo_index_loaded: false` without it.
+**Serving needs exactly three of these: `backbone.onnx`, `prototypes.npy`, and
+`taxonomy.json`.** `model.pth` is a *training* checkpoint — the full model
+including the classifier head that gets discarded at export time; the API
+(`api/inference.py`) never loads it and doesn't need it present.
+`geo_index.json` is optional and enables geo re-ranking; the API reports
+`geo_index_loaded: false` without it.
 
 Row order in `prototypes.npy` **is** the class index, and must match
 `taxonomy.json` — `AntIdentifier.__init__` raises on a length mismatch, but a

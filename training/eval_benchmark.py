@@ -53,32 +53,71 @@ def sha256_file(path: Path) -> str | None:
 
 
 def load_benchmark(csv_path: Path, image_dir: Path, slug_to_idx: dict[str, int]):
+    """Resolve every benchmark_v1.csv row to exactly one verified local image.
+
+    Fails closed, not open: if any row is missing, ambiguous (more than one
+    file matching {photo_id}.*), or hash-mismatched against the CSV's own
+    sha256, this raises SystemExit listing every problem found -- it never
+    returns a partial sample list. A benchmark number computed over "however
+    many images happened to be present" is not a number that means anything;
+    silently evaluating 1400 of 1591 rows would look like a normal run and
+    quietly report a different, incomparable benchmark. Fix the local copy
+    with:  python ../data_pipeline/scrape_benchmark.py --restore
+    """
     rows = list(csv.DictReader(csv_path.open(newline="", encoding="utf-8")))
     samples: list[Sample] = []
     coords: list[tuple[float | None, float | None]] = []
-    missing = 0
+    problems: list[str] = []
+
     for r in rows:
-        slug = r["slug"]
+        slug, photo_id = r["slug"], r["photo_id"]
         if slug not in slug_to_idx:
             raise SystemExit(f"benchmark species {slug!r} is not in taxonomy.json "
                              f"-- benchmark and artifacts are out of sync")
-        photo_id = r["photo_id"]
-        path = None
-        for ext in IMG_EXTS:
-            p = image_dir / slug / f"{photo_id}{ext}"
-            if p.exists():
-                path = p
-                break
-        if path is None:
-            missing += 1
+
+        matches = sorted((image_dir / slug).glob(f"{photo_id}.*")) \
+            if (image_dir / slug).exists() else []
+        if len(matches) == 0:
+            problems.append(f"{slug}/{photo_id}: no local image file")
             continue
+        if len(matches) > 1:
+            problems.append(f"{slug}/{photo_id}: {len(matches)} files match "
+                            f"(ambiguous) -- {[p.name for p in matches]}")
+            continue
+        path = matches[0]
+        if path.suffix.lower() not in IMG_EXTS:
+            problems.append(f"{slug}/{photo_id}: matched file {path.name} has an "
+                            f"unrecognized extension")
+            continue
+
+        digest = sha256_file(path)
+        if digest != r["sha256"]:
+            problems.append(f"{slug}/{photo_id}: sha256 mismatch "
+                            f"(local {digest[:12] if digest else 'MISSING'}..., "
+                            f"csv {r['sha256'][:12]}...)")
+            continue
+
         samples.append(Sample(str(path), slug_to_idx[slug], slug))
         lat = float(r["lat"]) if r.get("lat") else None
         lon = float(r["lon"]) if r.get("lon") else None
         coords.append((lat, lon))
-    if missing:
-        print(f"[bench-eval] WARNING: {missing}/{len(rows)} benchmark rows have no "
-              f"local image file under {image_dir}")
+
+    if problems or len(samples) != len(rows):
+        print(f"[bench-eval] FAILED verification: {len(problems)}/{len(rows)} "
+             f"row(s) did not resolve to exactly one hash-verified image.")
+        for p in problems[:50]:
+            print(f"  ! {p}")
+        if len(problems) > 50:
+            print(f"  ... and {len(problems) - 50} more")
+        raise SystemExit(
+            f"[bench-eval] Refusing to evaluate a partial or unverified benchmark "
+            f"({len(samples)}/{len(rows)} rows OK). This never silently evaluates a "
+            f"subset. Fix the local copy with:\n"
+            f"    python ../data_pipeline/scrape_benchmark.py --restore --out {image_dir}"
+        )
+
+    print(f"[bench-eval] verified {len(samples)}/{len(rows)} rows: exactly one "
+         f"hash-matched image each")
     return samples, coords
 
 

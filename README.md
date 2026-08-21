@@ -19,17 +19,32 @@ and ships a React Native client for iOS, Android, and web.
 held out, but drawn from an entirely separate scrape, verified to share zero
 `photo_id`, zero `observation_uuid`, and zero image hash with anything the
 model trained on (methodology and verification in
-`data/benchmark_v1/benchmark_v1.json`):
+`data/benchmark_v1/benchmark_v1.json`). **Micro accuracy (image-weighted) is
+the headline number** — it's what "point the app at a random ant" actually
+measures:
 
-| Inference setup | Top-1 (micro / macro) | Top-3 (micro / macro) |
+| Inference setup | Top-1 (micro) | Top-3 (micro) |
 |---|---:|---:|
-| Cosine similarity over class prototypes | **60.8% / 62.4%** | **79.3% / 80.4%** |
-| + geographic re-ranking (100% of images had coordinates) | **64.2% / 65.9%** | **82.2% / 83.0%** |
+| Cosine similarity over class prototypes | **60.8%** | **79.3%** |
+| + geographic re-ranking (100% of images had coordinates) | **64.2%** | **82.2%** |
+
+The unweighted per-species (macro) average is close — 62.4%/65.9% top-1,
+80.4%/83.0% top-3 — but **is not a reliable secondary number here**: two of the
+50 species have exactly 1 benchmark image each (see below), and both happened
+to score 100% on that single trial, pulling macro up by chance. A different
+draw of those two photos could just as easily have pulled it down. Treat macro
+as informational, not as evidence the model does better per-species than the
+micro number suggests.
 
 Random chance on 50 classes is 2%. Reproduce with `python eval_benchmark.py`
-from `training/` — full per-species breakdown, the coordinate-bearing-subset
-figures, and sha256 hashes of both the benchmark manifest and the evaluated
-artifacts are written to `data/benchmark_v1/benchmark_v1_eval.json` each run.
+from `training/` — it **refuses to run** unless all 1,591 rows resolve to
+exactly one local image apiece with a verified sha256 match against
+`benchmark_v1.csv`; it never silently evaluates a subset. If images are
+missing or don't match (e.g. on a fresh clone), restore the exact frozen set
+first — see **Restoring the benchmark locally**, below. Full per-species
+breakdown, the coordinate-bearing-subset figures, and sha256 hashes of both
+the benchmark manifest and the evaluated artifacts are written to
+`data/benchmark_v1/benchmark_v1_eval.json` each run.
 
 > **Why a second, independently-scraped benchmark exists at all.** The
 > original training run measured 66.6% top-1 / 81.9% top-3 on its own
@@ -49,21 +64,42 @@ artifacts are written to `data/benchmark_v1/benchmark_v1_eval.json` each run.
 
 **Several species score meaningfully lower on this fresh benchmark than the
 old (unreproducible) split reported** — e.g. *Camponotus pennsylvanicus*
-53.5% → 31.4%, *Linepithema humile* 50.0% → 31.4%. That gap is itself informative:
-the original split was drawn from the same scrape, observers, and time window
-as training, which flatters generalization even when it isn't contaminated in
-the strict sense benchmark_v1 rules out. Per-species spread stays wide either
-way — weak classes here (*C. pennsylvanicus*, *L. humile*, *Atta mexicana*, all
-≤35% top-1) are small-to-medium, near-uniform ants whose diagnostic characters
-(petiole shape, propodeal spines, antennal segment counts) aren't resolvable in
-a handheld phone photo; strong classes (*Cephalotes atratus*, *Ectatomma
-tuberculatum*, both ≥85%) are large, high-contrast, or distinctively sculptured.
-This is a data-resolution ceiling, not an optimization failure — training loss
-converged to 0.056. (Two species, *Anoplolepis custodiens* and *Polyrhachis
-schistacea*, have only 1 benchmark image each — too few recent iNat
-observations existed post-cutoff to reach the target sample size — so their
-individual figures aren't statistically meaningful; they're still counted in
-the overall numbers above.)
+53.5% → 31.4%, *Linepithema humile* 50.0% → 31.4%. That gap is itself
+informative: the original split was drawn from the same scrape, observers, and
+time window as training, which flatters generalization even when it isn't
+contaminated in the strict sense benchmark_v1 rules out. Per-species spread
+stays wide either way — weak classes here (*C. pennsylvanicus*, *L. humile*,
+*Atta mexicana*, all ≤35% top-1) are small-to-medium, near-uniform ants whose
+diagnostic characters (petiole shape, propodeal spines, antennal segment
+counts) are hard to resolve in a handheld phone photo; strong classes
+(*Cephalotes atratus*, *Ectatomma tuberculatum*, both ≥85%) are large,
+high-contrast, or distinctively sculptured. That pattern is *consistent with*
+a data-resolution ceiling, but this benchmark can't actually prove that's the
+whole story — the weak classes could equally reflect distribution shift
+between the two scrapes (different photographers, seasons, camera phones),
+genuine model limitations, or label noise in the source observations. Training
+loss did converge cleanly to 0.056, which at least rules out "still
+underfitting" as the explanation. (Two species, *Anoplolepis custodiens* and
+*Polyrhachis schistacea*, have only 1 benchmark image each — too few recent
+iNat observations existed post-cutoff to reach the target sample size — so
+their individual figures aren't statistically meaningful; they're still
+counted in the overall numbers above, and were deliberately kept rather than
+dropped or backfilled by loosening the freeze criteria.)
+
+**This measures accuracy among the 50 trained species only.** An ant that
+isn't one of them still gets forced into whichever of the 50 scores highest —
+the system has no "none of these" outcome. Nothing in this benchmark, or in
+switching architectures, addresses that; it needs broader species coverage and
+an explicit low-confidence/unknown path, which don't exist yet. See
+`data/benchmark_v1/benchmark_v1.json`'s `scope` field for the same caveat
+machine-readable.
+
+**benchmark_v1 is a report card, not a tuning signal.** Future architecture
+work (an EfficientNetV2 swap, say) should iterate against a freshly pinned
+`val_split.json` from that run, then touch benchmark_v1 exactly once, on the
+finalized candidate. Repeatedly evaluating candidates against it and keeping
+the best score would slowly turn this benchmark into something the model is
+indirectly fit to, the same problem it exists to avoid.
 
 Training dataset: 9,989 images across 50 species (~200 each), 7,990 train /
 1,999 val, sourced from the public iNaturalist open-data bucket.
@@ -326,15 +362,43 @@ them. The one exception is `data/benchmark_v1/`'s metadata: `benchmark_v1.csv`,
 `benchmark_v1.json`, and `benchmark_v1_eval.json` are force-added despite the
 `data/` ignore rule, because the benchmark's identity — which exact photos,
 what was verified, what the model scored — needs to travel with the repo even
-though the ~1,591 downloaded images themselves don't. Regenerate the images
-with `data_pipeline/scrape_benchmark.py` if you need them locally.
+though the ~1,591 downloaded images themselves don't.
+
+### Restoring the benchmark locally
+
+On a fresh clone (or after deleting `data/benchmark_v1/*/`), the frozen
+manifest is present but the images aren't. Fetch exactly the images it
+describes — same `observation_uuid`/`photo_id` records, verified against the
+sha256 already recorded in the CSV:
+
+```bash
+cd data_pipeline
+python scrape_benchmark.py --restore --out ../data/benchmark_v1
+```
+
+This is read-only with respect to `benchmark_v1.csv`: it never selects new
+candidates and never rewrites the file, only re-populates the image files it
+already lists. `eval_benchmark.py` (see Results) enforces this by refusing to
+evaluate unless every row resolves to exactly one hash-verified image, so a
+partial or stale local copy fails loudly instead of silently scoring a
+different, smaller benchmark.
+
+Running `scrape_benchmark.py` **without** `--restore` does something different
+on purpose — it selects a *new* set of candidate observations (for building
+`benchmark_v2` or similar) and will not reproduce `benchmark_v1`.
 
 ---
 
 ## Limitations
 
-- **50 species out of ~14,000 described.** Coverage is skewed toward
-  well-photographed North American, European, and Australian taxa.
+- **50 species out of ~14,000 described, and no reject option.** Coverage is
+  skewed toward well-photographed North American, European, and Australian
+  taxa. There's no "none of these" outcome: an ant outside the 50 is always
+  forced into whichever trained class scores highest, confidently wrong. A
+  better backbone doesn't fix this — closing the gap needs both broader
+  species coverage and a genuine low-confidence/unknown path, evaluated on a
+  separate out-of-scope test set (this benchmark can't measure that; it's
+  built entirely from the 50 known species, by construction).
 - **Confusable small dark ants are near the resolution limit of the input.**
   Several genera cannot be separated to species from a field photo at all; a
   genus-level answer would be more honest for those, and grouping the weakest
