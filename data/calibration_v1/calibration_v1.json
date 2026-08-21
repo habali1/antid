@@ -1,0 +1,103 @@
+{
+  "name": "calibration_v1",
+  "created_at": "2026-08-21T17:57:28Z",
+  "purpose": "Frozen dataset for studying unknown/out-of-scope rejection -- NOT for reporting accuracy. Separate from benchmark_v1 and must never be used to tune or select the classifier itself; it exists to characterize the similarity-score distributions a rejection rule would threshold on.",
+  "must_not_be_used_for_training": true,
+  "must_not_be_used_to_tune_the_classifier": true,
+  "n_images": 1005,
+  "categories": {
+    "known_holdout": {
+      "n": 255,
+      "n_distinct_species": 44
+    },
+    "low_quality_known": {
+      "n": 150,
+      "n_distinct_species": 43
+    },
+    "non_ant_insect": {
+      "n": 150,
+      "n_distinct_species": 122
+    },
+    "out_of_scope_ant": {
+      "n": 300,
+      "n_distinct_species": 165
+    },
+    "unrelated": {
+      "n": 150,
+      "n_distinct_species": 119
+    }
+  },
+  "category_definitions": {
+    "known_holdout": "The 50 trained species, research-grade, held out from BOTH training and benchmark_v1. Baseline for FALSE REJECTION rate: a good photo of a known species that a rejection rule incorrectly rejects.",
+    "out_of_scope_ant": "Formicidae species NOT among the 50 (excluded via without_taxon_id on all 50 known taxon_ids), research-grade, sampled across as many distinct species as available (165 species for 300 images). The main case: an ant the model was never trained to recognize.",
+    "non_ant_insect": "Non-Formicidae Insecta, research-grade, across 122 species. 'Pointed the app at the wrong bug' case.",
+    "unrelated": "Non-insect photos -- Aves, Plantae, Mammalia in equal thirds, research-grade, across 119 species combined. Sanity-check case, expected to be the easiest to reject.",
+    "low_quality_known": "EXPLORATORY -- not a controlled ground-truth class. Photos of the 50 species sourced from quality_grade=needs_id (not research), pooled ~10/species (463 candidates), then kept only if in the blurriest 150 by a measured Laplacian-variance sharpness score (see scrape_calibration.py:blur_score -- images capped to 512px before scoring). 'needs_id' means the community has NOT reached research-grade consensus on the species identification -- the species label on these rows is the OBSERVER'S claim, not verified species-level ground truth the way research-grade labels are. Two separate reasons a needs_id photo might fail to reach research grade: it's genuinely blurry/unusable (the property this category is trying to sample), or it's actually misidentified. This category cannot distinguish those two cases, so it is DIAGNOSTIC ONLY: never used as positive ground truth in any false-rejection calculation, and its label should be read as 'probably this species' rather than confirmed. See threshold_selection_policy below."
+  },
+  "source": "iNaturalist API (api.inaturalist.org/v1/observations), quality_grade as noted per category",
+  "one_photo_per_observation": true,
+  "cutoff_date": "2026-06-16",
+  "exclusion_criteria": [
+    "Structural: only observations created on/after 2026-06-16 were eligible -- the same cutoff benchmark_v1 uses, one day past training's wave-2 completion (2026-06-14 16:49 -04:00). An observation that did not exist at training scrape time cannot be a photo training saw.",
+    "Explicit exclusion against the training manifest's photo_id column (9989 ids) before any candidate was kept.",
+    "Explicit exclusion against benchmark_v1's photo_id AND observation_uuid columns (1591 each) before any candidate was kept -- calibration_v1 and benchmark_v1 are two disjoint frozen sets.",
+    "Verified zero overlap after the fact on three independent axes against BOTH training and benchmark_v1: photo_id, observation_uuid, and sha256 image hash (see verification block below)."
+  ],
+  "verification": {
+    "method": "Training photo_id -> observation_uuid reused the reconstruction already built for benchmark_v1's verification (99.3% coverage, 9920/9989). Training image sha256 reused the hashes already computed from the 9981 locally cached files under data/clean/. benchmark_v1's photo_id/observation_uuid/sha256 were read directly from its own committed CSV.",
+    "verified_at": "2026-08-21T17:57:28Z",
+    "vs_training": {
+      "shared_photo_ids": 0,
+      "shared_observation_uuids": 0,
+      "shared_image_hashes": 0
+    },
+    "vs_benchmark_v1": {
+      "shared_photo_ids": 0,
+      "shared_observation_uuids": 0,
+      "shared_image_hashes": 0
+    },
+    "internal_duplicates": 0,
+    "note": "One internal duplicate was found and removed before this count: a known_holdout candidate (leptomyrmex-erythrocephalus, photo_id 693315171) turned out to be byte-identical to a DIFFERENT photo_id already in benchmark_v1 (691253248) -- the same photographer's photo re-submitted as a second iNat observation, the same phenomenon found and fixed in benchmark_v1 itself last session, this time surfacing as a cross-set collision instead of an intra-set one. Neither photo_id nor observation_uuid caught it; only the sha256 check did. Original scrape yielded 1006 images; final calibration_v1 is 1005."
+  },
+  "columns": [
+    "photo_id",
+    "observation_uuid",
+    "species",
+    "slug",
+    "taxon_id",
+    "category",
+    "lat",
+    "lon",
+    "source",
+    "sha256",
+    "created_at",
+    "blur_score"
+  ],
+  "built_with": "data_pipeline/scrape_calibration.py",
+  "threshold_selection_policy": {
+    "positive_ground_truth_for_false_rejection": "known_holdout ONLY (research-grade). low_quality_known must never be used as the positive class for FRR -- its species labels are not verified (see category_definitions.low_quality_known).",
+    "negative_ground_truth_for_false_acceptance": "out_of_scope_ant, non_ant_insect, unrelated (all research-grade, all species-level identifications).",
+    "low_quality_known_role": "diagnostic only -- reported alongside the FRR/FAR curve to show whether a bad photo of a known species is distinguishable from a genuinely unknown species using similarity alone, never scored as a correct/incorrect rejection.",
+    "data_separation": "calibration_v1 is for CHOOSING a rejection rule (distributions, tradeoff curve, threshold selection). It must not also be used to report the frozen rule's final performance -- that would let the same data both pick and grade the rule. Once a threshold is frozen, build unknown_test_v1 for final evaluation: a separate frozen set whose out-of-scope AND non-ant/unrelated images are disjoint from calibration_v1 not just at the image/observation level (already required) but at the SPECIES level for out_of_scope_ant -- different non-known ant species than the 165 sampled here, so the frozen rule is tested on species it was never calibrated against, not just fresh photos of the same 165.",
+    "benchmark_v1_is_unrelated": "benchmark_v1 measures classification accuracy among the 50 known species and must never be modified or used to choose this threshold; the two are independent measurements."
+  },
+  "frozen_candidate_abstention_threshold": {
+    "status": "CANDIDATE -- NOT VALIDATED, NOT APPROVED FOR PRODUCTION",
+    "must_not_be_implemented_yet": "This threshold must NOT be implemented in api/inference.py or the mobile app. It is a candidate selected from calibration_v1 alone and has not been evaluated on any independent held-out set.",
+    "rule": "abstain (do not present a species identification) when max_sim < 0.60; otherwise allow closest-match presentation",
+    "signal": "max cosine similarity to any of the 50 class prototypes, raw cosine, no geo re-ranking",
+    "selected_using": "calibration_v1 (this file's dataset) -- known_holdout, out_of_scope_ant, non_ant_insect, unrelated categories; low_quality_known was NOT used to select it (see threshold_selection_policy)",
+    "selected_at": "2026-08-21T19:10:49Z",
+    "measured_behavior_at_0.60": {
+      "note": "Ground truth: known_holdout (research-grade) only for the known-species side; out_of_scope_ant for the OOD side. See calibration_v1_scores.json and the Phase B report for full detail.",
+      "known_species_accuracy_before_abstention": 0.631,
+      "correct_predictions_rejected": 0.199,
+      "incorrect_predictions_rejected": 0.638,
+      "accuracy_among_accepted_known_species_predictions": 0.791,
+      "false_rejection_rate_known_holdout_all": 0.361,
+      "out_of_scope_ant_still_accepted": 0.473,
+      "interpretation": "Behaves as a confidence/abstention gate (meaningfully improves accuracy among accepted known-species predictions, and rejects incorrect predictions 3x more often than correct ones) rather than a reliable unknown-species detector (still accepts a never-seen ant species close to half the time -- AUC known-vs-out_of_scope_ant is only 0.660, the weakest of the three OOD categories)."
+    },
+    "validation_requirement": "Must be evaluated EXACTLY ONCE on a future unknown_test_v1 whose out-of-scope ant SPECIES (not just images or observations) are disjoint from calibration_v1's 165 out-of-scope-ant species, before any production use. Do not modify this threshold after seeing unknown_test_v1 results -- if 0.60 performs poorly there, that is a finding to report, not a cue to re-tune against the same calibration data (see threshold_selection_policy .data_separation)."
+  }
+}
