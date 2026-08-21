@@ -82,7 +82,7 @@ export default function ResultsScreen({
             },
           ]}
         />
-        <Text style={styles.timing}>Identified in {inferenceMs}ms</Text>
+        <Text style={styles.timing}>Compared in {inferenceMs}ms</Text>
 
         {geoFiltered && (
           <View style={styles.geoBanner}>
@@ -91,6 +91,12 @@ export default function ResultsScreen({
             </Text>
           </View>
         )}
+
+        <Text style={styles.sectionHeading}>Closest matches</Text>
+        <Text style={styles.sectionCaption}>
+          Compared with 50 supported species. Match scores show visual
+          similarity, not the probability of a correct identification.
+        </Text>
 
         {results.map((r) => (
           <ResultCard
@@ -126,6 +132,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
   },
   timing: { color: '#8A8A8A', fontSize: 13, marginTop: 12, marginBottom: 12 },
+  sectionHeading: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginBottom: 6 },
+  sectionCaption: { color: '#8A8A8A', fontSize: 12.5, lineHeight: 17, marginBottom: 16 },
   geoBanner: {
     backgroundColor: '#15333A',
     borderRadius: 12,

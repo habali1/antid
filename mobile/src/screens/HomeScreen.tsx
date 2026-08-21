@@ -67,6 +67,10 @@ export default function HomeScreen({ navigation }: Props): React.JSX.Element {
       <View style={styles.header}>
         <Text style={styles.title}>AntID</Text>
         <Text style={styles.subtitle}>Identify an ant from a photo</Text>
+        <Text style={styles.scopeNote}>
+          Currently compares against 50 supported ant species. Other species
+          may still receive a closest match.
+        </Text>
       </View>
 
       <View style={styles.buttons}>
@@ -144,6 +148,7 @@ const styles = StyleSheet.create({
   header: { marginTop: 48, alignItems: 'center' },
   title: { color: '#FFFFFF', fontSize: 40, fontWeight: '800', letterSpacing: 1 },
   subtitle: { color: '#9A9A9A', fontSize: 15, marginTop: 8 },
+  scopeNote: { color: '#8A8A8A', fontSize: 12, marginTop: 10, textAlign: 'center', lineHeight: 16 },
   buttons: { gap: 16 },
   button: {
     backgroundColor: '#3DD68C',
