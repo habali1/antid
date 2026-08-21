@@ -1,0 +1,58 @@
+{
+  "name": "benchmark_v1",
+  "created_at": "2026-08-21T14:53:17Z",
+  "purpose": "Frozen, held-out evaluation set for the trained AntID model. Created because the original training-time val split (top1=0.666/top3=0.819, recorded in training/artifacts/eval.json) could not be reproduced: data/manifest_all.csv was regenerated after training, which rewrote the split column and row order that val_split.json now pins going forward. Re-evaluating the trained weights against any split reconstructable from the current manifest scores ~93% top-1 -- that number is memorization, not skill, and must never be reported as a result. This benchmark sidesteps the whole problem: instead of trying to recover the old split, it draws an entirely new, independently-verified-unseen sample.",
+  "must_not_be_used_for_training": true,
+  "n_images": 1591,
+  "n_species": 50,
+  "per_species_shortfall_below_35": {
+    "anoplolepis-custodiens": 1,
+    "crematogaster-peringueyi": 16,
+    "formica-rufa": 29,
+    "leptomyrmex-erythrocephalus": 34,
+    "megaponera-analis": 9,
+    "odontomachus-erythrocephalus": 20,
+    "paltothyreus-tarsatus": 11,
+    "polyrhachis-schistacea": 1
+  },
+  "source": "iNaturalist API (api.inaturalist.org/v1/observations), quality_grade=research",
+  "one_photo_per_observation": true,
+  "exclusion_criteria": [
+    "Structural (primary guarantee): only observations with created_at on or after 2026-06-16 were eligible -- one full day after the training scrape's later wave completed (wave 2, 2026-06-14 16:49 -04:00). An observation that did not exist at training scrape time cannot be a photo the model was trained on, independent of any ID bookkeeping.",
+    "Explicit photo_id exclusion: every candidate was checked against the photo_id column of data/manifest_all.csv (9989 rows) before being kept.",
+    "Verified zero overlap after the fact on three independent axes: photo_id, observation_uuid, and sha256 image hash (see verification block below)."
+  ],
+  "verification": {
+    "method": "Training photo_id -> observation_uuid was reconstructed by re-querying the iNat API per species, anchored at created_d2=2026-06-14 (the training scrape's own cutoff) so the ordering matches what the original scraper actually saw. 9920/9989 training photos (99.3%) resolved to an observation_uuid this way; the remainder are very likely observations since deleted, made private, or downgraded from research-grade -- unreachable by definition, not a gap in the method. Training image sha256 was computed directly from the 9981 locally cached files under data/clean/.",
+    "verified_at": "2026-08-21T14:53:17Z",
+    "training_photo_ids_checked": 9989,
+    "training_observation_uuids_resolved": 9920,
+    "training_observation_uuid_coverage": 0.993,
+    "training_image_hashes_checked": 9981,
+    "benchmark_images": 1591,
+    "shared_photo_ids": 0,
+    "shared_observation_uuids": 0,
+    "shared_image_hashes": 0,
+    "note": "One internal duplicate was found and removed before this count: two different photo_id/observation_uuid pairs (leptomyrmex-erythrocephalus, uploaded 3 days apart) had byte-identical image content, i.e. the same photo re-submitted as a second observation. This is not a training leak -- it was a duplicate within the fresh scrape itself -- but was removed for benchmark cleanliness. Original scrape yielded 1592 images; final benchmark is 1591."
+  },
+  "columns": [
+    "photo_id",
+    "observation_uuid",
+    "species",
+    "slug",
+    "taxon_id",
+    "lat",
+    "lon",
+    "source",
+    "sha256",
+    "created_at"
+  ],
+  "built_with": "data_pipeline/scrape_benchmark.py",
+  "low_sample_species_warning": {
+    "note": "anoplolepis-custodiens and polyrhachis-schistacea have only 1 image each in this benchmark -- not enough recent (post-cutoff) research-grade iNat observations existed to reach the 35-image target, and the shortfall was not backfilled by loosening the date cutoff or the quality_grade=research requirement. Their individual per-species top-1/top-3 figures are NOT statistically meaningful (a single trial is either 0% or 100%) and must not be read as evidence of model performance on those species specifically. They are kept in the benchmark rather than dropped, and do contribute to the overall micro-average and to the per-species macro-average like any other class; readers should look at the overall/macro numbers and treat these two rows as informational only.",
+    "affected_species": [
+      "anoplolepis-custodiens",
+      "polyrhachis-schistacea"
+    ]
+  }
+}

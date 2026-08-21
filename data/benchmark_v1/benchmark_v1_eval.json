@@ -1,0 +1,828 @@
+{
+  "benchmark": "benchmark_v1",
+  "evaluated_at": "2026-08-21T15:20:36Z",
+  "n_images_evaluated": 1591,
+  "n_species": 50,
+  "coordinates": {
+    "n_with_usable_coordinates": 1591,
+    "n_total": 1591,
+    "pct_with_coordinates": 100.0
+  },
+  "geo_config": {
+    "geo_index_present": true,
+    "geo_boost": 0.05,
+    "cell_size_deg": 1.0
+  },
+  "raw_cosine": {
+    "description": "No geo re-ranking. All 1591 benchmark images.",
+    "overall_micro_top1": 0.6084223758642363,
+    "overall_micro_top3": 0.7932118164676304,
+    "macro_top1": 0.6241412860860123,
+    "macro_top3": 0.8041323185491541,
+    "macro_n_species": 50,
+    "per_species": {
+      "anoplolepis-custodiens": {
+        "n": 1,
+        "top1": 1.0,
+        "top3": 1.0
+      },
+      "anoplolepis-gracilipes": {
+        "n": 35,
+        "top1": 0.8285714285714286,
+        "top3": 0.9428571428571428
+      },
+      "atta-mexicana": {
+        "n": 35,
+        "top1": 0.34285714285714286,
+        "top3": 0.7142857142857143
+      },
+      "atta-texana": {
+        "n": 35,
+        "top1": 0.45714285714285713,
+        "top3": 0.6
+      },
+      "brachymyrmex-patagonicus": {
+        "n": 35,
+        "top1": 0.45714285714285713,
+        "top3": 0.7428571428571429
+      },
+      "camponotus-castaneus": {
+        "n": 35,
+        "top1": 0.7714285714285715,
+        "top3": 0.8857142857142857
+      },
+      "camponotus-chromaiodes": {
+        "n": 35,
+        "top1": 0.4857142857142857,
+        "top3": 0.6571428571428571
+      },
+      "camponotus-pennsylvanicus": {
+        "n": 35,
+        "top1": 0.3142857142857143,
+        "top3": 0.6857142857142857
+      },
+      "cephalotes-atratus": {
+        "n": 35,
+        "top1": 0.8571428571428571,
+        "top3": 0.9428571428571428
+      },
+      "colobopsis-truncata": {
+        "n": 35,
+        "top1": 0.4,
+        "top3": 0.6571428571428571
+      },
+      "crematogaster-peringueyi": {
+        "n": 16,
+        "top1": 0.8125,
+        "top3": 0.875
+      },
+      "crematogaster-scutellaris": {
+        "n": 35,
+        "top1": 0.6571428571428571,
+        "top3": 0.7142857142857143
+      },
+      "dolichoderus-bispinosus": {
+        "n": 35,
+        "top1": 0.5142857142857142,
+        "top3": 0.8
+      },
+      "dolichoderus-quadripunctatus": {
+        "n": 35,
+        "top1": 0.6857142857142857,
+        "top3": 0.8
+      },
+      "dolichoderus-thoracicus": {
+        "n": 35,
+        "top1": 0.5142857142857142,
+        "top3": 0.8
+      },
+      "dorymyrmex-bureni": {
+        "n": 35,
+        "top1": 0.6,
+        "top3": 0.8857142857142857
+      },
+      "eciton-burchellii": {
+        "n": 35,
+        "top1": 0.5714285714285714,
+        "top3": 0.6857142857142857
+      },
+      "ectatomma-tuberculatum": {
+        "n": 35,
+        "top1": 0.8571428571428571,
+        "top3": 0.9428571428571428
+      },
+      "formica-rufa": {
+        "n": 29,
+        "top1": 0.5517241379310345,
+        "top3": 0.9310344827586207
+      },
+      "iridomyrmex-purpureus": {
+        "n": 35,
+        "top1": 0.7714285714285715,
+        "top3": 0.8857142857142857
+      },
+      "lasius-fuliginosus": {
+        "n": 35,
+        "top1": 0.6857142857142857,
+        "top3": 0.8571428571428571
+      },
+      "leptomyrmex-erythrocephalus": {
+        "n": 34,
+        "top1": 0.8529411764705882,
+        "top3": 0.9117647058823529
+      },
+      "linepithema-humile": {
+        "n": 35,
+        "top1": 0.3142857142857143,
+        "top3": 0.6857142857142857
+      },
+      "liometopum-occidentale": {
+        "n": 35,
+        "top1": 0.6571428571428571,
+        "top3": 0.7714285714285715
+      },
+      "megaponera-analis": {
+        "n": 9,
+        "top1": 0.4444444444444444,
+        "top3": 0.7777777777777778
+      },
+      "messor-barbarus": {
+        "n": 35,
+        "top1": 0.7428571428571429,
+        "top3": 0.8285714285714286
+      },
+      "myrmecia-pilosula": {
+        "n": 35,
+        "top1": 0.7428571428571429,
+        "top3": 0.7714285714285715
+      },
+      "myrmecia-pyriformis": {
+        "n": 35,
+        "top1": 0.8,
+        "top3": 1.0
+      },
+      "myrmica-rubra": {
+        "n": 35,
+        "top1": 0.7428571428571429,
+        "top3": 0.8571428571428571
+      },
+      "odontomachus-erythrocephalus": {
+        "n": 20,
+        "top1": 0.8,
+        "top3": 0.95
+      },
+      "odontomachus-simillimus": {
+        "n": 35,
+        "top1": 0.6285714285714286,
+        "top3": 0.7714285714285715
+      },
+      "odontoponera-denticulata": {
+        "n": 35,
+        "top1": 0.6285714285714286,
+        "top3": 0.8571428571428571
+      },
+      "oecophylla-smaragdina": {
+        "n": 35,
+        "top1": 0.6285714285714286,
+        "top3": 0.7428571428571429
+      },
+      "paltothyreus-tarsatus": {
+        "n": 11,
+        "top1": 0.5454545454545454,
+        "top3": 0.8181818181818182
+      },
+      "paraponera-clavata": {
+        "n": 35,
+        "top1": 0.6,
+        "top3": 0.8
+      },
+      "paratrechina-longicornis": {
+        "n": 35,
+        "top1": 0.4857142857142857,
+        "top3": 0.6571428571428571
+      },
+      "pheidole-pallidula": {
+        "n": 35,
+        "top1": 0.5142857142857142,
+        "top3": 0.7142857142857143
+      },
+      "pogonomyrmex-barbatus": {
+        "n": 35,
+        "top1": 0.6285714285714286,
+        "top3": 0.8
+      },
+      "pogonomyrmex-rugosus": {
+        "n": 35,
+        "top1": 0.5428571428571428,
+        "top3": 0.8285714285714286
+      },
+      "polyrhachis-dives": {
+        "n": 35,
+        "top1": 0.6857142857142857,
+        "top3": 0.8285714285714286
+      },
+      "polyrhachis-schistacea": {
+        "n": 1,
+        "top1": 1.0,
+        "top3": 1.0
+      },
+      "prenolepis-imparis": {
+        "n": 35,
+        "top1": 0.4857142857142857,
+        "top3": 0.6571428571428571
+      },
+      "pristomyrmex-punctatus": {
+        "n": 35,
+        "top1": 0.5142857142857142,
+        "top3": 0.7142857142857143
+      },
+      "pseudomyrmex-gracilis": {
+        "n": 35,
+        "top1": 0.6571428571428571,
+        "top3": 0.8857142857142857
+      },
+      "rhytidoponera-metallica": {
+        "n": 35,
+        "top1": 0.7428571428571429,
+        "top3": 0.8
+      },
+      "solenopsis-invicta": {
+        "n": 35,
+        "top1": 0.37142857142857144,
+        "top3": 0.8
+      },
+      "tapinoma-sessile": {
+        "n": 35,
+        "top1": 0.45714285714285713,
+        "top3": 0.6
+      },
+      "tetramorium-immigrans": {
+        "n": 35,
+        "top1": 0.4857142857142857,
+        "top3": 0.7428571428571429
+      },
+      "tetraponera-rufonigra": {
+        "n": 35,
+        "top1": 0.6,
+        "top3": 0.8
+      },
+      "veromessor-pergandei": {
+        "n": 35,
+        "top1": 0.7714285714285715,
+        "top3": 0.8285714285714286
+      }
+    }
+  },
+  "raw_cosine_coord_subset": {
+    "description": "Same raw-cosine model, restricted to the coordinate-bearing subset only -- for comparison against geo_reranking.coord_subset.",
+    "overall_micro_top1": 0.6084223758642363,
+    "overall_micro_top3": 0.7932118164676304,
+    "macro_top1": 0.6241412860860123,
+    "macro_top3": 0.8041323185491541,
+    "macro_n_species": 50,
+    "n": 1591
+  },
+  "geo_reranking": {
+    "all_images": {
+      "description": "Geo re-ranking applied where coordinates exist; images without coordinates fall back to raw-cosine rank unchanged. All 1591 benchmark images.",
+      "overall_micro_top1": 0.6423632935260842,
+      "overall_micro_top3": 0.8221244500314268,
+      "macro_top1": 0.6590199254205339,
+      "macro_top3": 0.8304180328348685,
+      "macro_n_species": 50,
+      "per_species": {
+        "anoplolepis-custodiens": {
+          "n": 1,
+          "top1": 1.0,
+          "top3": 1.0
+        },
+        "anoplolepis-gracilipes": {
+          "n": 35,
+          "top1": 0.8285714285714286,
+          "top3": 0.9428571428571428
+        },
+        "atta-mexicana": {
+          "n": 35,
+          "top1": 0.4,
+          "top3": 0.7142857142857143
+        },
+        "atta-texana": {
+          "n": 35,
+          "top1": 0.5142857142857142,
+          "top3": 0.6
+        },
+        "brachymyrmex-patagonicus": {
+          "n": 35,
+          "top1": 0.5142857142857142,
+          "top3": 0.7714285714285715
+        },
+        "camponotus-castaneus": {
+          "n": 35,
+          "top1": 0.8,
+          "top3": 0.9428571428571428
+        },
+        "camponotus-chromaiodes": {
+          "n": 35,
+          "top1": 0.4857142857142857,
+          "top3": 0.6571428571428571
+        },
+        "camponotus-pennsylvanicus": {
+          "n": 35,
+          "top1": 0.34285714285714286,
+          "top3": 0.8
+        },
+        "cephalotes-atratus": {
+          "n": 35,
+          "top1": 0.8571428571428571,
+          "top3": 0.9428571428571428
+        },
+        "colobopsis-truncata": {
+          "n": 35,
+          "top1": 0.42857142857142855,
+          "top3": 0.7428571428571429
+        },
+        "crematogaster-peringueyi": {
+          "n": 16,
+          "top1": 0.875,
+          "top3": 0.875
+        },
+        "crematogaster-scutellaris": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.8
+        },
+        "dolichoderus-bispinosus": {
+          "n": 35,
+          "top1": 0.6,
+          "top3": 0.8
+        },
+        "dolichoderus-quadripunctatus": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.8
+        },
+        "dolichoderus-thoracicus": {
+          "n": 35,
+          "top1": 0.5714285714285714,
+          "top3": 0.8
+        },
+        "dorymyrmex-bureni": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.9142857142857143
+        },
+        "eciton-burchellii": {
+          "n": 35,
+          "top1": 0.6285714285714286,
+          "top3": 0.6857142857142857
+        },
+        "ectatomma-tuberculatum": {
+          "n": 35,
+          "top1": 0.8857142857142857,
+          "top3": 0.9428571428571428
+        },
+        "formica-rufa": {
+          "n": 29,
+          "top1": 0.5517241379310345,
+          "top3": 0.9310344827586207
+        },
+        "iridomyrmex-purpureus": {
+          "n": 35,
+          "top1": 0.8,
+          "top3": 0.9142857142857143
+        },
+        "lasius-fuliginosus": {
+          "n": 35,
+          "top1": 0.7428571428571429,
+          "top3": 0.8857142857142857
+        },
+        "leptomyrmex-erythrocephalus": {
+          "n": 34,
+          "top1": 0.8823529411764706,
+          "top3": 0.9117647058823529
+        },
+        "linepithema-humile": {
+          "n": 35,
+          "top1": 0.34285714285714286,
+          "top3": 0.7142857142857143
+        },
+        "liometopum-occidentale": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.8
+        },
+        "megaponera-analis": {
+          "n": 9,
+          "top1": 0.5555555555555556,
+          "top3": 0.7777777777777778
+        },
+        "messor-barbarus": {
+          "n": 35,
+          "top1": 0.7714285714285715,
+          "top3": 0.8571428571428571
+        },
+        "myrmecia-pilosula": {
+          "n": 35,
+          "top1": 0.7428571428571429,
+          "top3": 0.8285714285714286
+        },
+        "myrmecia-pyriformis": {
+          "n": 35,
+          "top1": 0.8571428571428571,
+          "top3": 1.0
+        },
+        "myrmica-rubra": {
+          "n": 35,
+          "top1": 0.8,
+          "top3": 0.8857142857142857
+        },
+        "odontomachus-erythrocephalus": {
+          "n": 20,
+          "top1": 0.85,
+          "top3": 0.95
+        },
+        "odontomachus-simillimus": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.8
+        },
+        "odontoponera-denticulata": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.8857142857142857
+        },
+        "oecophylla-smaragdina": {
+          "n": 35,
+          "top1": 0.6285714285714286,
+          "top3": 0.7428571428571429
+        },
+        "paltothyreus-tarsatus": {
+          "n": 11,
+          "top1": 0.6363636363636364,
+          "top3": 0.8181818181818182
+        },
+        "paraponera-clavata": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.8571428571428571
+        },
+        "paratrechina-longicornis": {
+          "n": 35,
+          "top1": 0.5428571428571428,
+          "top3": 0.7142857142857143
+        },
+        "pheidole-pallidula": {
+          "n": 35,
+          "top1": 0.5428571428571428,
+          "top3": 0.7428571428571429
+        },
+        "pogonomyrmex-barbatus": {
+          "n": 35,
+          "top1": 0.6285714285714286,
+          "top3": 0.8285714285714286
+        },
+        "pogonomyrmex-rugosus": {
+          "n": 35,
+          "top1": 0.5714285714285714,
+          "top3": 0.8571428571428571
+        },
+        "polyrhachis-dives": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.8285714285714286
+        },
+        "polyrhachis-schistacea": {
+          "n": 1,
+          "top1": 1.0,
+          "top3": 1.0
+        },
+        "prenolepis-imparis": {
+          "n": 35,
+          "top1": 0.4857142857142857,
+          "top3": 0.6857142857142857
+        },
+        "pristomyrmex-punctatus": {
+          "n": 35,
+          "top1": 0.5428571428571428,
+          "top3": 0.7714285714285715
+        },
+        "pseudomyrmex-gracilis": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.9142857142857143
+        },
+        "rhytidoponera-metallica": {
+          "n": 35,
+          "top1": 0.7714285714285715,
+          "top3": 0.8285714285714286
+        },
+        "solenopsis-invicta": {
+          "n": 35,
+          "top1": 0.45714285714285713,
+          "top3": 0.8285714285714286
+        },
+        "tapinoma-sessile": {
+          "n": 35,
+          "top1": 0.4857142857142857,
+          "top3": 0.6857142857142857
+        },
+        "tetramorium-immigrans": {
+          "n": 35,
+          "top1": 0.5428571428571428,
+          "top3": 0.8571428571428571
+        },
+        "tetraponera-rufonigra": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.8285714285714286
+        },
+        "veromessor-pergandei": {
+          "n": 35,
+          "top1": 0.7714285714285715,
+          "top3": 0.8571428571428571
+        }
+      }
+    },
+    "coord_subset": {
+      "description": "Geo re-ranking, restricted to only the images that had usable coordinates -- isolates the geo effect from dilution by the no-coordinate images (which are identical to raw-cosine).",
+      "overall_micro_top1": 0.6423632935260842,
+      "overall_micro_top3": 0.8221244500314268,
+      "macro_top1": 0.6590199254205339,
+      "macro_top3": 0.8304180328348685,
+      "macro_n_species": 50,
+      "n": 1591,
+      "per_species": {
+        "anoplolepis-custodiens": {
+          "n": 1,
+          "top1": 1.0,
+          "top3": 1.0
+        },
+        "anoplolepis-gracilipes": {
+          "n": 35,
+          "top1": 0.8285714285714286,
+          "top3": 0.9428571428571428
+        },
+        "atta-mexicana": {
+          "n": 35,
+          "top1": 0.4,
+          "top3": 0.7142857142857143
+        },
+        "atta-texana": {
+          "n": 35,
+          "top1": 0.5142857142857142,
+          "top3": 0.6
+        },
+        "brachymyrmex-patagonicus": {
+          "n": 35,
+          "top1": 0.5142857142857142,
+          "top3": 0.7714285714285715
+        },
+        "camponotus-castaneus": {
+          "n": 35,
+          "top1": 0.8,
+          "top3": 0.9428571428571428
+        },
+        "camponotus-chromaiodes": {
+          "n": 35,
+          "top1": 0.4857142857142857,
+          "top3": 0.6571428571428571
+        },
+        "camponotus-pennsylvanicus": {
+          "n": 35,
+          "top1": 0.34285714285714286,
+          "top3": 0.8
+        },
+        "cephalotes-atratus": {
+          "n": 35,
+          "top1": 0.8571428571428571,
+          "top3": 0.9428571428571428
+        },
+        "colobopsis-truncata": {
+          "n": 35,
+          "top1": 0.42857142857142855,
+          "top3": 0.7428571428571429
+        },
+        "crematogaster-peringueyi": {
+          "n": 16,
+          "top1": 0.875,
+          "top3": 0.875
+        },
+        "crematogaster-scutellaris": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.8
+        },
+        "dolichoderus-bispinosus": {
+          "n": 35,
+          "top1": 0.6,
+          "top3": 0.8
+        },
+        "dolichoderus-quadripunctatus": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.8
+        },
+        "dolichoderus-thoracicus": {
+          "n": 35,
+          "top1": 0.5714285714285714,
+          "top3": 0.8
+        },
+        "dorymyrmex-bureni": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.9142857142857143
+        },
+        "eciton-burchellii": {
+          "n": 35,
+          "top1": 0.6285714285714286,
+          "top3": 0.6857142857142857
+        },
+        "ectatomma-tuberculatum": {
+          "n": 35,
+          "top1": 0.8857142857142857,
+          "top3": 0.9428571428571428
+        },
+        "formica-rufa": {
+          "n": 29,
+          "top1": 0.5517241379310345,
+          "top3": 0.9310344827586207
+        },
+        "iridomyrmex-purpureus": {
+          "n": 35,
+          "top1": 0.8,
+          "top3": 0.9142857142857143
+        },
+        "lasius-fuliginosus": {
+          "n": 35,
+          "top1": 0.7428571428571429,
+          "top3": 0.8857142857142857
+        },
+        "leptomyrmex-erythrocephalus": {
+          "n": 34,
+          "top1": 0.8823529411764706,
+          "top3": 0.9117647058823529
+        },
+        "linepithema-humile": {
+          "n": 35,
+          "top1": 0.34285714285714286,
+          "top3": 0.7142857142857143
+        },
+        "liometopum-occidentale": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.8
+        },
+        "megaponera-analis": {
+          "n": 9,
+          "top1": 0.5555555555555556,
+          "top3": 0.7777777777777778
+        },
+        "messor-barbarus": {
+          "n": 35,
+          "top1": 0.7714285714285715,
+          "top3": 0.8571428571428571
+        },
+        "myrmecia-pilosula": {
+          "n": 35,
+          "top1": 0.7428571428571429,
+          "top3": 0.8285714285714286
+        },
+        "myrmecia-pyriformis": {
+          "n": 35,
+          "top1": 0.8571428571428571,
+          "top3": 1.0
+        },
+        "myrmica-rubra": {
+          "n": 35,
+          "top1": 0.8,
+          "top3": 0.8857142857142857
+        },
+        "odontomachus-erythrocephalus": {
+          "n": 20,
+          "top1": 0.85,
+          "top3": 0.95
+        },
+        "odontomachus-simillimus": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.8
+        },
+        "odontoponera-denticulata": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.8857142857142857
+        },
+        "oecophylla-smaragdina": {
+          "n": 35,
+          "top1": 0.6285714285714286,
+          "top3": 0.7428571428571429
+        },
+        "paltothyreus-tarsatus": {
+          "n": 11,
+          "top1": 0.6363636363636364,
+          "top3": 0.8181818181818182
+        },
+        "paraponera-clavata": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.8571428571428571
+        },
+        "paratrechina-longicornis": {
+          "n": 35,
+          "top1": 0.5428571428571428,
+          "top3": 0.7142857142857143
+        },
+        "pheidole-pallidula": {
+          "n": 35,
+          "top1": 0.5428571428571428,
+          "top3": 0.7428571428571429
+        },
+        "pogonomyrmex-barbatus": {
+          "n": 35,
+          "top1": 0.6285714285714286,
+          "top3": 0.8285714285714286
+        },
+        "pogonomyrmex-rugosus": {
+          "n": 35,
+          "top1": 0.5714285714285714,
+          "top3": 0.8571428571428571
+        },
+        "polyrhachis-dives": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.8285714285714286
+        },
+        "polyrhachis-schistacea": {
+          "n": 1,
+          "top1": 1.0,
+          "top3": 1.0
+        },
+        "prenolepis-imparis": {
+          "n": 35,
+          "top1": 0.4857142857142857,
+          "top3": 0.6857142857142857
+        },
+        "pristomyrmex-punctatus": {
+          "n": 35,
+          "top1": 0.5428571428571428,
+          "top3": 0.7714285714285715
+        },
+        "pseudomyrmex-gracilis": {
+          "n": 35,
+          "top1": 0.6857142857142857,
+          "top3": 0.9142857142857143
+        },
+        "rhytidoponera-metallica": {
+          "n": 35,
+          "top1": 0.7714285714285715,
+          "top3": 0.8285714285714286
+        },
+        "solenopsis-invicta": {
+          "n": 35,
+          "top1": 0.45714285714285713,
+          "top3": 0.8285714285714286
+        },
+        "tapinoma-sessile": {
+          "n": 35,
+          "top1": 0.4857142857142857,
+          "top3": 0.6857142857142857
+        },
+        "tetramorium-immigrans": {
+          "n": 35,
+          "top1": 0.5428571428571428,
+          "top3": 0.8571428571428571
+        },
+        "tetraponera-rufonigra": {
+          "n": 35,
+          "top1": 0.6571428571428571,
+          "top3": 0.8285714285714286
+        },
+        "veromessor-pergandei": {
+          "n": 35,
+          "top1": 0.7714285714285715,
+          "top3": 0.8571428571428571
+        }
+      }
+    }
+  },
+  "low_sample_species": {
+    "note": "n<5 species have too few trials for their per-species top1/top3 to be statistically meaningful; anoplolepis-custodiens and polyrhachis-schistacea (n=1 each) are the extreme case.",
+    "slugs_n_below_5": [
+      "anoplolepis-custodiens",
+      "polyrhachis-schistacea"
+    ]
+  },
+  "hashes": {
+    "benchmark_v1_csv_sha256": "61b3439850da9100b4ae8393f4f9cd90d45b4d5b381f20eaa1ea63d8fb1ec38c",
+    "config_yaml_sha256": "a161bff33ddd2d5bafb24775ddd04ea73f430cf4370aec3ab02d46735db07d9e",
+    "artifacts_sha256": {
+      "model.pth": "43732525b498a5b4e64221c39fc77c700db4259a25d8f672e1a39a358e794eec",
+      "backbone.onnx": "7856e2b035a31704c23db36c70aee96ebcd8cfb7a0711e5c878c90044d7e2cdb",
+      "prototypes.npy": "b2aec98b94f1a48a0b2170b25cefd774a4ac0a7a0535217299075f4d25a0bae2",
+      "taxonomy.json": "057819601f47613a0b3fa099982547d4234e4f28f0cd45170d50774695538cf9",
+      "geo_index.json": "56fbdcac943c74bd184b5b8ab12953452f76b6ba42882bd6c5695e887a0dd5e5"
+    }
+  },
+  "checkpoint_path": "C:\\dev\\antid\\training\\artifacts\\model.pth",
+  "device": "cuda"
+}

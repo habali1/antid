@@ -15,41 +15,58 @@ and ships a React Native client for iOS, Android, and web.
 
 ## Results
 
-50 species, 1,996 held-out validation images (iNaturalist field photos, never
-seen in training):
+50 species, evaluated on **benchmark_v1** — 1,591 images that are not just
+held out, but drawn from an entirely separate scrape, verified to share zero
+`photo_id`, zero `observation_uuid`, and zero image hash with anything the
+model trained on (methodology and verification in
+`data/benchmark_v1/benchmark_v1.json`):
 
-| Inference setup | Top-1 | Top-3 |
+| Inference setup | Top-1 (micro / macro) | Top-3 (micro / macro) |
 |---|---:|---:|
-| Cosine similarity over class prototypes | **66.6%** | **81.9%** |
-| + geographic re-ranking (`lat`/`lon` supplied) | **69.4%** | **84.9%** |
+| Cosine similarity over class prototypes | **60.8% / 62.4%** | **79.3% / 80.4%** |
+| + geographic re-ranking (100% of images had coordinates) | **64.2% / 65.9%** | **82.2% / 83.0%** |
 
-Random chance on 50 classes is 2%. Both rows are what the training run measured
-against its held-out split; the base row is recorded per-species in
-`artifacts/eval.json`. `python evaluate.py --geo` recomputes both — it re-embeds
-the val set, ranks by cosine, then re-ranks with the geo boost and reports the
-two side by side.
+Random chance on 50 classes is 2%. Reproduce with `python eval_benchmark.py`
+from `training/` — full per-species breakdown, the coordinate-bearing-subset
+figures, and sha256 hashes of both the benchmark manifest and the evaluated
+artifacts are written to `data/benchmark_v1/benchmark_v1_eval.json` each run.
 
-> **Reproducing these requires the held-out split, and the split must be
-> pinned.** `train.py` now writes `artifacts/val_split.json` for exactly this
-> reason. Runs predating it did not, and their numbers cannot be regenerated:
-> the split was implied by the manifest's `split` column and row order, and
-> regenerating the manifest rewrites both, quietly mixing training images back
-> into "validation." A model that scores ~99.6% on data it trained on will
-> report ~93% on any 80/20 slice of a dataset it has fully seen — a number that
-> looks like a result and is really just memorization.
+> **Why a second, independently-scraped benchmark exists at all.** The
+> original training run measured 66.6% top-1 / 81.9% top-3 on its own
+> held-out split — a real result at the time, but the split was only implied
+> by the training manifest's `split` column and row order, and the manifest
+> was regenerated a minute after training finished, silently rewriting both.
+> That run's number is **not reproducible** and is kept only as a historical
+> note (`training/artifacts/eval.json`, `training/artifacts/README.md`).
+> Critically: re-evaluating those same weights against any split
+> reconstructable from today's manifest reports **~93% top-1 — do not read
+> that as model performance.** The model scores ~99.6% on images it trained
+> on, so any 80/20 slice of a dataset it has fully seen averages out near
+> 93%; it's the model grading its own homework, not a measurement of
+> generalization. `train.py` now writes `artifacts/val_split.json` to pin the
+> split for future retrains, but for *this* checkpoint the only trustworthy,
+> reproducible number is benchmark_v1 above.
 
-**Per-species spread is wide, and the failures are the interesting part.**
-Accuracy runs from *Veromessor pergandei* at 90.3% top-1 / 100% top-3 down to
-*Tapinoma sessile* at 38.3% and *Solenopsis invicta* at 38.9%. The weak classes
-are exactly the ones a myrmecologist would predict: small, glossy, near-uniform
-brown-black ants whose diagnostic characters (petiole shape, propodeal spines,
-antennal segment counts) are simply not resolvable in a handheld phone photo.
-The strong classes are large, high-contrast, or distinctively sculptured. This
-is a data-resolution ceiling, not an optimization failure — training loss
-converged to 0.056.
+**Several species score meaningfully lower on this fresh benchmark than the
+old (unreproducible) split reported** — e.g. *Camponotus pennsylvanicus*
+53.5% → 31.4%, *Linepithema humile* 50.0% → 31.4%. That gap is itself informative:
+the original split was drawn from the same scrape, observers, and time window
+as training, which flatters generalization even when it isn't contaminated in
+the strict sense benchmark_v1 rules out. Per-species spread stays wide either
+way — weak classes here (*C. pennsylvanicus*, *L. humile*, *Atta mexicana*, all
+≤35% top-1) are small-to-medium, near-uniform ants whose diagnostic characters
+(petiole shape, propodeal spines, antennal segment counts) aren't resolvable in
+a handheld phone photo; strong classes (*Cephalotes atratus*, *Ectatomma
+tuberculatum*, both ≥85%) are large, high-contrast, or distinctively sculptured.
+This is a data-resolution ceiling, not an optimization failure — training loss
+converged to 0.056. (Two species, *Anoplolepis custodiens* and *Polyrhachis
+schistacea*, have only 1 benchmark image each — too few recent iNat
+observations existed post-cutoff to reach the target sample size — so their
+individual figures aren't statistically meaningful; they're still counted in
+the overall numbers above.)
 
-Dataset: 9,989 images across 50 species (~200 each), 7,990 train / 1,999 val,
-sourced from the public iNaturalist open-data bucket.
+Training dataset: 9,989 images across 50 species (~200 each), 7,990 train /
+1,999 val, sourced from the public iNaturalist open-data bucket.
 
 ---
 
@@ -175,8 +192,8 @@ human-transported species that make up much of applied ant identification.
 
 | Path | What |
 |---|---|
-| `data_pipeline/` | scrapers (iNat primary; AntWeb + GBIF gap-fill), cleaning, upload, SQL schema, geo-index builder |
-| `training/` | `train.py`, `export.py` (→ONNX), `evaluate.py`, `model.py`, `data.py`, configs |
+| `data_pipeline/` | scrapers (iNat primary; AntWeb + GBIF gap-fill), `scrape_benchmark.py` (frozen benchmark builder), cleaning, upload, SQL schema, geo-index builder |
+| `training/` | `train.py`, `export.py` (→ONNX), `evaluate.py`, `eval_benchmark.py`, `model.py`, `data.py`, configs |
 | `api/` | FastAPI server — `main.py` (routes), `inference.py` (`AntIdentifier`) |
 | `mobile/` | React Native + react-native-web client |
 
@@ -217,6 +234,7 @@ python train.py --config config.yaml      # any config key is CLI-overridable
 python export.py                          # re-export ONNX from artifacts/model.pth
 python evaluate.py                        # top-1/top-3 under the serving cosine path
 python evaluate.py --geo                  # + geographic re-ranking, side by side
+python eval_benchmark.py                  # the reproducible baseline -- see Results above
 ```
 
 `evaluate.py` reads `artifacts/val_split.json` to recover the exact held-out set
@@ -227,6 +245,12 @@ coordinate votes for its own answer. For a leak-free measurement:
 ```bash
 python evaluate.py --geo --geo-source train   # rebuild the index from train only
 ```
+
+`eval_benchmark.py` is different: it doesn't touch `val_split.json` or the
+training manifest at all. It scores the current artifacts against
+`data/benchmark_v1/` — the frozen, independently-scraped set described in
+Results — so its number stays meaningful across retrains without needing any
+split bookkeeping.
 
 Two-minute CPU smoke run that exercises the full interface end to end — set
 `LOCAL_DATA_DIR` to any `{species_slug}/{image}.jpg` folder first:
@@ -293,11 +317,17 @@ things, and they map onto the failure modes that actually occur here:
 | `python train.py --config config.smoke.yaml …` | interface breaks across the whole training→artifact path |
 | the ONNX checker inside `export.py` | shape/opset regressions in the exported graph |
 | `python evaluate.py --geo` | preprocessing drift, prototype misalignment, geo-ranking drift |
+| `python eval_benchmark.py` | the reproducible baseline itself — the only number in Results not tied to a training-manifest split |
 | `npm run typecheck` | client/API contract drift (strict TypeScript) |
 
 Trained weights and datasets are **not** committed — `training/artifacts/` and
 `data/` are gitignored. Run the pipeline and training steps above to regenerate
-them.
+them. The one exception is `data/benchmark_v1/`'s metadata: `benchmark_v1.csv`,
+`benchmark_v1.json`, and `benchmark_v1_eval.json` are force-added despite the
+`data/` ignore rule, because the benchmark's identity — which exact photos,
+what was verified, what the model scored — needs to travel with the repo even
+though the ~1,591 downloaded images themselves don't. Regenerate the images
+with `data_pipeline/scrape_benchmark.py` if you need them locally.
 
 ---
 
