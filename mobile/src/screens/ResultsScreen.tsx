@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -15,11 +16,44 @@ import ResultCard from '@/components/ResultCard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 
+// The preview is sized to the photo's own aspect ratio, so a portrait shot
+// stays portrait instead of being cropped to a wide banner. Clamped at both
+// ends: an unclamped ratio lets a very tall photo push the results off screen
+// and a panorama collapse to a sliver. `contain` means the clamped cases
+// letterbox rather than crop, so the whole ant is always visible.
+const MIN_ASPECT = 3 / 4; // tallest we render (portrait)
+const MAX_ASPECT = 16 / 9; // widest we render (landscape)
+// Portrait-friendly until the real ratio is measured — that's the common case
+// here, and it keeps the first paint close to the final layout.
+const DEFAULT_ASPECT = MIN_ASPECT;
+// Never let the preview eat more than half the viewport.
+const MAX_VIEWPORT_FRACTION = 0.5;
+
 export default function ResultsScreen({
   route,
   navigation,
 }: Props): React.JSX.Element {
   const { imageUri, results, inferenceMs, geoFiltered } = route.params;
+  const { height: windowHeight } = useWindowDimensions();
+  const [aspect, setAspect] = useState(DEFAULT_ASPECT);
+
+  useEffect(() => {
+    let cancelled = false;
+    Image.getSize(
+      imageUri,
+      (w, h) => {
+        if (cancelled || !w || !h) return;
+        setAspect(Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, w / h)));
+      },
+      // Measurement can fail (revoked blob URL, remote fetch error). The
+      // default ratio still renders the photo uncropped, so there is nothing
+      // to recover from.
+      () => undefined
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [imageUri]);
 
   const tryAnother = useCallback(() => {
     navigation.dispatch(
@@ -37,13 +71,23 @@ export default function ResultsScreen({
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Image source={{ uri: imageUri }} style={styles.thumb} />
+        <Image
+          source={{ uri: imageUri }}
+          resizeMode="contain"
+          style={[
+            styles.thumb,
+            {
+              aspectRatio: aspect,
+              maxHeight: windowHeight * MAX_VIEWPORT_FRACTION,
+            },
+          ]}
+        />
         <Text style={styles.timing}>Identified in {inferenceMs}ms</Text>
 
         {geoFiltered && (
           <View style={styles.geoBanner}>
             <Text style={styles.geoBannerText}>
-              📍 Results filtered for your region
+              📍 Location used to improve ranking
             </Text>
           </View>
         )}
@@ -77,10 +121,9 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 12 },
   thumb: {
     width: '100%',
-    height: 220,
     borderRadius: 18,
+    // Also the letterbox colour where the photo does not fill the box.
     backgroundColor: '#1A1A1A',
-    resizeMode: 'cover',
   },
   timing: { color: '#8A8A8A', fontSize: 13, marginTop: 12, marginBottom: 12 },
   geoBanner: {

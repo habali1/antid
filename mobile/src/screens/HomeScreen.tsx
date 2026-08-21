@@ -129,7 +129,7 @@ function LocationStatus({
     label = 'Getting location…';
   } else if (permitted) {
     dotColor = '#3DD68C';
-    label = '📍 Location active — results will be filtered for your region';
+    label = '📍 Location active — used to improve ranking';
   }
   return (
     <View style={styles.locationRow}>
