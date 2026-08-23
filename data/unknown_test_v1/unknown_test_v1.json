@@ -1,0 +1,78 @@
+{
+  "name": "unknown_test_v1",
+  "created_at": "2026-08-23T12:32:12Z",
+  "purpose": "The FINAL, ONE-TIME independent evaluation set for the frozen candidate abstention rule chosen using calibration_v1 (max_sim < 0.60, see data/calibration_v1/calibration_v1.json:frozen_candidate_abstention_threshold). calibration_v1 chose the threshold; this set grades it. It must not be reused to re-tune or re-select a threshold -- if this evaluation is unsatisfactory, that is a finding to report, not a cue to adjust 0.60 and re-run against this same data (that would just make unknown_test_v1 a second calibration set).",
+  "must_not_be_used_for_training": true,
+  "must_not_be_used_to_tune_the_classifier_or_threshold": true,
+  "n_images": 573,
+  "categories": {
+    "known_holdout": {
+      "n": 172,
+      "n_distinct_species": 45
+    },
+    "non_ant_insect": {
+      "n": 99,
+      "n_distinct_species": 84
+    },
+    "out_of_scope_ant": {
+      "n": 200,
+      "n_distinct_species": 127
+    },
+    "unrelated": {
+      "n": 102,
+      "n_distinct_species": 83
+    }
+  },
+  "category_definitions": {
+    "known_holdout": "The 50 trained species, research-grade, disjoint (image/observation/hash) from training, benchmark_v1, AND calibration_v1.",
+    "out_of_scope_ant": "Formicidae species NOT among the 50 AND NOT among calibration_v1's 165 out-of-scope-ant species (excluded by taxon_id, 215 total) -- species-level disjointness, not just image-level. Tests whether the rule generalizes to a species it was never calibrated against, not just a new photo of one it was.",
+    "non_ant_insect": "Non-Formicidae Insecta, research-grade, image/observation/hash disjoint from all three prior sets (species-level disjointness not enforced for this category -- only requested for out_of_scope_ant).",
+    "unrelated": "Non-insect photos (Aves/Plantae/Mammalia), research-grade, same disjointness as non_ant_insect."
+  },
+  "no_low_quality_known_category": "unknown_test_v1 does not rebuild calibration_v1's low_quality_known category -- that category's purpose was exploring an ambiguous case during calibration (and it was never used as ground truth there either); it has no role in final grading.",
+  "source": "iNaturalist API (api.inaturalist.org/v1/observations), quality_grade=research",
+  "one_photo_per_observation": true,
+  "cutoff_date": "2026-06-16",
+  "exclusion_criteria": [
+    "Structural: only observations created on/after 2026-06-16 eligible (same cutoff as benchmark_v1 and calibration_v1) -- training-disjointness guarantee.",
+    "Explicit exclusion against training's photo_id column (9989 ids), benchmark_v1's photo_id + observation_uuid columns (1591 each), and calibration_v1's photo_id + observation_uuid columns (1005 each) before any candidate was kept.",
+    "out_of_scope_ant additionally excluded calibration_v1's 165 out-of-scope-ant species by taxon_id (215 taxon_ids total, alongside the 50 known species).",
+    "Verified zero overlap after the fact on photo_id, observation_uuid, and sha256 against training, benchmark_v1, AND calibration_v1 (see verification block), plus the species-level check for out_of_scope_ant."
+  ],
+  "verification": {
+    "vs_training": {
+      "shared_photo_ids": 0,
+      "shared_observation_uuids": 0,
+      "shared_image_hashes": 0
+    },
+    "vs_benchmark_v1": {
+      "shared_photo_ids": 0,
+      "shared_observation_uuids": 0,
+      "shared_image_hashes": 0
+    },
+    "vs_calibration_v1": {
+      "shared_photo_ids": 0,
+      "shared_observation_uuids": 0,
+      "shared_image_hashes": 0
+    },
+    "out_of_scope_ant_species_overlap_with_calibration_v1": 0,
+    "internal_duplicates": 0,
+    "verified_at": "2026-08-23T12:32:12Z",
+    "note": "Three rows were found and removed before this count, each a byte-identical re-upload under a different photo_id/observation_uuid (the same phenomenon found in benchmark_v1 and calibration_v1 -- hash-checking catches what ID-exclusion structurally cannot): (1) an internal duplicate within unknown_test_v1 itself (bindahara-moorei, kept the earlier upload); (2) a known_holdout candidate (leptomyrmex-erythrocephalus, photo_id 693315171) duplicating content already in benchmark_v1 under a different photo_id (691253248) -- this is the SAME underlying photo found and removed from calibration_v1 in an earlier session, resurfacing here because removing it from calibration_v1.csv also removed it from this session's exclusion set; (3) a known_holdout candidate (tetraponera-rufonigra, photo_id 687741251) duplicating content already in calibration_v1 (photo_id 687148127). In both (2) and (3) the already-frozen dataset (benchmark_v1, calibration_v1) was left untouched; only the new unknown_test_v1 row was dropped. Original scrape yielded 576 images; final unknown_test_v1 is 573."
+  },
+  "columns": [
+    "photo_id",
+    "observation_uuid",
+    "species",
+    "slug",
+    "taxon_id",
+    "category",
+    "lat",
+    "lon",
+    "source",
+    "sha256",
+    "created_at",
+    "blur_score"
+  ],
+  "built_with": "data_pipeline/scrape_unknown_test.py"
+}

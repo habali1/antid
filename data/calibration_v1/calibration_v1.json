@@ -98,6 +98,38 @@
       "out_of_scope_ant_still_accepted": 0.473,
       "interpretation": "Behaves as a confidence/abstention gate (meaningfully improves accuracy among accepted known-species predictions, and rejects incorrect predictions 3x more often than correct ones) rather than a reliable unknown-species detector (still accepts a never-seen ant species close to half the time -- AUC known-vs-out_of_scope_ant is only 0.660, the weakest of the three OOD categories)."
     },
-    "validation_requirement": "Must be evaluated EXACTLY ONCE on a future unknown_test_v1 whose out-of-scope ant SPECIES (not just images or observations) are disjoint from calibration_v1's 165 out-of-scope-ant species, before any production use. Do not modify this threshold after seeing unknown_test_v1 results -- if 0.60 performs poorly there, that is a finding to report, not a cue to re-tune against the same calibration data (see threshold_selection_policy .data_separation)."
+    "validation_requirement": "Must be evaluated EXACTLY ONCE on a future unknown_test_v1 whose out-of-scope ant SPECIES (not just images or observations) are disjoint from calibration_v1's 165 out-of-scope-ant species, before any production use. Do not modify this threshold after seeing unknown_test_v1 results -- if 0.60 performs poorly there, that is a finding to report, not a cue to re-tune against the same calibration data (see threshold_selection_policy .data_separation).",
+    "machine_readable_rule": {
+      "value": 0.6,
+      "operator": "max_sim < value",
+      "signal": "raw max cosine similarity before geo re-ranking",
+      "note": "Added for machine-readable provenance after the fact -- the original 0.60 selection and the original unknown_test_v1 one-pass evaluation both used this same value as a hardcoded constant in eval_unknown_test.py, not loaded from this file. eval_unknown_test.py was updated after that evaluation to load and validate this value for future reproductions; the rule itself (0.60, max_sim < value) is unchanged."
+    }
+  },
+  "phase_c_validation": {
+    "status": "INDEPENDENTLY VALIDATED as a selective confidence/abstention gate; NOT VALIDATED as an unknown-species detector",
+    "must_not_be_adjusted_using_unknown_test_v1": "0.60 must not be adjusted, re-tuned, or re-derived using unknown_test_v1 results. unknown_test_v1 exists to grade this exact value once; if it performs poorly, that is a finding to report, not a cue to pick a new threshold from the same data (see threshold_selection_policy).",
+    "evaluated_on": "data/unknown_test_v1/ (see unknown_test_v1.json for methodology and verification, unknown_test_v1_eval.json for full per-image results)",
+    "known_holdout_species_coverage": {
+      "covered": 45,
+      "total": 50,
+      "absent_species_unmeasured": [
+        "anoplolepis-custodiens",
+        "megaponera-analis",
+        "paltothyreus-tarsatus",
+        "polyrhachis-schistacea",
+        "veromessor-pergandei"
+      ],
+      "note": "These 5 species have zero unknown_test_v1 known_holdout images (same low-observation-velocity species thin throughout this project's iNat-based sets). Their rejection/abstention behavior at 0.60 is entirely unmeasured, not merely under-sampled."
+    },
+    "results_at_0.60": {
+      "known_photo_rejection_rate": 0.32,
+      "accuracy_before_abstention": 0.698,
+      "correct_predictions_rejected": 0.167,
+      "incorrect_predictions_rejected": 0.673,
+      "accuracy_among_accepted": 0.855,
+      "out_of_scope_ant_false_acceptance_rate": 0.455
+    },
+    "interpretation": "At the frozen 0.60 threshold, 91/200 out-of-scope ant photographs (45.5%) still passed the gate and would receive one of the 50 supported species as their closest match, even though their true species is outside the catalog. Therefore this rule is useful as a selective confidence/quality gate but does not reliably detect unsupported ant species. This is a per-image rate measured across 127 distinct out-of-scope-ant species (species-disjoint from calibration_v1's 165) -- it is not a claim that 45.5% of unknown ant SPECIES were accepted, and cosine similarity is not calibrated confidence, so these are not 'confidently misidentified' results -- they are closest-match presentations the UI already frames as such, not confirmed identifications."
   }
 }

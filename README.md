@@ -394,11 +394,17 @@ on purpose — it selects a *new* set of candidate observations (for building
 - **50 species out of ~14,000 described, and no reject option.** Coverage is
   skewed toward well-photographed North American, European, and Australian
   taxa. There's no "none of these" outcome: an ant outside the 50 is always
-  forced into whichever trained class scores highest, confidently wrong. A
-  better backbone doesn't fix this — closing the gap needs both broader
-  species coverage and a genuine low-confidence/unknown path, evaluated on a
-  separate out-of-scope test set (this benchmark can't measure that; it's
-  built entirely from the 50 known species, by construction).
+  forced into whichever trained class scores highest as its closest match. A
+  better backbone doesn't fix this by itself — closing the gap needs both
+  broader species coverage and a genuine low-confidence/unknown path (this
+  benchmark can't measure that; it's built entirely from the 50 known
+  species, by construction). A candidate abstention rule has been measured
+  on a dedicated out-of-scope test set (not this one) and independently
+  validated as a selective confidence gate — it improves accuracy among
+  what it accepts, but still passes roughly half of never-seen ant species
+  through as a closest match, so it doesn't close this gap by itself either.
+  See `training/artifacts/README.md` for the full result; not implemented
+  in the API or app yet.
 - **Confusable small dark ants are near the resolution limit of the input.**
   Several genera cannot be separated to species from a field photo at all; a
   genus-level answer would be more honest for those, and grouping the weakest

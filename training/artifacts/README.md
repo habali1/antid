@@ -66,6 +66,27 @@ is indirectly fit to, defeating the point. Any future architecture work
 (`val_split.json` from that run) and touch benchmark_v1 exactly once, on the
 finalized candidate.
 
+## Unknown/out-of-scope rejection — frozen candidate, independently validated
+
+A candidate abstention rule — **abstain when max_sim < 0.60, raw cosine, no
+geo** — was selected using `data/calibration_v1/` (1,005 images: known-species
+holdout, out-of-scope ants, non-ant insects, unrelated photos) and then graded
+**exactly once**, unmodified, on `data/unknown_test_v1/` (573 images,
+disjoint from training/benchmark_v1/calibration_v1 on photo_id/observation_uuid
+/sha256, and additionally **species-disjoint** from calibration_v1's 165
+out-of-scope-ant species). Full methodology, verification, and results in
+`data/calibration_v1/calibration_v1.json` (`frozen_candidate_abstention_threshold`,
+`phase_c_validation`) and `data/unknown_test_v1/unknown_test_v1.json`.
+
+**Result: validated as a selective confidence/quality gate, not as an
+unknown-species detector.** It measurably improves known-species accuracy
+among what it accepts (69.8% → 85.5%) and rejects incorrect predictions ~4x
+more often than correct ones — but 91/200 out-of-scope ant photographs (45.5%)
+in the independent test still pass the gate and receive one of the 50
+supported species as their closest match. **Not implemented in `api/` or
+`mobile/` — this is a validated candidate, not a shipped feature**, and 0.60
+must not be re-tuned against unknown_test_v1's results.
+
 ## Historical number — do not treat as reproducible
 
 At the end of the original training run, this model measured:
