@@ -11,7 +11,7 @@
     "prototypes_npy": "b2aec98b94f1a48a0b2170b25cefd774a4ac0a7a0535217299075f4d25a0bae2",
     "taxonomy_json": "057819601f47613a0b3fa099982547d4234e4f28f0cd45170d50774695538cf9",
     "config_yaml": "a161bff33ddd2d5bafb24775ddd04ea73f430cf4370aec3ab02d46735db07d9e",
-    "calibration_v1_json": "97257603d4bfa881d334f72b6cbb70cc5a4562b864fafe2d3ca01fae84ff1067"
+    "calibration_v1_json": "2e4c4be09656ab001312334641d3306323a8e07ab729634a90a0af1d13af35ed"
   },
   "known_photo_rejection": {
     "description": "Fraction of ALL known_holdout images rejected (max_sim < threshold), correct and incorrect predictions alike.",
@@ -7498,5 +7498,5 @@
       "gap": 0.03567337989807129
     }
   ],
-  "threshold_provenance_note": "This evaluation (the original, one-pass unknown_test_v1 run) used the frozen threshold value 0.60 as a hardcoded constant (FROZEN_THRESHOLD in eval_unknown_test.py at the time), not loaded from calibration_v1.json. eval_unknown_test.py was updated afterward to load and validate this same numeric value (0.60, operator 'max_sim < value') from calibration_v1.json's frozen_candidate_abstention_threshold.machine_readable_rule for future reproductions. The rule applied here is unchanged -- 0.60, max_sim < value -- and no part of this evaluation was rerun; only this note and calibration_v1.json's sha256 (in hashes, above) were added after the fact."
+  "threshold_provenance_note": "This evaluation (the original, one-pass unknown_test_v1 run) used the frozen threshold value 0.60 as a hardcoded constant (FROZEN_THRESHOLD in eval_unknown_test.py at the time), not loaded from calibration_v1.json. eval_unknown_test.py was updated afterward to load and validate this same numeric value (0.60, operator 'max_sim < value') from calibration_v1.json's frozen_candidate_abstention_threshold.machine_readable_rule for future reproductions. The rule applied here is unchanged -- 0.60, max_sim < value -- and no part of this evaluation was rerun; only this note and calibration_v1.json's sha256 (in hashes, above) were added after the fact. calibration_v1.json's hash recorded above was updated after a wording-only, non-metric precision correction to its Phase B interpretation string (no numeric value, threshold, or result changed) -- see that commit for the exact wording diff."
 }

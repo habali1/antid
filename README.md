@@ -401,8 +401,9 @@ on purpose — it selects a *new* set of candidate observations (for building
   species, by construction). A candidate abstention rule has been measured
   on a dedicated out-of-scope test set (not this one) and independently
   validated as a selective confidence gate — it improves accuracy among
-  what it accepts, but still passes roughly half of never-seen ant species
-  through as a closest match, so it doesn't close this gap by itself either.
+  what it accepts, but still allows roughly half of out-of-scope ant
+  photographs to pass the gate and receive a supported-species closest
+  match, so it doesn't close this gap by itself either.
   See `training/artifacts/README.md` for the full result; not implemented
   in the API or app yet.
 - **Confusable small dark ants are near the resolution limit of the input.**

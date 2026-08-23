@@ -96,7 +96,7 @@
       "accuracy_among_accepted_known_species_predictions": 0.791,
       "false_rejection_rate_known_holdout_all": 0.361,
       "out_of_scope_ant_still_accepted": 0.473,
-      "interpretation": "Behaves as a confidence/abstention gate (meaningfully improves accuracy among accepted known-species predictions, and rejects incorrect predictions 3x more often than correct ones) rather than a reliable unknown-species detector (still accepts a never-seen ant species close to half the time -- AUC known-vs-out_of_scope_ant is only 0.660, the weakest of the three OOD categories)."
+      "interpretation": "Behaves as a confidence/abstention gate (meaningfully improves accuracy among accepted known-species predictions, and rejects incorrect predictions 3x more often than correct ones) rather than a reliable unknown-species detector (still accepts close to half of out-of-scope ant photographs -- AUC known-vs-out_of_scope_ant is only 0.660, the weakest of the three OOD categories)."
     },
     "validation_requirement": "Must be evaluated EXACTLY ONCE on a future unknown_test_v1 whose out-of-scope ant SPECIES (not just images or observations) are disjoint from calibration_v1's 165 out-of-scope-ant species, before any production use. Do not modify this threshold after seeing unknown_test_v1 results -- if 0.60 performs poorly there, that is a finding to report, not a cue to re-tune against the same calibration data (see threshold_selection_policy .data_separation).",
     "machine_readable_rule": {
