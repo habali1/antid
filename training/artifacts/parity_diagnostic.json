@@ -1,0 +1,1136 @@
+{
+  "generated_at": "2026-08-23T18:01:08Z",
+  "script": "training/parity_diagnostic.py",
+  "correction_from_planning_discussion": "max|raw_a-raw_b| / max|normalized_a-normalized_b| is NOT a valid lower bound on either raw embedding's norm -- the vectors can have different norms and the two maxima can occur at different indices. This script measures L2 norm and RMS magnitude directly per image per runtime path, and does not use that ratio anywhere.",
+  "artifact_hashes": {
+    "model.pth": "43732525b498a5b4e64221c39fc77c700db4259a25d8f672e1a39a358e794eec",
+    "backbone.onnx": "7856e2b035a31704c23db36c70aee96ebcd8cfb7a0711e5c878c90044d7e2cdb",
+    "prototypes.npy": "b2aec98b94f1a48a0b2170b25cefd774a4ac0a7a0535217299075f4d25a0bae2",
+    "taxonomy.json": "057819601f47613a0b3fa099982547d4234e4f28f0cd45170d50774695538cf9",
+    "config_yaml": "a161bff33ddd2d5bafb24775ddd04ea73f430cf4370aec3ab02d46735db07d9e"
+  },
+  "diagnostic_images": [
+    {
+      "role": "outlier",
+      "slug": "pseudomyrmex-gracilis",
+      "photo_id": "671332727",
+      "file_sha256": "d1b5161f93b7ada9b535a93b6dcd290630676814d8441d3627d03f16fa802932"
+    },
+    {
+      "role": "control_close_to_0.60",
+      "slug": "tapinoma-sessile",
+      "photo_id": "666024473",
+      "file_sha256": "1798050e97d902c5334827d2dbfa455fdb632ae96ebe9d7d1426837ceb1af482"
+    },
+    {
+      "role": "control_typical_low",
+      "slug": "oecophylla-smaragdina",
+      "photo_id": "673209953",
+      "file_sha256": "e21375ecdbc1c1aa3383ec52461366719d25245cd7a4a218da4afea1d80787d7"
+    },
+    {
+      "role": "control_typical_high",
+      "slug": "myrmica-rubra",
+      "photo_id": "666679020",
+      "file_sha256": "c001460ea7f19b0bb17b2a412341caeb2f74523e170e0be0194841f88241ba20"
+    }
+  ],
+  "runtime_matrix_paths": [
+    "pytorch_cuda",
+    "pytorch_cpu",
+    "onnx_cpu_default",
+    "onnx_cpu_noopt",
+    "onnx_cpu_1thread",
+    "onnx_cpu_noopt_1thread",
+    "onnx_api_style"
+  ],
+  "onnx_api_style_providers": [
+    "AzureExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "section1_input_embedding_measurements": [
+    {
+      "role": "outlier",
+      "slug": "pseudomyrmex-gracilis",
+      "photo_id": "671332727",
+      "file_sha256": "d1b5161f93b7ada9b535a93b6dcd290630676814d8441d3627d03f16fa802932",
+      "dimensions": [
+        500,
+        375
+      ],
+      "mode": "RGB",
+      "exif_orientation": null,
+      "decoded_pixel_stats": {
+        "min": 0.0,
+        "max": 255.0,
+        "mean": 247.37661333333332,
+        "std": 31.130565739896927
+      },
+      "normalized_input_stats_reference": {
+        "min": -1.5604357719421387,
+        "max": 2.640000104904175,
+        "mean": 2.3066892623901367,
+        "std": 0.5490272641181946
+      },
+      "normalized_input_stats_serving": {
+        "min": -1.5604357719421387,
+        "max": 2.640000104904175,
+        "mean": 2.3066892623901367,
+        "std": 0.5490272641181946
+      },
+      "preprocessing_max_abs_diff_training_vs_api": 0.0,
+      "finite_check_passed": true,
+      "raw_embedding_l2_norm_by_path": {
+        "pytorch_cuda": 70.97987209730236,
+        "pytorch_cpu": 121.13379124888455,
+        "onnx_cpu_default": 121.15370546299269,
+        "onnx_cpu_noopt": 121.11986844166043,
+        "onnx_cpu_1thread": 121.15370546299269,
+        "onnx_cpu_noopt_1thread": 121.12618366043021,
+        "onnx_api_style": 121.15370546299269
+      },
+      "raw_embedding_rms_by_path": {
+        "pytorch_cuda": 1.676741871969952,
+        "pytorch_cpu": 2.8615168483121494,
+        "onnx_cpu_default": 2.8619872774021977,
+        "onnx_cpu_noopt": 2.8611879529061945,
+        "onnx_cpu_1thread": 2.8619872774021977,
+        "onnx_cpu_noopt_1thread": 2.861337135927086,
+        "onnx_api_style": 2.8619872774021977
+      },
+      "normalized_embedding_l2_norm_by_path": {
+        "pytorch_cuda": 0.9999999775742012,
+        "pytorch_cpu": 1.0000000191989737,
+        "onnx_cpu_default": 0.9999999663672882,
+        "onnx_cpu_noopt": 1.0000000266607552,
+        "onnx_cpu_1thread": 0.9999999663672882,
+        "onnx_cpu_noopt_1thread": 1.00000000817292,
+        "onnx_api_style": 0.9999999663672882
+      },
+      "top10_divergent_channels_pytorch_cuda_vs_onnx_cpu_default": [
+        {
+          "index": 519,
+          "abs_diff": 9.777990102767944,
+          "value_a": 1.456960916519165,
+          "value_b": 11.23495101928711
+        },
+        {
+          "index": 1718,
+          "abs_diff": 8.82539165019989,
+          "value_a": 0.9960795640945435,
+          "value_b": 9.821471214294434
+        },
+        {
+          "index": 1154,
+          "abs_diff": 8.602131366729736,
+          "value_a": 5.854742527008057,
+          "value_b": 14.456873893737793
+        },
+        {
+          "index": 1360,
+          "abs_diff": 8.43642807006836,
+          "value_a": 4.878443717956543,
+          "value_b": 13.314871788024902
+        },
+        {
+          "index": 1059,
+          "abs_diff": 8.432364463806152,
+          "value_a": 5.559797286987305,
+          "value_b": 13.992161750793457
+        },
+        {
+          "index": 40,
+          "abs_diff": 8.138336777687073,
+          "value_a": 1.113059401512146,
+          "value_b": 9.251396179199219
+        },
+        {
+          "index": 1372,
+          "abs_diff": 7.824046611785889,
+          "value_a": 6.716663837432861,
+          "value_b": 14.54071044921875
+        },
+        {
+          "index": 443,
+          "abs_diff": 7.684688568115234,
+          "value_a": 1.9170265197753906,
+          "value_b": 9.601715087890625
+        },
+        {
+          "index": 56,
+          "abs_diff": 7.573100328445435,
+          "value_a": 1.251539945602417,
+          "value_b": 8.824640274047852
+        },
+        {
+          "index": 398,
+          "abs_diff": 7.3154725432395935,
+          "value_a": 0.5351267457008362,
+          "value_b": 7.85059928894043
+        }
+      ]
+    },
+    {
+      "role": "control_close_to_0.60",
+      "slug": "tapinoma-sessile",
+      "photo_id": "666024473",
+      "file_sha256": "1798050e97d902c5334827d2dbfa455fdb632ae96ebe9d7d1426837ceb1af482",
+      "dimensions": [
+        500,
+        375
+      ],
+      "mode": "RGB",
+      "exif_orientation": null,
+      "decoded_pixel_stats": {
+        "min": 0.0,
+        "max": 239.0,
+        "mean": 142.16172088888888,
+        "std": 39.26895913113799
+      },
+      "normalized_input_stats_reference": {
+        "min": -2.1007792949676514,
+        "max": 2.2914161682128906,
+        "mean": 0.4812733232975006,
+        "std": 0.6845187544822693
+      },
+      "normalized_input_stats_serving": {
+        "min": -2.1007792949676514,
+        "max": 2.2914161682128906,
+        "mean": 0.4812733232975006,
+        "std": 0.6845187544822693
+      },
+      "preprocessing_max_abs_diff_training_vs_api": 0.0,
+      "finite_check_passed": true,
+      "raw_embedding_l2_norm_by_path": {
+        "pytorch_cuda": 17.180008403974334,
+        "pytorch_cpu": 17.182676583237978,
+        "onnx_cpu_default": 17.182679084048132,
+        "onnx_cpu_noopt": 17.182678087003932,
+        "onnx_cpu_1thread": 17.182679084048132,
+        "onnx_cpu_noopt_1thread": 17.18267508454371,
+        "onnx_api_style": 17.182679084048132
+      },
+      "raw_embedding_rms_by_path": {
+        "pytorch_cuda": 0.40583955141889094,
+        "pytorch_cpu": 0.4059025812294708,
+        "onnx_cpu_default": 0.4059026403055578,
+        "onnx_cpu_noopt": 0.40590261675260236,
+        "onnx_cpu_1thread": 0.4059026403055578,
+        "onnx_cpu_noopt_1thread": 0.40590254582614643,
+        "onnx_api_style": 0.4059026403055578
+      },
+      "normalized_embedding_l2_norm_by_path": {
+        "pytorch_cuda": 0.9999999157917456,
+        "pytorch_cpu": 1.0000000184490803,
+        "onnx_cpu_default": 1.0000000495151349,
+        "onnx_cpu_noopt": 0.9999999925415082,
+        "onnx_cpu_1thread": 1.0000000495151349,
+        "onnx_cpu_noopt_1thread": 1.0000000413163717,
+        "onnx_api_style": 1.0000000495151349
+      },
+      "top10_divergent_channels_pytorch_cuda_vs_onnx_cpu_default": [
+        {
+          "index": 801,
+          "abs_diff": 0.0037760138511657715,
+          "value_a": 0.6893022656440735,
+          "value_b": 0.6930782794952393
+        },
+        {
+          "index": 321,
+          "abs_diff": 0.003612011671066284,
+          "value_a": 0.3288032114505768,
+          "value_b": 0.3251911997795105
+        },
+        {
+          "index": 290,
+          "abs_diff": 0.0033519864082336426,
+          "value_a": 0.6335834860801697,
+          "value_b": 0.6369354724884033
+        },
+        {
+          "index": 1130,
+          "abs_diff": 0.003301084041595459,
+          "value_a": 0.9469074606895447,
+          "value_b": 0.9502085447311401
+        },
+        {
+          "index": 1601,
+          "abs_diff": 0.003154754638671875,
+          "value_a": 0.9519007802009583,
+          "value_b": 0.9487460255622864
+        },
+        {
+          "index": 959,
+          "abs_diff": 0.002988278865814209,
+          "value_a": 0.9711117148399353,
+          "value_b": 0.9740999937057495
+        },
+        {
+          "index": 536,
+          "abs_diff": 0.002986609935760498,
+          "value_a": 0.29715484380722046,
+          "value_b": 0.29416823387145996
+        },
+        {
+          "index": 1756,
+          "abs_diff": 0.0028440356254577637,
+          "value_a": 0.6938543915748596,
+          "value_b": 0.6966984272003174
+        },
+        {
+          "index": 9,
+          "abs_diff": 0.0027811527252197266,
+          "value_a": 0.390611857175827,
+          "value_b": 0.39339300990104675
+        },
+        {
+          "index": 392,
+          "abs_diff": 0.0027363598346710205,
+          "value_a": 0.49011796712875366,
+          "value_b": 0.48738160729408264
+        }
+      ]
+    },
+    {
+      "role": "control_typical_low",
+      "slug": "oecophylla-smaragdina",
+      "photo_id": "673209953",
+      "file_sha256": "e21375ecdbc1c1aa3383ec52461366719d25245cd7a4a218da4afea1d80787d7",
+      "dimensions": [
+        500,
+        333
+      ],
+      "mode": "RGB",
+      "exif_orientation": null,
+      "decoded_pixel_stats": {
+        "min": 0.0,
+        "max": 210.0,
+        "mean": 72.28548148148148,
+        "std": 35.81854578351071
+      },
+      "normalized_input_stats_reference": {
+        "min": -2.1007792949676514,
+        "max": 1.2979522943496704,
+        "mean": -0.7331163287162781,
+        "std": 0.5631805658340454
+      },
+      "normalized_input_stats_serving": {
+        "min": -2.1007792949676514,
+        "max": 1.2979522943496704,
+        "mean": -0.7331163287162781,
+        "std": 0.5631805658340454
+      },
+      "preprocessing_max_abs_diff_training_vs_api": 0.0,
+      "finite_check_passed": true,
+      "raw_embedding_l2_norm_by_path": {
+        "pytorch_cuda": 17.312701327237864,
+        "pytorch_cpu": 17.307613066749916,
+        "onnx_cpu_default": 17.307602394747985,
+        "onnx_cpu_noopt": 17.307604535450512,
+        "onnx_cpu_1thread": 17.307602394747985,
+        "onnx_cpu_noopt_1thread": 17.307605478131777,
+        "onnx_api_style": 17.307602394747985
+      },
+      "raw_embedding_rms_by_path": {
+        "pytorch_cuda": 0.40897412709472547,
+        "pytorch_cpu": 0.40885392823885924,
+        "onnx_cpu_default": 0.40885367613651014,
+        "onnx_cpu_noopt": 0.408853726705854,
+        "onnx_cpu_1thread": 0.40885367613651014,
+        "onnx_cpu_noopt_1thread": 0.40885374897460564,
+        "onnx_api_style": 0.40885367613651014
+      },
+      "normalized_embedding_l2_norm_by_path": {
+        "pytorch_cuda": 1.0000000617561713,
+        "pytorch_cpu": 0.9999999814990175,
+        "onnx_cpu_default": 1.0000000283229242,
+        "onnx_cpu_noopt": 1.0000000393813704,
+        "onnx_cpu_1thread": 1.0000000283229242,
+        "onnx_cpu_noopt_1thread": 0.9999999831384525,
+        "onnx_api_style": 1.0000000283229242
+      },
+      "top10_divergent_channels_pytorch_cuda_vs_onnx_cpu_default": [
+        {
+          "index": 125,
+          "abs_diff": 0.0030480027198791504,
+          "value_a": 0.2121952623128891,
+          "value_b": 0.20914725959300995
+        },
+        {
+          "index": 1362,
+          "abs_diff": 0.0029444098472595215,
+          "value_a": 0.4903913140296936,
+          "value_b": 0.4874469041824341
+        },
+        {
+          "index": 1159,
+          "abs_diff": 0.002697378396987915,
+          "value_a": 0.14747482538223267,
+          "value_b": 0.14477744698524475
+        },
+        {
+          "index": 278,
+          "abs_diff": 0.0025881528854370117,
+          "value_a": 1.3454028367996216,
+          "value_b": 1.3428146839141846
+        },
+        {
+          "index": 238,
+          "abs_diff": 0.0025081634521484375,
+          "value_a": 0.341804176568985,
+          "value_b": 0.3443123400211334
+        },
+        {
+          "index": 570,
+          "abs_diff": 0.002421855926513672,
+          "value_a": 0.6249018907546997,
+          "value_b": 0.622480034828186
+        },
+        {
+          "index": 913,
+          "abs_diff": 0.0023955106735229492,
+          "value_a": 1.2258622646331787,
+          "value_b": 1.2234667539596558
+        },
+        {
+          "index": 729,
+          "abs_diff": 0.002354145050048828,
+          "value_a": 1.154746413230896,
+          "value_b": 1.1523922681808472
+        },
+        {
+          "index": 86,
+          "abs_diff": 0.002318568527698517,
+          "value_a": 0.04306136816740036,
+          "value_b": 0.04074279963970184
+        },
+        {
+          "index": 996,
+          "abs_diff": 0.002301245927810669,
+          "value_a": 0.2604241967201233,
+          "value_b": 0.2581229507923126
+        }
+      ]
+    },
+    {
+      "role": "control_typical_high",
+      "slug": "myrmica-rubra",
+      "photo_id": "666679020",
+      "file_sha256": "c001460ea7f19b0bb17b2a412341caeb2f74523e170e0be0194841f88241ba20",
+      "dimensions": [
+        500,
+        333
+      ],
+      "mode": "RGB",
+      "exif_orientation": null,
+      "decoded_pixel_stats": {
+        "min": 0.0,
+        "max": 253.0,
+        "mean": 69.15983783783784,
+        "std": 45.69215841645571
+      },
+      "normalized_input_stats_reference": {
+        "min": -2.1179039478302,
+        "max": 2.1975338459014893,
+        "mean": -0.7888421416282654,
+        "std": 0.7299606204032898
+      },
+      "normalized_input_stats_serving": {
+        "min": -2.1179039478302,
+        "max": 2.1975338459014893,
+        "mean": -0.7888422012329102,
+        "std": 0.7299606800079346
+      },
+      "preprocessing_max_abs_diff_training_vs_api": 0.0,
+      "finite_check_passed": true,
+      "raw_embedding_l2_norm_by_path": {
+        "pytorch_cuda": 17.681869926307755,
+        "pytorch_cpu": 17.675180106777677,
+        "onnx_cpu_default": 17.6751851418061,
+        "onnx_cpu_noopt": 17.67518466598817,
+        "onnx_cpu_1thread": 17.6751851418061,
+        "onnx_cpu_noopt_1thread": 17.675183162434116,
+        "onnx_api_style": 17.6751851418061
+      },
+      "raw_embedding_rms_by_path": {
+        "pytorch_cuda": 0.41769491553216337,
+        "pytorch_cpu": 0.4175368834000877,
+        "onnx_cpu_default": 0.4175370023414542,
+        "onnx_cpu_noopt": 0.41753699110131204,
+        "onnx_cpu_1thread": 0.4175370023414542,
+        "onnx_cpu_noopt_1thread": 0.4175369555831861,
+        "onnx_api_style": 0.4175370023414542
+      },
+      "normalized_embedding_l2_norm_by_path": {
+        "pytorch_cuda": 1.0000000263785331,
+        "pytorch_cpu": 0.9999999827347588,
+        "onnx_cpu_default": 1.0000000495108763,
+        "onnx_cpu_noopt": 1.000000023190338,
+        "onnx_cpu_1thread": 1.0000000495108763,
+        "onnx_cpu_noopt_1thread": 0.9999999383567857,
+        "onnx_api_style": 1.0000000495108763
+      },
+      "top10_divergent_channels_pytorch_cuda_vs_onnx_cpu_default": [
+        {
+          "index": 49,
+          "abs_diff": 0.002990126609802246,
+          "value_a": 1.7596476078033447,
+          "value_b": 1.7566574811935425
+        },
+        {
+          "index": 28,
+          "abs_diff": 0.0023609399795532227,
+          "value_a": 1.1509056091308594,
+          "value_b": 1.1485446691513062
+        },
+        {
+          "index": 715,
+          "abs_diff": 0.0022661685943603516,
+          "value_a": 1.483178734779358,
+          "value_b": 1.4809125661849976
+        },
+        {
+          "index": 570,
+          "abs_diff": 0.001907944679260254,
+          "value_a": 1.6451538801193237,
+          "value_b": 1.6432459354400635
+        },
+        {
+          "index": 1691,
+          "abs_diff": 0.0017784982919692993,
+          "value_a": 0.12096694111824036,
+          "value_b": 0.11918844282627106
+        },
+        {
+          "index": 816,
+          "abs_diff": 0.0017667710781097412,
+          "value_a": 0.30390822887420654,
+          "value_b": 0.3021414577960968
+        },
+        {
+          "index": 842,
+          "abs_diff": 0.0017396211624145508,
+          "value_a": 1.0893101692199707,
+          "value_b": 1.0875705480575562
+        },
+        {
+          "index": 320,
+          "abs_diff": 0.001685023307800293,
+          "value_a": 1.5404778718948364,
+          "value_b": 1.5387928485870361
+        },
+        {
+          "index": 916,
+          "abs_diff": 0.0016078948974609375,
+          "value_a": 0.9326127171516418,
+          "value_b": 0.9310048222541809
+        },
+        {
+          "index": 1229,
+          "abs_diff": 0.001497805118560791,
+          "value_a": 0.8453041911125183,
+          "value_b": 0.8468019962310791
+        }
+      ]
+    }
+  ],
+  "section2_runtime_device_matrix": [
+    {
+      "role": "outlier",
+      "slug": "pseudomyrmex-gracilis",
+      "photo_id": "671332727",
+      "per_path_summary": {
+        "pytorch_cuda": {
+          "max_similarity": 0.3181408643722534,
+          "top1": 4,
+          "gate_reject": true
+        },
+        "pytorch_cpu": {
+          "max_similarity": 0.3592006266117096,
+          "top1": 45,
+          "gate_reject": true
+        },
+        "onnx_cpu_default": {
+          "max_similarity": 0.3591891825199127,
+          "top1": 45,
+          "gate_reject": true
+        },
+        "onnx_cpu_noopt": {
+          "max_similarity": 0.3592231869697571,
+          "top1": 45,
+          "gate_reject": true
+        },
+        "onnx_cpu_1thread": {
+          "max_similarity": 0.3591891825199127,
+          "top1": 45,
+          "gate_reject": true
+        },
+        "onnx_cpu_noopt_1thread": {
+          "max_similarity": 0.3592170774936676,
+          "top1": 45,
+          "gate_reject": true
+        },
+        "onnx_api_style": {
+          "max_similarity": 0.3591891825199127,
+          "top1": 45,
+          "gate_reject": true
+        }
+      },
+      "isolations": {
+        "pytorch_cpu__vs__onnx_cpu_default": {
+          "isolation": "framework/export difference, device held constant (both CPU)",
+          "raw_embedding_max_abs_diff": 0.004512786865234375,
+          "normalized_embedding_max_abs_diff": 3.0018389225006104e-05,
+          "score_vector_max_abs_diff": 4.581362009048462e-05,
+          "max_similarity_a": 0.3592006266117096,
+          "max_similarity_b": 0.3591891825199127,
+          "max_similarity_abs_diff": 1.1444091796875e-05,
+          "top1_a": 45,
+          "top1_b": 45,
+          "top1_agree": true,
+          "gate_reject_a": true,
+          "gate_reject_b": true,
+          "gate_agree": true
+        },
+        "pytorch_cuda__vs__pytorch_cpu": {
+          "isolation": "device/kernel difference, framework held constant (both PyTorch)",
+          "raw_embedding_max_abs_diff": 9.774519920349121,
+          "normalized_embedding_max_abs_diff": 0.07219324260950089,
+          "score_vector_max_abs_diff": 0.15574002265930176,
+          "max_similarity_a": 0.3181408643722534,
+          "max_similarity_b": 0.3592006266117096,
+          "max_similarity_abs_diff": 0.04105976223945618,
+          "top1_a": 4,
+          "top1_b": 45,
+          "top1_agree": false,
+          "gate_reject_a": true,
+          "gate_reject_b": true,
+          "gate_agree": true
+        },
+        "onnx_cpu_default__vs__onnx_cpu_noopt": {
+          "isolation": "graph-optimization/fusion effect",
+          "raw_embedding_max_abs_diff": 0.009124279022216797,
+          "normalized_embedding_max_abs_diff": 6.570294499397278e-05,
+          "score_vector_max_abs_diff": 9.232759475708008e-05,
+          "max_similarity_a": 0.3591891825199127,
+          "max_similarity_b": 0.3592231869697571,
+          "max_similarity_abs_diff": 3.400444984436035e-05,
+          "top1_a": 45,
+          "top1_b": 45,
+          "top1_agree": true,
+          "gate_reject_a": true,
+          "gate_reject_b": true,
+          "gate_agree": true
+        },
+        "onnx_cpu_default__vs__onnx_cpu_1thread": {
+          "isolation": "threading/reduction-order effect",
+          "raw_embedding_max_abs_diff": 0.0,
+          "normalized_embedding_max_abs_diff": 0.0,
+          "score_vector_max_abs_diff": 0.0,
+          "max_similarity_a": 0.3591891825199127,
+          "max_similarity_b": 0.3591891825199127,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 45,
+          "top1_b": 45,
+          "top1_agree": true,
+          "gate_reject_a": true,
+          "gate_reject_b": true,
+          "gate_agree": true
+        },
+        "onnx_api_style__vs__onnx_cpu_default": {
+          "isolation": "actual serving-provider effect (unforced vs forced CPU)",
+          "raw_embedding_max_abs_diff": 0.0,
+          "normalized_embedding_max_abs_diff": 0.0,
+          "score_vector_max_abs_diff": 0.0,
+          "max_similarity_a": 0.3591891825199127,
+          "max_similarity_b": 0.3591891825199127,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 45,
+          "top1_b": 45,
+          "top1_agree": true,
+          "gate_reject_a": true,
+          "gate_reject_b": true,
+          "gate_agree": true
+        }
+      }
+    },
+    {
+      "role": "control_close_to_0.60",
+      "slug": "tapinoma-sessile",
+      "photo_id": "666024473",
+      "per_path_summary": {
+        "pytorch_cuda": {
+          "max_similarity": 0.6028298735618591,
+          "top1": 49,
+          "gate_reject": false
+        },
+        "pytorch_cpu": {
+          "max_similarity": 0.6034684181213379,
+          "top1": 49,
+          "gate_reject": false
+        },
+        "onnx_cpu_default": {
+          "max_similarity": 0.6034688949584961,
+          "top1": 49,
+          "gate_reject": false
+        },
+        "onnx_cpu_noopt": {
+          "max_similarity": 0.6034685373306274,
+          "top1": 49,
+          "gate_reject": false
+        },
+        "onnx_cpu_1thread": {
+          "max_similarity": 0.6034688949584961,
+          "top1": 49,
+          "gate_reject": false
+        },
+        "onnx_cpu_noopt_1thread": {
+          "max_similarity": 0.6034684777259827,
+          "top1": 49,
+          "gate_reject": false
+        },
+        "onnx_api_style": {
+          "max_similarity": 0.6034688949584961,
+          "top1": 49,
+          "gate_reject": false
+        }
+      },
+      "isolations": {
+        "pytorch_cpu__vs__onnx_cpu_default": {
+          "isolation": "framework/export difference, device held constant (both CPU)",
+          "raw_embedding_max_abs_diff": 3.5762786865234375e-06,
+          "normalized_embedding_max_abs_diff": 2.0116567611694336e-07,
+          "score_vector_max_abs_diff": 5.103647708892822e-07,
+          "max_similarity_a": 0.6034684181213379,
+          "max_similarity_b": 0.6034688949584961,
+          "max_similarity_abs_diff": 4.76837158203125e-07,
+          "top1_a": 49,
+          "top1_b": 49,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "pytorch_cuda__vs__pytorch_cpu": {
+          "isolation": "device/kernel difference, framework held constant (both PyTorch)",
+          "raw_embedding_max_abs_diff": 0.0037741661071777344,
+          "normalized_embedding_max_abs_diff": 0.00021342188119888306,
+          "score_vector_max_abs_diff": 0.0006385445594787598,
+          "max_similarity_a": 0.6028298735618591,
+          "max_similarity_b": 0.6034684181213379,
+          "max_similarity_abs_diff": 0.0006385445594787598,
+          "top1_a": 49,
+          "top1_b": 49,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_cpu_default__vs__onnx_cpu_noopt": {
+          "isolation": "graph-optimization/fusion effect",
+          "raw_embedding_max_abs_diff": 2.9802322387695312e-06,
+          "normalized_embedding_max_abs_diff": 1.7136335372924805e-07,
+          "score_vector_max_abs_diff": 3.8743019104003906e-07,
+          "max_similarity_a": 0.6034688949584961,
+          "max_similarity_b": 0.6034685373306274,
+          "max_similarity_abs_diff": 3.5762786865234375e-07,
+          "top1_a": 49,
+          "top1_b": 49,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_cpu_default__vs__onnx_cpu_1thread": {
+          "isolation": "threading/reduction-order effect",
+          "raw_embedding_max_abs_diff": 0.0,
+          "normalized_embedding_max_abs_diff": 0.0,
+          "score_vector_max_abs_diff": 0.0,
+          "max_similarity_a": 0.6034688949584961,
+          "max_similarity_b": 0.6034688949584961,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 49,
+          "top1_b": 49,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_api_style__vs__onnx_cpu_default": {
+          "isolation": "actual serving-provider effect (unforced vs forced CPU)",
+          "raw_embedding_max_abs_diff": 0.0,
+          "normalized_embedding_max_abs_diff": 0.0,
+          "score_vector_max_abs_diff": 0.0,
+          "max_similarity_a": 0.6034688949584961,
+          "max_similarity_b": 0.6034688949584961,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 49,
+          "top1_b": 49,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        }
+      }
+    },
+    {
+      "role": "control_typical_low",
+      "slug": "oecophylla-smaragdina",
+      "photo_id": "673209953",
+      "per_path_summary": {
+        "pytorch_cuda": {
+          "max_similarity": 0.6261155009269714,
+          "top1": 32,
+          "gate_reject": false
+        },
+        "pytorch_cpu": {
+          "max_similarity": 0.6264474391937256,
+          "top1": 32,
+          "gate_reject": false
+        },
+        "onnx_cpu_default": {
+          "max_similarity": 0.626447856426239,
+          "top1": 32,
+          "gate_reject": false
+        },
+        "onnx_cpu_noopt": {
+          "max_similarity": 0.6264481544494629,
+          "top1": 32,
+          "gate_reject": false
+        },
+        "onnx_cpu_1thread": {
+          "max_similarity": 0.626447856426239,
+          "top1": 32,
+          "gate_reject": false
+        },
+        "onnx_cpu_noopt_1thread": {
+          "max_similarity": 0.6264480352401733,
+          "top1": 32,
+          "gate_reject": false
+        },
+        "onnx_api_style": {
+          "max_similarity": 0.626447856426239,
+          "top1": 32,
+          "gate_reject": false
+        }
+      },
+      "isolations": {
+        "pytorch_cpu__vs__onnx_cpu_default": {
+          "isolation": "framework/export difference, device held constant (both CPU)",
+          "raw_embedding_max_abs_diff": 3.7550926208496094e-06,
+          "normalized_embedding_max_abs_diff": 2.3655593395233154e-07,
+          "score_vector_max_abs_diff": 7.152557373046875e-07,
+          "max_similarity_a": 0.6264474391937256,
+          "max_similarity_b": 0.626447856426239,
+          "max_similarity_abs_diff": 4.172325134277344e-07,
+          "top1_a": 32,
+          "top1_b": 32,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "pytorch_cuda__vs__pytorch_cpu": {
+          "isolation": "device/kernel difference, framework held constant (both PyTorch)",
+          "raw_embedding_max_abs_diff": 0.003046184778213501,
+          "normalized_embedding_max_abs_diff": 0.00017239991575479507,
+          "score_vector_max_abs_diff": 0.0005539059638977051,
+          "max_similarity_a": 0.6261155009269714,
+          "max_similarity_b": 0.6264474391937256,
+          "max_similarity_abs_diff": 0.0003319382667541504,
+          "top1_a": 32,
+          "top1_b": 32,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_cpu_default__vs__onnx_cpu_noopt": {
+          "isolation": "graph-optimization/fusion effect",
+          "raw_embedding_max_abs_diff": 2.0265579223632812e-06,
+          "normalized_embedding_max_abs_diff": 1.0896474123001099e-07,
+          "score_vector_max_abs_diff": 3.8743019104003906e-07,
+          "max_similarity_a": 0.626447856426239,
+          "max_similarity_b": 0.6264481544494629,
+          "max_similarity_abs_diff": 2.980232238769531e-07,
+          "top1_a": 32,
+          "top1_b": 32,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_cpu_default__vs__onnx_cpu_1thread": {
+          "isolation": "threading/reduction-order effect",
+          "raw_embedding_max_abs_diff": 0.0,
+          "normalized_embedding_max_abs_diff": 0.0,
+          "score_vector_max_abs_diff": 0.0,
+          "max_similarity_a": 0.626447856426239,
+          "max_similarity_b": 0.626447856426239,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 32,
+          "top1_b": 32,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_api_style__vs__onnx_cpu_default": {
+          "isolation": "actual serving-provider effect (unforced vs forced CPU)",
+          "raw_embedding_max_abs_diff": 0.0,
+          "normalized_embedding_max_abs_diff": 0.0,
+          "score_vector_max_abs_diff": 0.0,
+          "max_similarity_a": 0.626447856426239,
+          "max_similarity_b": 0.626447856426239,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 32,
+          "top1_b": 32,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        }
+      }
+    },
+    {
+      "role": "control_typical_high",
+      "slug": "myrmica-rubra",
+      "photo_id": "666679020",
+      "per_path_summary": {
+        "pytorch_cuda": {
+          "max_similarity": 0.9093752503395081,
+          "top1": 28,
+          "gate_reject": false
+        },
+        "pytorch_cpu": {
+          "max_similarity": 0.9093571901321411,
+          "top1": 28,
+          "gate_reject": false
+        },
+        "onnx_cpu_default": {
+          "max_similarity": 0.9093573093414307,
+          "top1": 28,
+          "gate_reject": false
+        },
+        "onnx_cpu_noopt": {
+          "max_similarity": 0.9093573093414307,
+          "top1": 28,
+          "gate_reject": false
+        },
+        "onnx_cpu_1thread": {
+          "max_similarity": 0.9093573093414307,
+          "top1": 28,
+          "gate_reject": false
+        },
+        "onnx_cpu_noopt_1thread": {
+          "max_similarity": 0.9093572497367859,
+          "top1": 28,
+          "gate_reject": false
+        },
+        "onnx_api_style": {
+          "max_similarity": 0.9093573093414307,
+          "top1": 28,
+          "gate_reject": false
+        }
+      },
+      "isolations": {
+        "pytorch_cpu__vs__onnx_cpu_default": {
+          "isolation": "framework/export difference, device held constant (both CPU)",
+          "raw_embedding_max_abs_diff": 2.8014183044433594e-06,
+          "normalized_embedding_max_abs_diff": 1.5273690223693848e-07,
+          "score_vector_max_abs_diff": 2.7194619178771973e-07,
+          "max_similarity_a": 0.9093571901321411,
+          "max_similarity_b": 0.9093573093414307,
+          "max_similarity_abs_diff": 1.1920928955078125e-07,
+          "top1_a": 28,
+          "top1_b": 28,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "pytorch_cuda__vs__pytorch_cpu": {
+          "isolation": "device/kernel difference, framework held constant (both PyTorch)",
+          "raw_embedding_max_abs_diff": 0.0029900074005126953,
+          "normalized_embedding_max_abs_diff": 0.00013150274753570557,
+          "score_vector_max_abs_diff": 0.00021649524569511414,
+          "max_similarity_a": 0.9093752503395081,
+          "max_similarity_b": 0.9093571901321411,
+          "max_similarity_abs_diff": 1.806020736694336e-05,
+          "top1_a": 28,
+          "top1_b": 28,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_cpu_default__vs__onnx_cpu_noopt": {
+          "isolation": "graph-optimization/fusion effect",
+          "raw_embedding_max_abs_diff": 1.7881393432617188e-06,
+          "normalized_embedding_max_abs_diff": 1.0058283805847168e-07,
+          "score_vector_max_abs_diff": 2.5331974029541016e-07,
+          "max_similarity_a": 0.9093573093414307,
+          "max_similarity_b": 0.9093573093414307,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 28,
+          "top1_b": 28,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_cpu_default__vs__onnx_cpu_1thread": {
+          "isolation": "threading/reduction-order effect",
+          "raw_embedding_max_abs_diff": 0.0,
+          "normalized_embedding_max_abs_diff": 0.0,
+          "score_vector_max_abs_diff": 0.0,
+          "max_similarity_a": 0.9093573093414307,
+          "max_similarity_b": 0.9093573093414307,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 28,
+          "top1_b": 28,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        },
+        "onnx_api_style__vs__onnx_cpu_default": {
+          "isolation": "actual serving-provider effect (unforced vs forced CPU)",
+          "raw_embedding_max_abs_diff": 0.0,
+          "normalized_embedding_max_abs_diff": 0.0,
+          "score_vector_max_abs_diff": 0.0,
+          "max_similarity_a": 0.9093573093414307,
+          "max_similarity_b": 0.9093573093414307,
+          "max_similarity_abs_diff": 0.0,
+          "top1_a": 28,
+          "top1_b": 28,
+          "top1_agree": true,
+          "gate_reject_a": false,
+          "gate_reject_b": false,
+          "gate_agree": true
+        }
+      }
+    }
+  ],
+  "channel_consistency_evidence": {
+    "outlier_top_divergent_channel": 519,
+    "control_top_divergent_channels": [
+      801,
+      125,
+      49
+    ],
+    "outlier_channel_also_top_for_n_controls": 0,
+    "note": "Reported as evidence only. A single index matching (or not matching) across 4 images does not by itself establish an image-driven or channel-driven cause; see Section 2 isolations and Section 4/5 for the determinism and CUDA-control evidence needed to narrow further."
+  },
+  "section3_ort_provider_evidence": {
+    "registered_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "node_event_count_by_provider": {
+      "CPUExecutionProvider": 3064
+    },
+    "nodes_without_provider_field": 0,
+    "any_node_executed_outside_cpu": false,
+    "non_cpu_nodes": [],
+    "profile_file_path": "C:\\dev\\antid\\training\\artifacts\\parity_diag_profile_2026-08-23_14-01-15_886.json",
+    "schema_note": "ORT's profiling trace exposes args.provider per Node-category event; this was usable and is not an inference from session.get_providers()."
+  },
+  "section4_determinism": {
+    "repeats": 20,
+    "max_within_process_divergence": {
+      "pytorch_cuda": 0.0,
+      "onnx_cpu_default": 0.0,
+      "onnx_cpu_noopt": 0.0,
+      "onnx_cpu_1thread": 0.0
+    },
+    "fresh_process": {
+      "pytorch_cuda": {
+        "n_runs": 5,
+        "identical_embedding_bytes_across_runs": true,
+        "n_distinct_embedding_hashes": 1,
+        "max_similarity_spread": 0.0,
+        "identical_top1_across_runs": true,
+        "distinct_top1_values": [
+          4
+        ],
+        "identical_gate_decision_across_runs": true
+      },
+      "onnx_cpu": {
+        "n_runs": 5,
+        "identical_embedding_bytes_across_runs": true,
+        "n_distinct_embedding_hashes": 1,
+        "max_similarity_spread": 0.0,
+        "identical_top1_across_runs": true,
+        "distinct_top1_values": [
+          45
+        ],
+        "identical_gate_decision_across_runs": true
+      }
+    }
+  },
+  "section5_cuda_numerical_controls": {
+    "settings_before": {
+      "cudnn_deterministic": false,
+      "cudnn_benchmark": false,
+      "cudnn_allow_tf32": true,
+      "cuda_matmul_allow_tf32": false,
+      "float32_matmul_precision": "highest",
+      "autocast_enabled_cuda": false
+    },
+    "settings_after_restore": {
+      "cudnn_deterministic": false,
+      "cudnn_benchmark": false,
+      "cudnn_allow_tf32": true,
+      "cuda_matmul_allow_tf32": false,
+      "float32_matmul_precision": "highest",
+      "autocast_enabled_cuda": false
+    },
+    "settings_restored_correctly": true,
+    "controlled_settings_applied": {
+      "cudnn_deterministic": true,
+      "cudnn_benchmark": false,
+      "cudnn_allow_tf32": false,
+      "cuda_matmul_allow_tf32": false,
+      "float32_matmul_precision": "highest",
+      "autocast": "disabled (was already disabled)"
+    },
+    "per_image": {
+      "outlier": {
+        "l2_norm_controlled_cuda": 121.11215918881835,
+        "l2_norm_pytorch_cpu": 121.13379124888455,
+        "raw_abs_diff_controlled_cuda_vs_pytorch_cpu": 0.005123138427734375,
+        "l2_norm_default_cuda_recomputed": 70.97987209730236,
+        "raw_abs_diff_controlled_cuda_vs_default_cuda_recomputed": 9.77066707611084
+      },
+      "control_close_to_0.60": {
+        "l2_norm_controlled_cuda": 17.182677989058575,
+        "l2_norm_pytorch_cpu": 17.182676583237978,
+        "raw_abs_diff_controlled_cuda_vs_pytorch_cpu": 2.86102294921875e-06,
+        "l2_norm_default_cuda_recomputed": 17.180008403974334,
+        "raw_abs_diff_controlled_cuda_vs_default_cuda_recomputed": 0.003773033618927002
+      },
+      "control_typical_low": {
+        "l2_norm_controlled_cuda": 17.307608755323972,
+        "l2_norm_pytorch_cpu": 17.307613066749916,
+        "raw_abs_diff_controlled_cuda_vs_pytorch_cpu": 3.2186508178710938e-06,
+        "l2_norm_default_cuda_recomputed": 17.312701327237864,
+        "raw_abs_diff_controlled_cuda_vs_default_cuda_recomputed": 0.0030473172664642334
+      },
+      "control_typical_high": {
+        "l2_norm_controlled_cuda": 17.675175206832503,
+        "l2_norm_pytorch_cpu": 17.675180106777677,
+        "raw_abs_diff_controlled_cuda_vs_pytorch_cpu": 1.9073486328125e-06,
+        "l2_norm_default_cuda_recomputed": 17.681869926307755,
+        "raw_abs_diff_controlled_cuda_vs_default_cuda_recomputed": 0.002990126609802246
+      }
+    },
+    "note": "Default-CUDA embeddings for this comparison were recomputed AFTER restoring global settings (identical config to the original Stage A/B run), since PyTorch global backend flags cannot be un-applied retroactively to an embedding already computed under different settings. Section 4's within-process repeat already characterizes default-settings run-to-run stability independently."
+  },
+  "structural_verification": {
+    "n_diagnostic_images": 4,
+    "cpu_execution_provider_confirmed_all_forced_sessions": true,
+    "cuda_available": true,
+    "failures": []
+  }
+}

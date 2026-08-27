@@ -2,6 +2,7 @@ torch>=2.2
 torchvision>=0.17
 timm>=1.0
 onnx>=1.16
+onnxruntime>=1.20   # required by inference_policy_generator.py (CPU-only parity/policy checks)
 numpy>=1.26
 pillow>=10.0
 pyyaml>=6.0

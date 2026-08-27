@@ -87,6 +87,60 @@ supported species as their closest match. **Not implemented in `api/` or
 `mobile/` — this is a validated candidate, not a shipped feature**, and 0.60
 must not be re-tuned against unknown_test_v1's results.
 
+## Parity evidence and limitations
+
+Three scripts investigated whether the serving path (ONNX, CPU) produces the
+same results as the training/evaluation path (PyTorch, CUDA, batch 32) used
+to select and validate the 0.60 abstention threshold above:
+`parity_check.py`, `parity_diagnostic.py`, `parity_flag_ablation.py`, writing
+`parity_report.json`, `parity_diagnostic.json`, `parity_flag_ablation.json`
+respectively. **All six files are frozen and were not rerun for this
+release.** Their exact sha256 hashes, recorded here so any future diff is
+detectable:
+
+    training/parity_check.py                    2ae11808a6c557a3a0cd283799bd4b5cbaf60e379e4bdf626bda93b0a080af0a
+    training/parity_diagnostic.py                b4e3501bedf2e0a907bbf79d6bb5775ffc61ace92430098c19304b2753cdd335
+    training/parity_flag_ablation.py             f719fe2c53482ddd3cb09fce773f18b2907375bb1e7ef5a6cc4ee7d18bc640ce
+    training/artifacts/parity_report.json        dfe6030f1b8b7399923064a182dc0212963526322225465ca0f4c018892d245b
+    training/artifacts/parity_diagnostic.json    59c9818b852a1dc53a5876b9aeb2634eea6e4d1cd92c82783d3f2a955dc30335
+    training/artifacts/parity_flag_ablation.json 9be162144afadaf00770330ca4f2e26b45f605b95a06ecd1bfef1dfeb143acf6
+
+Each report names its associated script, and the file timestamps are
+consistent with that association, but no report embeds a hash of the script
+bytes. **Treat this as contemporaneous preserved provenance, not
+cryptographic proof that these exact script bytes produced the reports.**
+
+**These scripts must not be reused to produce new evidence** until the
+deferred audit items in the repository root's `TODO.md` are fixed. A future
+parity run must write versioned `v2` reports (e.g. `parity_report_v2.json`)
+rather than overwrite these frozen `v1` files.
+
+Known limitations of the frozen evidence, carried forward rather than
+resolved:
+
+- `parity_flag_ablation.json`'s `part_b_cross_check_vs_parity_report
+  .max_diff_reference_path` is **0.0401538908**, even though that report's own
+  note expected an exact reproduction of `parity_report.json`'s reference
+  path. `parity_flag_ablation.json`'s top-level `warnings` list is **empty**
+  — that emptiness must not be read as resolving this discrepancy; it simply
+  means the script's own warning checks didn't happen to flag it.
+- Because of the above, `calibration_mirror_cuda_batch32` (the PyTorch-CUDA
+  path used throughout `parity_flag_ablation.json`) is a **diagnostic
+  reproduction** of the historical calibration/Phase C evaluator, not an
+  exact byte-for-byte replay of its entire scoring execution.
+- `exploratory_spearman_norm_vs_divergence.spearman_rho` ≈ **-0.107** is weak
+  exploratory evidence (explicitly labeled `EXPLORATORY ONLY` in the report)
+  and supports no causal or population claim about embedding norm predicting
+  divergence.
+- The 200-image stratified sample (4 images/species × 50 species) used
+  throughout is diagnostic evidence about this fixed sample, not a
+  population bound over unseen images.
+- The measured, production-relevant result that stands despite the caveats
+  above: **0/200 gate disagreements** between the `calibration_mirror_cuda_batch32`
+  path and the production ONNX-CPU path (`part_b_pairwise_distributions
+  .calibration_mirror_cuda_batch32__vs__production_onnx_cpu_batch1
+  .gate_disagreement_count`).
+
 ## Historical number — do not treat as reproducible
 
 At the end of the original training run, this model measured:
