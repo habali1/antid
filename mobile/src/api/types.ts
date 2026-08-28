@@ -14,6 +14,11 @@ export interface IdentificationResponse {
   results: IdentificationResult[];
   inference_ms: number;
   geo_filtered: boolean;
+  // Optional during rollout: an older API may omit both. LoadingScreen
+  // normalizes an absent or malformed gate response to inactive/null so the
+  // client never implies that an unverified match is reliable.
+  gate_active?: boolean;
+  low_confidence?: boolean | null;
 }
 
 export interface Species {
@@ -31,6 +36,8 @@ export type RootStackParamList = {
     results: IdentificationResult[];
     inferenceMs: number;
     geoFiltered: boolean;
+    gateActive: boolean;
+    lowConfidence: boolean | null;
   };
   SpeciesDetail: {
     taxon_id: number | null;

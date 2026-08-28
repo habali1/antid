@@ -83,9 +83,10 @@ unknown-species detector.** It measurably improves known-species accuracy
 among what it accepts (69.8% → 85.5%) and rejects incorrect predictions ~4x
 more often than correct ones — but 91/200 out-of-scope ant photographs (45.5%)
 in the independent test still pass the gate and receive one of the 50
-supported species as their closest match. **Not implemented in `api/` or
-`mobile/` — this is a validated candidate, not a shipped feature**, and 0.60
-must not be re-tuned against unknown_test_v1's results.
+supported species as their closest match. It is now implemented as an optional,
+hash-bound serving policy and surfaced by the mobile client. **This remains a
+confidence gate, not an unknown-species detector**, and 0.60 must not be
+re-tuned against unknown_test_v1's results.
 
 ## Parity evidence and limitations
 
@@ -160,16 +161,24 @@ actually replaces it.
     prototypes.npy          (num_classes, 1792) unit-norm mean train embeddings
     taxonomy.json           class_idx -> {species_name, common_name, taxon_id, slug}
     geo_index.json          {cell_size_deg, cells: {slug: [[lat_cell, lon_cell], ...]}}
+    inference_policy.json   optional hash-bound confidence-gate policy
     eval.json               historical top-1/top-3, overall and per species (see above)
     val_split.json          the pinned held-out set ({slug}/{photo_id} keys) -- did not
                             exist for this run; present for future retrains
 
-**Serving needs exactly three of these: `backbone.onnx`, `prototypes.npy`, and
-`taxonomy.json`.** `model.pth` is a *training* checkpoint — the full model
-including the classifier head that gets discarded at export time; the API
-(`api/inference.py`) never loads it and doesn't need it present.
+**Serving has three mandatory model artifacts: `backbone.onnx`,
+`prototypes.npy`, and `taxonomy.json`.** `model.pth` is a *training* checkpoint
+— the full model including the classifier head that gets discarded at export
+time; the API (`api/inference.py`) never loads it and doesn't need it present.
 `geo_index.json` is optional and enables geo re-ranking; the API reports
-`geo_index_loaded: false` without it.
+`geo_index_loaded: false` plus a reason when it is unavailable or unusable.
+`inference_policy.json` is also optional. It activates the selective confidence
+gate only when its schema, hashes of all three mandatory artifacts,
+preprocessing contract, and CPU-only provider policy verify; it deliberately
+does not bind the independently refreshable geo index. If the policy is absent
+or invalid, closest-match inference remains available with
+`gate_active: false` and `low_confidence: null`, while `/health` reports
+`inference_policy_loaded: false` and `inference_policy_reason`.
 
 Row order in `prototypes.npy` **is** the class index, and must match
 `taxonomy.json` — `AntIdentifier.__init__` raises on a length mismatch, but a

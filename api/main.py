@@ -5,7 +5,7 @@ Run:
     uvicorn main:app --reload --port 8000
 
 Endpoints:
-    GET  /health                      -> status + species_count + geo_index_loaded
+    GET  /health                      -> runtime + policy/geo functional status
     GET  /species                     -> all known species
     POST /identify?lat=&lon=          -> top-3 results (lat/lon optional)
 """
@@ -17,9 +17,9 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, UnidentifiedImageError
 
-from inference import AntIdentifier
+from inference import AntIdentifier, InferenceError
 
-app = FastAPI(title="AntID", version="1.1.0")
+app = FastAPI(title="AntID", version="1.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -38,6 +38,9 @@ def health() -> dict:
         "status": "ok",
         "species_count": identifier.species_count,
         "geo_index_loaded": identifier.geo_index_loaded,
+        "geo_index_reason": identifier.geo_index_reason,
+        "inference_policy_loaded": identifier.inference_policy_loaded,
+        "inference_policy_reason": identifier.inference_policy_reason,
     }
 
 
@@ -65,7 +68,10 @@ async def identify(
     # If only one of lat/lon arrives, ignore location entirely.
     if (lat is None) != (lon is None):
         lat = lon = None
-    return identifier.identify(img, lat=lat, lon=lon)
+    try:
+        return identifier.identify(img, lat=lat, lon=lon)
+    except InferenceError as exc:
+        raise HTTPException(status_code=500, detail="Inference failed.") from exc
 
 
 if __name__ == "__main__":

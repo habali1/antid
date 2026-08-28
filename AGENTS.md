@@ -17,9 +17,9 @@ handful of artifact files — not through shared code (the one exception:
 
 Almost every non-obvious bug in this codebase comes from breaking one of these.
 
-**1. The artifact interface (training → serving).** Training emits exactly three
-required files, and the API consumes exactly those three — and *only* those
-three; `model.pth` is a training checkpoint (full model incl. the discarded
+**1. The artifact interface (training → serving).** Training emits three
+mandatory model files, and the API cannot start without all three;
+`model.pth` is a training checkpoint (full model incl. the discarded
 classifier head) that `api/inference.py` never loads:
 - `backbone.onnx` — input `"input"` `(batch,3,380,380)` float32 → output
   `"embedding"` `(batch,1792)`, opset 17, dynamic batch.
@@ -30,10 +30,22 @@ classifier head) that `api/inference.py` never loads:
   raises. Backfill it without retraining via `training/rebuild_taxonomy.py`
   (`--fetch-common-names` pulls common names from the iNat API); it refuses to
   write if slug ordering would change.
-- `geo_index.json` (optional 4th) — `{cell_size_deg, cells: {slug: [[lat,lon],…]}}`.
+- `geo_index.json` (optional sidecar) —
+  `{cell_size_deg, cells: {slug: [[lat,lon],…]}}`.
+- `inference_policy.json` (optional, hash-bound sidecar) — activates the
+  selective confidence gate only when its schema, the live hashes of the three
+  mandatory artifacts, preprocessing contract, and CPU-only provider policy
+  all verify. It intentionally does not bind `geo_index.json`.
 
-Two more files live alongside these but are **not** part of the serving
-contract — training/eval bookkeeping only:
+A missing or invalid optional policy never prevents closest-match inference:
+the response carries `gate_active: false` and `low_confidence: null`, and
+`/health` exposes `inference_policy_loaded` plus `inference_policy_reason`.
+When active, the gate compares the raw, unrounded, pre-geo maximum cosine with
+the frozen 0.60 threshold. It is a validated confidence/abstention gate,
+**not** an unknown-species detector; roughly 45.5% of independently tested
+out-of-scope ant photographs still passed it.
+
+Training/eval bookkeeping files that are **not** part of the serving contract:
 - `val_split.json` — the pinned held-out set for *this training run*, written
   by `train.py` and read by `evaluate.py`. Without it the val split is only
   implied by the manifest's split column and row order, both of which are
@@ -82,9 +94,10 @@ auto-emits it when the image manifest carries coordinates, or
 
 ## Commands
 
-There is **no unit-test runner** (no pytest/jest). "Tests" are: the training
-smoke run, `tsc --noEmit`, the ONNX checker inside `export.py`, and
-`evaluate.py`'s serving-mirror metrics. Verify changes with those.
+There is **no single unit-test runner** (no pytest/jest). Checks include the
+training smoke run, the policy generator/API `unittest` scripts, `tsc
+--noEmit`, the ONNX checker inside `export.py`, and `evaluate.py`'s
+serving-mirror metrics. Verify changes with the checks relevant to them.
 
 **Setup (once):**
 ```bash
@@ -116,6 +129,7 @@ python evaluate.py                                     # top-1/top-3 under cosin
 python evaluate.py --geo                               # + geo re-ranking, side by side
 python evaluate.py --geo --geo-source train            # leak-free geo index (train split only)
 python eval_benchmark.py                                # the reproducible baseline -- see below
+python test_policy_generator.py                         # policy evidence/schema/generator tests
 ```
 CPU smoke run that exercises the whole training→artifact path in ~2 min (set
 `LOCAL_DATA_DIR` to any `{slug}/{img}.jpg` folder first):
@@ -148,10 +162,17 @@ candidates during development — tune against a freshly pinned
 **API** (`cd api`, `pip install -r requirements.txt`):
 ```bash
 uvicorn main:app --reload --port 8000                 # expects ../training/artifacts/ (override with ARTIFACTS_DIR)
+python test_inference_policy.py                       # fail-safe policy loader tests
+python test_inference.py                              # inference/gate/geo contract tests
+python test_main.py                                   # /health + inference-error contract tests
 ```
 Artifacts load once at startup; missing artifacts crash the process by design.
 Endpoints: `GET /health`, `GET /species`, `POST /identify?lat=&lon=` (multipart
-`file`, lat/lon optional).
+`file`, lat/lon optional). Missing mandatory model artifacts crash startup;
+missing or invalid optional sidecars disable only their feature. `/health`
+reports functional geo/policy loaded flags and reason strings. `/identify`
+returns `gate_active` and nullable `low_confidence` in addition to the top-3;
+inactive policy state is `false`/`null`, never a false assurance.
 
 **Mobile** (`cd mobile`):
 ```bash

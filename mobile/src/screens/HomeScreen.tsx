@@ -66,10 +66,10 @@ export default function HomeScreen({ navigation }: Props): React.JSX.Element {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>AntID</Text>
-        <Text style={styles.subtitle}>Identify an ant from a photo</Text>
+        <Text style={styles.subtitle}>Find the closest matches for an ant photo</Text>
         <Text style={styles.scopeNote}>
-          Currently compares against 50 supported ant species. Other species
-          may still receive a closest match.
+          Currently compares photos with 50 supported ant species. Other
+          species may still receive a supported-species closest match.
         </Text>
       </View>
 

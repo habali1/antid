@@ -35,6 +35,12 @@ VALID_DECISION = {
     "normal_results_if": {"comparison": "greater_than_or_equal", "threshold": 0.6},
     "equal_threshold_action": "normal_results", "non_finite_action": "request_error",
 }
+VALID_RULE = {
+    "operator_verbatim": "max_sim < value",
+    "operator_normalized": {"comparison": "strict_less_than"},
+    "signal": "raw max cosine similarity before geo re-ranking",
+    "value": 0.6,
+}
 
 
 # ============================================================= unit tests
@@ -94,7 +100,8 @@ class TestValidateNeverRaises(unittest.TestCase):
     @staticmethod
     def _valid_policy():
         content = {
-            "decision": VALID_DECISION,
+            "rule": json.loads(json.dumps(VALID_RULE)),
+            "decision": json.loads(json.dumps(VALID_DECISION)),
             "artifact_hashes": {"backbone.onnx": "a" * 64, "prototypes.npy": "b" * 64, "taxonomy.json": "c" * 64},
             "provider_policy": {"providers": ["CPUExecutionProvider"], "exclusive": True},
             "preprocessing": {"contract": {
@@ -114,6 +121,35 @@ class TestValidateNeverRaises(unittest.TestCase):
         policy["content_sha256"] = "0" * 64
         errs = schema.validate(policy)
         self.assertTrue(any("content_sha256 mismatch" in e for e in errs))
+
+    def test_rule_and_decision_signal_encodings_are_enforced(self):
+        mutations = (
+            ("operator_verbatim", lambda c: c["rule"].__setitem__("operator_verbatim", "max_sim <= value")),
+            ("operator_normalized", lambda c: c["rule"].__setitem__(
+                "operator_normalized", {"comparison": "less_than_or_equal"})),
+            ("rule.signal", lambda c: c["rule"].__setitem__("signal", "post-geo score")),
+            ("rule.value", lambda c: c["rule"].__setitem__("value", 0.55)),
+            ("frozen threshold", lambda c: (
+                c["rule"].__setitem__("value", 0.59995),
+                c["decision"]["low_confidence_if"].__setitem__("threshold", 0.59995),
+                c["decision"]["normal_results_if"].__setitem__("threshold", 0.59995),
+            )),
+            ("rule.value", lambda c: c["rule"].__setitem__("value", True)),
+            ("low_confidence_if.signal", lambda c: c["decision"]["low_confidence_if"].__setitem__(
+                "signal", "rounded_or_post_geo")),
+        )
+        for expected_error, mutate_content in mutations:
+            with self.subTest(expected_error=expected_error):
+                policy = self._valid_policy()
+                mutate_content(policy["content"])
+                policy["content_sha256"] = schema.compute_content_sha256(
+                    policy["policy_schema_version"], policy["content"])
+                errors = schema.validate(policy)
+                self.assertTrue(any(expected_error in e for e in errors), errors)
+
+    def test_training_and_api_schema_copies_are_byte_identical(self):
+        api_copy = HERE.parent / "api" / "policy_schema.py"
+        self.assertEqual((HERE / "policy_schema.py").read_bytes(), api_copy.read_bytes())
 
     def test_schema_version_type_strictness(self):
         # 1. start from a known-valid policy
@@ -342,10 +378,12 @@ class TestGeneratorIntegration(unittest.TestCase):
                      "data.py", "config.yaml", "requirements.txt", "model.py"):
             shutil.copy(HERE / name, scratch_training / name)
         corrupted = (HERE.parent / "api" / "inference.py").read_text().replace(
-            "MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)",
-            "MEAN = np.array([0.400, 0.400, 0.400], dtype=np.float32)")
+            "NORMALIZE_MEAN = (0.485, 0.456, 0.406)",
+            "NORMALIZE_MEAN = (0.400, 0.400, 0.400)")
         self.assertNotEqual(corrupted, (HERE.parent / "api" / "inference.py").read_text())
         (scratch_api / "inference.py").write_text(corrupted)
+        for name in ("inference_policy.py", "policy_schema.py"):
+            shutil.copy(HERE.parent / "api" / name, scratch_api / name)
         r = run_gen(s, script=str(scratch_training / "inference_policy_generator.py"))
         self.assertNotEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("nonzero divergence", r.stderr)

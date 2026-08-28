@@ -33,7 +33,14 @@ export default function ResultsScreen({
   route,
   navigation,
 }: Props): React.JSX.Element {
-  const { imageUri, results, inferenceMs, geoFiltered } = route.params;
+  const {
+    imageUri,
+    results,
+    inferenceMs,
+    geoFiltered,
+    gateActive,
+    lowConfidence,
+  } = route.params;
   const { height: windowHeight } = useWindowDimensions();
   const [aspect, setAspect] = useState(DEFAULT_ASPECT);
 
@@ -92,6 +99,18 @@ export default function ResultsScreen({
           </View>
         )}
 
+        {gateActive === true && lowConfidence === true && (
+          <View style={styles.lowConfidenceBanner}>
+            <Text style={styles.lowConfidenceTitle}>No reliable match</Text>
+            <Text style={styles.lowConfidenceText}>
+              This may be a species outside the 50 supported species, or the
+              photo may be too distant, blurry, or unclear. Try a closer,
+              clearer photo. The results below are possible matches, not an
+              identification.
+            </Text>
+          </View>
+        )}
+
         <Text style={styles.sectionHeading}>Closest matches</Text>
         <Text style={styles.sectionCaption}>
           Compared with 50 supported species. Match scores show visual
@@ -142,6 +161,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   geoBannerText: { color: '#7FD7E0', fontSize: 13, fontWeight: '500' },
+  lowConfidenceBanner: {
+    backgroundColor: '#332A16',
+    borderColor: '#9C7930',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+  },
+  lowConfidenceTitle: {
+    color: '#F5D88B',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 5,
+  },
+  lowConfidenceText: { color: '#E8DDBF', fontSize: 13, lineHeight: 18 },
   button: {
     backgroundColor: '#3DD68C',
     margin: 20,

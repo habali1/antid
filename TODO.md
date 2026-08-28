@@ -39,8 +39,3 @@ bytes preserved alongside those reports:
 **All of the above must be fixed before any future parity run.** A future
 run must write versioned `v2` reports (e.g. `parity_report_v2.json`) rather
 than overwrite the frozen `v1` reports listed above.
-
-## Task 4
-
-- Copy `training/policy_schema.py` to `api/policy_schema.py` verbatim; add a
-  byte-identity test.

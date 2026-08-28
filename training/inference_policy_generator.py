@@ -3,7 +3,7 @@
 
 Thin orchestrator: evidence loading/cross-checking lives in
 policy_evidence.py, schema/decision semantics live in policy_schema.py
-(shared with the future Task 4 loader). Fails closed -- on any problem,
+(duplicated byte-for-byte in the API-local runtime loader). Fails closed -- on any problem,
 nothing is written -- and self-validates before and after writing.
 """
 from __future__ import annotations
@@ -15,17 +15,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "api"))
+sys.path.insert(0, str(HERE))  # training-local policy_schema must win
 
 import policy_schema as schema
 import policy_evidence as ev
 
-GENERATOR_VERSION = "3.0.0"
+GENERATOR_VERSION = "4.0.0"
 SEQUENCING_NOTE = (
     "api/inference.py's source hash recorded in preprocessing.source_hashes is diagnostic provenance "
-    "only, not a binding constraint -- Task 4 will modify that file to add the gate. This policy must "
-    "be regenerated at the end of Task 4, against the post-Task-4 source and artifacts."
+    "only, not a binding constraint. The API now ships the confidence gate and reads this policy from "
+    "the artifact directory. Regenerate the policy after serving-code or bound-artifact changes so "
+    "the recorded provenance describes the runtime being shipped."
 )
 
 
@@ -171,8 +172,9 @@ def main() -> int:
         "runtime_comparison_semantics": {
             "widening": "raw float32 max similarity is widened to float64 before comparison, without rounding",
             "non_finite_handling": "non-finite similarity (NaN/Inf) is a request error; see decision.non_finite_action",
-            "not_yet_implemented": "Documents intended runtime semantics for a future API gate; not "
-                                   "implemented in api/ as of this policy generation.",
+            "implementation": "Implemented by the API on the raw, unrounded, pre-geo maximum cosine. "
+                              "If this optional policy is absent or invalid, the API keeps closest-match "
+                              "inference available with gate_active=false and low_confidence=null.",
         },
         "validated_environment": validated_environment,
         "not_validated_for": not_validated_for,

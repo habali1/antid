@@ -1,8 +1,9 @@
 # AntID
 
-**Identify an ant to species from a single photo.** Point a phone at an ant, get
-the three most likely species back with confidence scores — optionally re-ranked
-by where you're standing.
+**Compare an ant photo with supported species.** Point a phone at an ant, get
+the three closest visual matches — optionally re-ranked by where you're
+standing — plus a separately validated low-confidence flag when its hash-bound
+serving policy is active.
 
 AntID is an end-to-end system, not just a model: it scrapes and cleans its own
 training set from public biodiversity data, fine-tunes an EfficientNet-B4
@@ -88,9 +89,10 @@ dropped or backfilled by loosening the freeze criteria.)
 
 **This measures accuracy among the 50 trained species only.** An ant that
 isn't one of them still gets forced into whichever of the 50 scores highest —
-the system has no "none of these" outcome. Nothing in this benchmark, or in
-switching architectures, addresses that; it needs broader species coverage and
-an explicit low-confidence/unknown path, which don't exist yet. See
+the system has no "none of these" outcome. The shipped confidence gate can
+abstain on weaker matches, but it is not an unknown-species detector: 45.5% of
+out-of-scope ant photographs still passed it in the independent test. Broader
+coverage or a genuinely open-set approach is still needed. See
 `data/benchmark_v1/benchmark_v1.json`'s `scope` field for the same caveat
 machine-readable.
 
@@ -155,6 +157,7 @@ Why this is worth the extra machinery:
    │  prototypes.npy   (num_classes, 1792) unit-norm       │
    │  taxonomy.json    class_idx → species metadata        │
    │  geo_index.json   slug → occupied 1° grid cells       │  ← optional
+   │  inference_policy.json  hash-bound confidence gate     │  ← optional
    └───────────────────────────┬──────────────────────────┘
                                ▼
               FastAPI  ·  POST /identify?lat=&lon=  ·  ONNX Runtime
@@ -169,8 +172,8 @@ PostgreSQL, a cloud bucket, and the artifact files above.
 
 ### Contract 1 — the artifact interface
 
-Training emits exactly these files and serving consumes exactly these files.
-That's the whole API between the two halves of the system:
+Training emits three mandatory model artifacts and two independently optional
+sidecars. Together they are the file-level API between the two halves:
 
 | File | Shape / schema | Notes |
 |---|---|---|
@@ -178,6 +181,15 @@ That's the whole API between the two halves of the system:
 | `prototypes.npy` | `(num_classes, 1792)`, L2-normalized | **row order == class index** |
 | `taxonomy.json` | `{class_idx: {species_name, common_name, taxon_id, slug}}` | length must equal prototype rows |
 | `geo_index.json` | `{cell_size_deg, cells: {slug: [[lat,lon], …]}}` | optional |
+| `inference_policy.json` | schema-versioned policy + sha256 bindings | optional; enables the confidence gate only when valid |
+
+The API cannot start without the first three files. A missing or invalid
+sidecar disables only its own feature. `inference_policy.json` hash-binds the
+three mandatory artifacts (not the independently refreshable geo index),
+requires CPU-only ONNX execution, and evaluates the raw, unrounded, pre-geo
+maximum cosine. If it cannot be activated, `/identify` returns
+`gate_active: false` and `low_confidence: null`; `/health` reports the policy's
+functional loaded flag and reason.
 
 Class indices are contiguous `0..N-1` **sorted by species slug**, enforced
 identically in the database loader, the local-directory loader, and
@@ -221,6 +233,24 @@ The details that keep this honest:
 Nothing is ever filtered *out* by geography — an off-range species can still win
 on image evidence alone, which matters for the introduced and
 human-transported species that make up much of applied ant identification.
+
+---
+
+## Selective confidence gate
+
+The optional `inference_policy.json` enables a frozen abstention rule:
+`low_confidence` when the raw, unrounded, pre-geo maximum cosine is strictly
+below 0.60. It was selected on `calibration_v1` and evaluated exactly once on
+the species-disjoint `unknown_test_v1`. Among known-species photographs,
+accuracy rose from 69.8% overall to 85.5% among accepted results. But 45.5% of
+out-of-scope ant photographs still passed, so this is a **confidence gate, not
+an unknown-species detector**.
+
+The policy is bound to the exact ONNX backbone, prototypes, and taxonomy and is
+validated only for CPU execution. Missing, malformed, stale, or mismatched
+policy state disables the gate without disabling closest-match inference;
+clients receive `gate_active: false` and `low_confidence: null`, while
+`/health` exposes the reason.
 
 ---
 
@@ -310,8 +340,13 @@ curl -X POST "http://localhost:8000/identify?lat=42.27&lon=-83.07" -F "file=@ant
 ```
 
 `GET /health` · `GET /species` · `POST /identify` (multipart `file`, optional
-`lat`/`lon`). Artifacts load once at startup; missing artifacts crash the
-process deliberately rather than serving a half-initialized model.
+`lat`/`lon`). The three mandatory model artifacts load once at startup;
+missing any of them crashes the process deliberately rather than serving a
+half-initialized model. Optional geo/policy sidecars fail independently.
+`/health` reports `geo_index_loaded`/`geo_index_reason` and
+`inference_policy_loaded`/`inference_policy_reason`. `/identify` adds
+`gate_active` and nullable `low_confidence`; an inactive policy is represented
+as `false`/`null`, never as a reassuring `low_confidence: false`.
 
 ### 4 · Mobile
 ```bash
@@ -336,7 +371,7 @@ Web is a **Metro target**, not a separate build: `metro.config.js` maps bare
 |---|---|
 | Data pipeline | Any machine with network access; no cloud credentials needed for iNat |
 | Training | A real CUDA GPU — EfficientNet-B4 at 380px is not a laptop workload |
-| API | Anywhere the artifacts are present; ONNX Runtime is CPU-fine |
+| API | Anywhere the artifacts are present; ONNX Runtime is explicitly CPU-only for the validated gate |
 | iOS build | macOS + Xcode. Web and Android build anywhere with Node 18+ |
 
 **Requirements:** Python 3.11+ · Node 18+ · PostgreSQL · a GCS or S3 bucket.
@@ -345,8 +380,8 @@ Web is a **Metro target**, not a separate build: `metro.config.js` maps bare
 
 ## Testing
 
-There is no unit-test runner in this project. Correctness is verified by four
-things, and they map onto the failure modes that actually occur here:
+There is no single centralized test runner. Correctness checks map directly
+onto the failure modes that actually occur here:
 
 | Check | Catches |
 |---|---|
@@ -354,6 +389,8 @@ things, and they map onto the failure modes that actually occur here:
 | the ONNX checker inside `export.py` | shape/opset regressions in the exported graph |
 | `python evaluate.py --geo` | preprocessing drift, prototype misalignment, geo-ranking drift |
 | `python eval_benchmark.py` | the reproducible baseline itself — the only number in Results not tied to a training-manifest split |
+| `python training/test_policy_generator.py` | policy evidence, schema, hashing, and generator failure paths |
+| `python api/test_inference_policy.py`, `python api/test_inference.py`, and `python api/test_main.py` | fail-safe policy loading, boundary semantics, geo independence, and API/health response behavior |
 | `npm run typecheck` | client/API contract drift (strict TypeScript) |
 
 Trained weights and datasets are **not** committed — `training/artifacts/` and
@@ -362,7 +399,9 @@ them. The one exception is `data/benchmark_v1/`'s metadata: `benchmark_v1.csv`,
 `benchmark_v1.json`, and `benchmark_v1_eval.json` are force-added despite the
 `data/` ignore rule, because the benchmark's identity — which exact photos,
 what was verified, what the model scored — needs to travel with the repo even
-though the ~1,591 downloaded images themselves don't.
+though the ~1,591 downloaded images themselves don't. The generated
+`inference_policy.json` and frozen parity reports are also force-added as
+provenance artifacts; trained weights remain external.
 
 ### Restoring the benchmark locally
 
@@ -391,21 +430,16 @@ on purpose — it selects a *new* set of candidate observations (for building
 
 ## Limitations
 
-- **50 species out of ~14,000 described, and no reject option.** Coverage is
+- **50 species out of ~14,000 described, and no reliable unknown-species
+  detector.** Coverage is
   skewed toward well-photographed North American, European, and Australian
-  taxa. There's no "none of these" outcome: an ant outside the 50 is always
-  forced into whichever trained class scores highest as its closest match. A
-  better backbone doesn't fix this by itself — closing the gap needs both
-  broader species coverage and a genuine low-confidence/unknown path (this
-  benchmark can't measure that; it's built entirely from the 50 known
-  species, by construction). A candidate abstention rule has been measured
-  on a dedicated out-of-scope test set (not this one) and independently
-  validated as a selective confidence gate — it improves accuracy among
-  what it accepts, but still allows roughly half of out-of-scope ant
-  photographs to pass the gate and receive a supported-species closest
-  match, so it doesn't close this gap by itself either.
-  See `training/artifacts/README.md` for the full result; not implemented
-  in the API or app yet.
+  taxa. The shipped confidence gate can withhold a reliable-match claim, but
+  it does not produce a species-independent "none of these" classification.
+  It improves accuracy among accepted known-species matches, yet still allows
+  roughly half of out-of-scope ant photographs to pass and receive a supported-
+  species closest match. A better backbone does not fix this by itself;
+  broader coverage or an open-set approach is still required. See
+  `training/artifacts/README.md` for the full independent validation.
 - **Confusable small dark ants are near the resolution limit of the input.**
   Several genera cannot be separated to species from a field photo at all; a
   genus-level answer would be more honest for those, and grouping the weakest

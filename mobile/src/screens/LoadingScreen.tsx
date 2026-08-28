@@ -51,6 +51,16 @@ export default function LoadingScreen({
           results: resp.results,
           inferenceMs: resp.inference_ms,
           geoFiltered: resp.geo_filtered,
+          // Fail silent if an older server omits the policy fields or returns
+          // an unexpected value. Only explicit booleans can activate a gate
+          // decision in the results screen.
+          gateActive: resp.gate_active === true,
+          lowConfidence:
+            resp.low_confidence === true
+              ? true
+              : resp.low_confidence === false
+                ? false
+                : null,
         });
       })
       .catch((err: unknown) => {
@@ -89,7 +99,7 @@ export default function LoadingScreen({
       <Image source={{ uri: imageUri }} style={styles.thumb} />
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#3DD68C" />
-        <Text style={styles.identifying}>Identifying…</Text>
+        <Text style={styles.identifying}>Finding closest matches…</Text>
         <Text style={styles.subtle}>
           {hasLocation ? '📍 Using your location' : 'No location data'}
         </Text>
