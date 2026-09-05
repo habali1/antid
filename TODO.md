@@ -8,8 +8,9 @@
   and [public aggregate-count snapshot](docs/plans/northeast-counts-2026-09-05.json).
 - Train-only geo export, stale-sidecar replacement, and pinned train+val
   membership are implemented and covered by focused synthetic tests.
-- Next: candidate metadata/quality and post-exclusion availability review.
-  No training or photo collection has started.
+- Metadata readiness and post-exclusion availability are complete. Next: design
+  the small labeled-photo quality review. No training or photo collection has started.
+- A model trained on CC BY-NC / CC BY-NC-SA imagery inherits the non-commercial restriction. The restriction applies to the trained weights and any derived artifacts (`model.pth`, `backbone.onnx`, `prototypes.npy`), not only to the source images. A full licensing review is mandatory before any commercial use, public deployment, or redistribution of the model artifacts.
 - Keep personal local history and optional accounts on the roadmap. Public
   maps/social sharing remain deferred; no paid infrastructure without approval.
 

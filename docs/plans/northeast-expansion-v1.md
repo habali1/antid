@@ -1,7 +1,8 @@
 # AntID: Northeast coverage expansion v1
 
-Status: scope approved; Milestone 1 implemented and verified; species shortlist
-provisional; no data collection or training started. Prepared 2026-09-05.
+Status: scope and personal/non-commercial license pool approved; Milestone 1 and
+metadata-only Milestone 2A implemented and verified; species shortlist remains
+provisional; no photos downloaded and no training started. Prepared 2026-09-05.
 
 ## Decision and boundaries
 
@@ -138,9 +139,28 @@ the current live geo index, or regenerate the current policy for this work.
 
 ### 2. Audit candidate data, then freeze a versioned dataset
 
-First collect **metadata only** for the provisional IDs. Resolve exact active
-taxon IDs and lineage; never silently accept a fuzzy name match. Record current
-genus IDs and names rather than inferring taxonomic certainty from string prefixes.
+Metadata-only readiness audit completed 2026-09-05. See
+[`northeast-readiness-v1.md`](northeast-readiness-v1.md) and the ignored
+row-level snapshot under `data/northeast_readiness_v1/`. Across 14,431 unique
+observations, only 13 matched an existing training/frozen-set photo or
+observation. Exact active species and genus ancestry were verified. Under the
+predeclared 230-observation quota, 1/15 candidates is numerically ready using
+CC0/CC BY/CC BY-SA alone. The approved 2026-09-05 personal/non-commercial pool
+also admits CC BY-NC and CC BY-NC-SA, under which all 15 are numerically ready.
+No image-quality review, byte-hash check, perceptual-duplicate check, split
+assignment, or species freeze has occurred.
+
+The previously agreed **150-image admission floor is not currently binding**:
+each of the 15 candidates clears the larger 230-observation quota under the
+approved pool. Keep the 150 floor as a fail-closed eligibility rule if a current
+candidate is later dropped or a reserve is proposed as a replacement; evaluate
+the replacement before it enters the catalog, never after looking at model or
+test scores.
+
+Audit methodology retained for reproducibility: collect **metadata only** for
+the provisional IDs; resolve exact active taxon IDs and lineage without a fuzzy
+name fallback; record current genus IDs and names rather than inferring taxonomy
+from string prefixes.
 
 For each candidate, report research-grade observation counts remaining after
 all old-data exclusions, distinct observers, geographic spread, photo-license
@@ -159,8 +179,11 @@ Once membership and collection budget are approved:
 
 - Use a versioned manifest, not the existing scraper's completion-order split.
   Include observation ID/UUID, photo ID, taxon and genus IDs, source URL,
-  attribution/license, observed/created timestamps, optional coordinates,
-  file hash, and split membership. Preserve private/obscured location handling.
+  `photo_license`, `photo_attribution`, observed/created timestamps, optional
+  coordinates, file hash, and split membership. Preserve private/obscured
+  location handling.
+  Fail closed if license or attribution is blank for a selected expansion row;
+  never attempt to reconstruct either field after downloading.
 - Prefer one photo per observation. Group any additional photos from the same
   observation in one split; check hashes across splits and against existing
   training, benchmark, calibration, unknown-test, and duplicate-exclusion records.
@@ -259,16 +282,8 @@ hosting, and any recurring cost before enabling those features.
 
 ## Next bounded terminal task
 
-Begin **Milestone 2A: a metadata-only readiness audit** for the 15 provisional
-taxon IDs. Inspect current scripts and frozen exclusion sources first. Query
-public iNaturalist metadata at the recommended request pace; do not download
-photos. For each candidate, verify exact active species/genus lineage and report
-the observation/photo candidates remaining after every available training,
-benchmark, calibration, unknown-test, and duplicate exclusion. Also report
-distinct observers, state coverage, licenses, date coverage, and shortfalls
-against a proposed bounded train/development/final-test quota. Do not choose the
-quota after looking at model scores, do not freeze membership, and do not start
-training. Preserve all current artifacts, policies, frozen datasets/reports, and
-parity scripts. Write a reproducible, versioned metadata report plus its query
-parameters; show the proposed download/disk budget and stop for approval before
-any image download or final species substitution.
+Design a small, balanced labeled-photo review for diagnostic visibility, label
+plausibility, license/attribution completeness, and lookalike risk under the
+approved personal/non-commercial pool. Do not bulk-download images yet. Stop
+again before the bulk image download, final species substitution, or dataset
+freeze.

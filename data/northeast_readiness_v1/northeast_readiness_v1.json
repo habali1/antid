@@ -1,0 +1,1592 @@
+{
+  "budget": {
+    "existing_download_size_sample": {
+      "mean_bytes": 150499,
+      "p95_bytes": 291292,
+      "sample_count": 9989,
+      "source": "existing medium-size training downloads in data/raw and data/raw_wave2"
+    },
+    "existing_mean_kib": 147.0,
+    "existing_p95_kib": 284.5,
+    "max_images": 3450,
+    "paid_service_required": false,
+    "projected_mean_mib": 495.2,
+    "projected_p95_mib": 958.4,
+    "recommended_disk_reservation_gib": 2.0
+  },
+  "candidate_csv": {
+    "contains_image_bytes": false,
+    "path": "data/northeast_readiness_v1/candidates.csv",
+    "rows": 14431,
+    "sha256": "082522f359585db13319378e14a1066c4fb7ffdda98194a9fae829e531cdc5ed"
+  },
+  "counts_snapshot": {
+    "path": "docs/plans/northeast-counts-2026-09-05.json",
+    "sha256": "a64796656a9fe8f59b4259415556b0d15888e4e70830fe8fc11765c3b582feb6"
+  },
+  "eligibility": {
+    "approved_license_codes": [
+      "cc-by",
+      "cc-by-nc",
+      "cc-by-nc-sa",
+      "cc-by-sa",
+      "cc0"
+    ],
+    "approved_policy_effective_date": "2026-09-05",
+    "approved_scope": "personal, non-commercial phase only",
+    "base": [
+      "research grade",
+      "has photos",
+      "not captive",
+      "exact active candidate species"
+    ],
+    "coordinates": "not collected in this metadata audit",
+    "core_license_codes": [
+      "cc-by",
+      "cc-by-sa",
+      "cc0"
+    ],
+    "excluded_license_codes": [
+      "cc-by-nc-nd",
+      "cc-by-nd"
+    ],
+    "one_photo_per_observation": "choose lowest photo ID from best available license tier",
+    "personal_noncommercial_license_codes": [
+      "cc-by",
+      "cc-by-nc",
+      "cc-by-nc-sa",
+      "cc-by-sa",
+      "cc0"
+    ],
+    "unlicensed": "empty photo_license means iNaturalist returned null/no code; preserved as source truth and not eligible"
+  },
+  "exclusions": {
+    "method": "all observation photo IDs plus observation UUID compared with source-specific sets",
+    "not_yet_possible": [
+      "downloaded image SHA-256 comparison",
+      "perceptual/recompressed near-duplicate comparison"
+    ],
+    "required_later": "perform both byte-hash and perceptual near-duplicate checks before freezing any split",
+    "source_files": {
+      "data/benchmark_v1/_training_obs_uuids.json": {
+        "mapped_photo_ids": 9920,
+        "sha256": "e22328188be47cadd7b05a707abda07544f4c7a104115c5d4847667d3d72c8ee",
+        "unique_observation_uuids": 9920,
+        "unmatched_training_photos": 69
+      },
+      "data/benchmark_v1/benchmark_v1.csv": {
+        "rows": 1591,
+        "sha256": "61b3439850da9100b4ae8393f4f9cd90d45b4d5b381f20eaa1ea63d8fb1ec38c",
+        "unique_observation_uuids": 1591,
+        "unique_photo_ids": 1591
+      },
+      "data/calibration_v1/calibration_v1.csv": {
+        "rows": 1005,
+        "sha256": "83a80351f8ac65e89ea6124ac7de6d2cb6a3c68efc1f33eb3ecc2eca8c5f63c0",
+        "unique_observation_uuids": 1005,
+        "unique_photo_ids": 1005
+      },
+      "data/manifest_all.csv": {
+        "rows": 9989,
+        "sha256": "7fd2e01aa164634a4afd8d23283004b7082778b2c95a2fc81b76d9ba350b2211"
+      },
+      "data/raw/manifest_inat.csv": {
+        "rows": 3996,
+        "sha256": "dc74e2376696c813dbebbaaf5340ae7e13ae9b3d9aea45dbde8301a70a084121"
+      },
+      "data/raw_wave2/manifest_inat.csv": {
+        "rows": 5993,
+        "sha256": "b019cfe949affc4acea3f21a87a9f7f425b9fe07b569c382e1b044b0b16c8ab9"
+      },
+      "data/unknown_test_v1/unknown_test_v1.csv": {
+        "rows": 573,
+        "sha256": "b010af9a66db79fd6b40cd808d666f5f6dd5ebe376321c139707d05dd1849b07",
+        "unique_observation_uuids": 573,
+        "unique_photo_ids": 573
+      }
+    },
+    "training_uuid_limitation": "69 historical training photos have no reconstructed parent UUID; protected by photo ID only"
+  },
+  "future_download_manifest_contract": {
+    "provenance_rule": "photo_license and photo_attribution must be copied from the selected candidate row and must never be blank for an admitted download",
+    "required_fields": [
+      "observation_id",
+      "observation_uuid",
+      "photo_id",
+      "taxon_id",
+      "genus_id",
+      "photo_license",
+      "photo_attribution",
+      "photo_url_medium",
+      "sha256",
+      "split"
+    ],
+    "status": "schema requirement only; download manifest does not exist yet"
+  },
+  "global_caveats": [
+    "Research-grade labels are community evidence, not infallible species ground truth.",
+    "Counts measure available iNaturalist metadata, not natural abundance or encounter probability.",
+    "Numeric quota capacity does not assess diagnostic image quality or lookalike label risk.",
+    "API data and taxonomy can change after this dated snapshot.",
+    "No model scores were used to choose candidates, licenses, or quotas."
+  ],
+  "next_gate": "manual labeled-photo review proposal before any image download or species freeze",
+  "purpose": "metadata-only readiness audit; not a frozen dataset or split",
+  "quota": {
+    "capacity_basis": "approved personal/non-commercial license pool",
+    "development": 40,
+    "final_test": 30,
+    "minimum_candidate_floor": 150,
+    "minimum_candidate_floor_status": "not binding: all 15 current candidates clear the 230-observation quota under the approved pool; still required for replacements",
+    "per_species_total": 230,
+    "status": "approved capacity target only; no rows assigned and no membership frozen",
+    "train": 160
+  },
+  "region": {
+    "broome_usage": "diagnostic in the earlier count snapshot only; not added because it is inside NY",
+    "definition": "nine-state U.S. Census Northeast",
+    "state_place_ids": {
+      "CT": 49,
+      "MA": 2,
+      "ME": 17,
+      "NH": 41,
+      "NJ": 51,
+      "NY": 48,
+      "PA": 42,
+      "RI": 8,
+      "VT": 47
+    }
+  },
+  "retrieval": {
+    "api": "https://api.inaturalist.org/v1",
+    "completed_at_utc": "2026-09-05T20:27:48.864672Z",
+    "last_request_at_utc": "2026-09-05T20:27:37.317654Z",
+    "query": {
+      "captive": "false",
+      "order": "asc",
+      "order_by": "id",
+      "page": "1..N until complete",
+      "per_page": 200,
+      "photos": "true",
+      "place_id": "49,17,2,41,8,47,51,48,42",
+      "quality_grade": "research",
+      "taxon_id": "one exact provisional taxon ID per query"
+    },
+    "request_count": 80,
+    "request_interval_seconds": 1.05,
+    "started_at_utc": "2026-09-05T20:16:35.466164Z",
+    "taxon_resolution": "GET /v1/taxa/{comma-separated exact IDs}; exact active species/name and genus ancestor required",
+    "user_agent": "AntID-northeast-readiness/1.0 (educational project)"
+  },
+  "schema_version": 1,
+  "species": [
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        637569,
+        69405
+      ],
+      "approved_quota_capacity": {
+        "available": 2030,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-08-27T07:28:22-04:00",
+      "core_created_at_min": "2015-05-11T20:26:36-04:00",
+      "core_license_eligible_rows": 367,
+      "core_observed_date_max": "2026-08-27",
+      "core_observed_date_min": "2015-05-07",
+      "core_quota_capacity": {
+        "available": 367,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_state_counts": {
+        "CT": 1,
+        "MA": 21,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 48,
+        "NY": 195,
+        "PA": 102,
+        "RI": 0,
+        "VT": 0
+      },
+      "core_states_present": 5,
+      "dated_aggregate_snapshot_count": 2494,
+      "distinct_core_observers": 73,
+      "genus": "Nylanderia",
+      "genus_id": 69405,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 44,
+      "largest_core_observer_share": 0.119891,
+      "live_api_total": 2494,
+      "metadata_rows": 2494,
+      "name": "Nylanderia flavipes",
+      "personal_noncommercial_eligible_rows": 2030,
+      "prior_overlap_by_source": {
+        "calibration_v1": 1
+      },
+      "prior_overlap_rows": 1,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 316,
+        "cc-by-nc": 1637,
+        "cc-by-nc-nd": 26,
+        "cc-by-nc-sa": 26,
+        "cc-by-sa": 4,
+        "cc0": 47,
+        "unlicensed": 438
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 367,
+        "no_derivatives": 26,
+        "personal_noncommercial": 1663,
+        "unlicensed_or_unknown": 438
+      },
+      "source_unlicensed_rows": 438,
+      "source_unlicensed_share": 0.175621,
+      "taxon_id": 372712,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        637569,
+        69086,
+        931956
+      ],
+      "approved_quota_capacity": {
+        "available": 1074,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-09-04T22:01:01-04:00",
+      "core_created_at_min": "2013-05-15T15:50:10-04:00",
+      "core_license_eligible_rows": 193,
+      "core_observed_date_max": "2026-09-04",
+      "core_observed_date_min": "2013-05-12",
+      "core_quota_capacity": {
+        "available": 193,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 123
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 37
+      },
+      "core_state_counts": {
+        "CT": 5,
+        "MA": 44,
+        "ME": 2,
+        "NH": 3,
+        "NJ": 19,
+        "NY": 82,
+        "PA": 32,
+        "RI": 6,
+        "VT": 0
+      },
+      "core_states_present": 8,
+      "dated_aggregate_snapshot_count": 1399,
+      "distinct_core_observers": 75,
+      "genus": "Lasius",
+      "genus_id": 69086,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 18,
+      "largest_core_observer_share": 0.093264,
+      "live_api_total": 1399,
+      "metadata_rows": 1399,
+      "name": "Lasius neoniger",
+      "personal_noncommercial_eligible_rows": 1074,
+      "prior_overlap_by_source": {
+        "calibration_v1": 1
+      },
+      "prior_overlap_rows": 1,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 162,
+        "cc-by-nc": 872,
+        "cc-by-nc-nd": 12,
+        "cc-by-nc-sa": 9,
+        "cc-by-nd": 2,
+        "cc-by-sa": 12,
+        "cc0": 19,
+        "unlicensed": 311
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 193,
+        "no_derivatives": 14,
+        "personal_noncommercial": 881,
+        "unlicensed_or_unknown": 311
+      },
+      "source_unlicensed_rows": 311,
+      "source_unlicensed_share": 0.222302,
+      "taxon_id": 69311,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        637569,
+        69086,
+        1115224
+      ],
+      "approved_quota_capacity": {
+        "available": 1003,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-05-06T00:44:00-04:00",
+      "core_created_at_min": "2016-11-19T23:23:58-05:00",
+      "core_license_eligible_rows": 156,
+      "core_observed_date_max": "2026-04-17",
+      "core_observed_date_min": "2016-01-28",
+      "core_quota_capacity": {
+        "available": 156,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 86
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 74
+      },
+      "core_state_counts": {
+        "CT": 6,
+        "MA": 27,
+        "ME": 0,
+        "NH": 1,
+        "NJ": 23,
+        "NY": 66,
+        "PA": 29,
+        "RI": 2,
+        "VT": 2
+      },
+      "core_states_present": 8,
+      "dated_aggregate_snapshot_count": 1345,
+      "distinct_core_observers": 72,
+      "genus": "Lasius",
+      "genus_id": 69086,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 16,
+      "largest_core_observer_share": 0.102564,
+      "live_api_total": 1345,
+      "metadata_rows": 1345,
+      "name": "Lasius claviger",
+      "personal_noncommercial_eligible_rows": 1003,
+      "prior_overlap_by_source": {},
+      "prior_overlap_rows": 0,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 134,
+        "cc-by-nc": 833,
+        "cc-by-nc-nd": 10,
+        "cc-by-nc-sa": 14,
+        "cc-by-nd": 2,
+        "cc-by-sa": 9,
+        "cc0": 13,
+        "unlicensed": 330
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 156,
+        "no_derivatives": 12,
+        "personal_noncommercial": 847,
+        "unlicensed_or_unknown": 330
+      },
+      "source_unlicensed_rows": 330,
+      "source_unlicensed_share": 0.245353,
+      "taxon_id": 222712,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        334375,
+        62781,
+        519191
+      ],
+      "approved_quota_capacity": {
+        "available": 955,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-08-27T15:46:21-04:00",
+      "core_created_at_min": "2013-04-28T16:57:47-04:00",
+      "core_license_eligible_rows": 174,
+      "core_observed_date_max": "2026-08-27",
+      "core_observed_date_min": "2007-08-02",
+      "core_quota_capacity": {
+        "available": 174,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 104
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 56
+      },
+      "core_state_counts": {
+        "CT": 1,
+        "MA": 9,
+        "ME": 33,
+        "NH": 23,
+        "NJ": 0,
+        "NY": 39,
+        "PA": 7,
+        "RI": 0,
+        "VT": 62
+      },
+      "core_states_present": 7,
+      "dated_aggregate_snapshot_count": 1266,
+      "distinct_core_observers": 80,
+      "genus": "Camponotus",
+      "genus_id": 62781,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 40,
+      "largest_core_observer_share": 0.229885,
+      "live_api_total": 1266,
+      "metadata_rows": 1266,
+      "name": "Camponotus novaeboracensis",
+      "personal_noncommercial_eligible_rows": 955,
+      "prior_overlap_by_source": {
+        "calibration_v1": 1
+      },
+      "prior_overlap_rows": 1,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 139,
+        "cc-by-nc": 754,
+        "cc-by-nc-nd": 18,
+        "cc-by-nc-sa": 27,
+        "cc-by-nd": 2,
+        "cc-by-sa": 7,
+        "cc0": 28,
+        "unlicensed": 291
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 174,
+        "no_derivatives": 20,
+        "personal_noncommercial": 781,
+        "unlicensed_or_unknown": 291
+      },
+      "source_unlicensed_rows": 291,
+      "source_unlicensed_share": 0.229858,
+      "taxon_id": 143252,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        637569,
+        69086,
+        931956
+      ],
+      "approved_quota_capacity": {
+        "available": 798,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-08-07T15:59:50-04:00",
+      "core_created_at_min": "2018-07-14T18:09:44-04:00",
+      "core_license_eligible_rows": 77,
+      "core_observed_date_max": "2026-08-06",
+      "core_observed_date_min": "2017-03-08",
+      "core_quota_capacity": {
+        "available": 77,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 7
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 153
+      },
+      "core_state_counts": {
+        "CT": 0,
+        "MA": 0,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 0,
+        "NY": 77,
+        "PA": 0,
+        "RI": 0,
+        "VT": 0
+      },
+      "core_states_present": 1,
+      "dated_aggregate_snapshot_count": 1042,
+      "distinct_core_observers": 21,
+      "genus": "Lasius",
+      "genus_id": 69086,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 13,
+      "largest_core_observer_share": 0.168831,
+      "live_api_total": 1042,
+      "metadata_rows": 1042,
+      "name": "Lasius emarginatus",
+      "personal_noncommercial_eligible_rows": 798,
+      "prior_overlap_by_source": {
+        "calibration_v1": 2
+      },
+      "prior_overlap_rows": 2,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 61,
+        "cc-by-nc": 715,
+        "cc-by-nc-nd": 6,
+        "cc-by-nc-sa": 8,
+        "cc-by-sa": 6,
+        "cc0": 10,
+        "unlicensed": 236
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 77,
+        "no_derivatives": 6,
+        "personal_noncommercial": 723,
+        "unlicensed_or_unknown": 236
+      },
+      "source_unlicensed_rows": 236,
+      "source_unlicensed_share": 0.226488,
+      "taxon_id": 341143,
+      "warnings": [
+        "core-license pool spans fewer than three Northeast states"
+      ]
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        334375,
+        62781,
+        519191
+      ],
+      "approved_quota_capacity": {
+        "available": 818,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-08-28T18:01:03-04:00",
+      "core_created_at_min": "2017-05-03T20:04:58-04:00",
+      "core_license_eligible_rows": 117,
+      "core_observed_date_max": "2026-08-28",
+      "core_observed_date_min": "2014-08-03",
+      "core_quota_capacity": {
+        "available": 117,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 47
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 113
+      },
+      "core_state_counts": {
+        "CT": 7,
+        "MA": 58,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 14,
+        "NY": 19,
+        "PA": 14,
+        "RI": 3,
+        "VT": 2
+      },
+      "core_states_present": 7,
+      "dated_aggregate_snapshot_count": 1027,
+      "distinct_core_observers": 58,
+      "genus": "Camponotus",
+      "genus_id": 62781,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 14,
+      "largest_core_observer_share": 0.119658,
+      "live_api_total": 1027,
+      "metadata_rows": 1027,
+      "name": "Camponotus americanus",
+      "personal_noncommercial_eligible_rows": 818,
+      "prior_overlap_by_source": {
+        "calibration_v1": 2
+      },
+      "prior_overlap_rows": 2,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 103,
+        "cc-by-nc": 681,
+        "cc-by-nc-nd": 10,
+        "cc-by-nc-sa": 20,
+        "cc-by-nd": 1,
+        "cc-by-sa": 4,
+        "cc0": 10,
+        "unlicensed": 198
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 117,
+        "no_derivatives": 11,
+        "personal_noncommercial": 701,
+        "unlicensed_or_unknown": 198
+      },
+      "source_unlicensed_rows": 198,
+      "source_unlicensed_share": 0.192795,
+      "taxon_id": 215970,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        334375,
+        62781,
+        363598
+      ],
+      "approved_quota_capacity": {
+        "available": 777,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-08-30T22:26:43-04:00",
+      "core_created_at_min": "2015-02-10T18:39:38-05:00",
+      "core_license_eligible_rows": 161,
+      "core_observed_date_max": "2026-08-20",
+      "core_observed_date_min": "2012-07-22",
+      "core_quota_capacity": {
+        "available": 161,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 91
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 69
+      },
+      "core_state_counts": {
+        "CT": 0,
+        "MA": 0,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 24,
+        "NY": 55,
+        "PA": 82,
+        "RI": 0,
+        "VT": 0
+      },
+      "core_states_present": 3,
+      "dated_aggregate_snapshot_count": 987,
+      "distinct_core_observers": 48,
+      "genus": "Camponotus",
+      "genus_id": 62781,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 20,
+      "largest_core_observer_share": 0.124224,
+      "live_api_total": 987,
+      "metadata_rows": 987,
+      "name": "Camponotus subbarbatus",
+      "personal_noncommercial_eligible_rows": 777,
+      "prior_overlap_by_source": {
+        "calibration_v1": 1
+      },
+      "prior_overlap_rows": 1,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 146,
+        "cc-by-nc": 614,
+        "cc-by-nc-nd": 13,
+        "cc-by-nc-sa": 3,
+        "cc-by-sa": 7,
+        "cc0": 8,
+        "unlicensed": 196
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 161,
+        "no_derivatives": 13,
+        "personal_noncommercial": 617,
+        "unlicensed_or_unknown": 196
+      },
+      "source_unlicensed_rows": 196,
+      "source_unlicensed_share": 0.198582,
+      "taxon_id": 143505,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        334375,
+        62781,
+        363598
+      ],
+      "approved_quota_capacity": {
+        "available": 683,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-07-28T14:00:26-04:00",
+      "core_created_at_min": "2016-04-10T20:59:10-04:00",
+      "core_license_eligible_rows": 140,
+      "core_observed_date_max": "2026-07-28",
+      "core_observed_date_min": "2014-08-11",
+      "core_quota_capacity": {
+        "available": 140,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 70
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 90
+      },
+      "core_state_counts": {
+        "CT": 1,
+        "MA": 17,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 20,
+        "NY": 56,
+        "PA": 35,
+        "RI": 8,
+        "VT": 3
+      },
+      "core_states_present": 7,
+      "dated_aggregate_snapshot_count": 879,
+      "distinct_core_observers": 60,
+      "genus": "Camponotus",
+      "genus_id": 62781,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 15,
+      "largest_core_observer_share": 0.107143,
+      "live_api_total": 879,
+      "metadata_rows": 879,
+      "name": "Camponotus nearcticus",
+      "personal_noncommercial_eligible_rows": 683,
+      "prior_overlap_by_source": {},
+      "prior_overlap_rows": 0,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 122,
+        "cc-by-nc": 526,
+        "cc-by-nc-nd": 15,
+        "cc-by-nc-sa": 17,
+        "cc-by-nd": 1,
+        "cc-by-sa": 7,
+        "cc0": 11,
+        "unlicensed": 180
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 140,
+        "no_derivatives": 16,
+        "personal_noncommercial": 543,
+        "unlicensed_or_unknown": 180
+      },
+      "source_unlicensed_rows": 180,
+      "source_unlicensed_share": 0.204778,
+      "taxon_id": 146942,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        637569,
+        69086,
+        931956
+      ],
+      "approved_quota_capacity": {
+        "available": 537,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-08-12T10:01:59-04:00",
+      "core_created_at_min": "2016-06-19T09:24:53-04:00",
+      "core_license_eligible_rows": 99,
+      "core_observed_date_max": "2026-08-12",
+      "core_observed_date_min": "2016-06-12",
+      "core_quota_capacity": {
+        "available": 99,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 29
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 131
+      },
+      "core_state_counts": {
+        "CT": 2,
+        "MA": 16,
+        "ME": 3,
+        "NH": 1,
+        "NJ": 8,
+        "NY": 44,
+        "PA": 23,
+        "RI": 1,
+        "VT": 1
+      },
+      "core_states_present": 9,
+      "dated_aggregate_snapshot_count": 711,
+      "distinct_core_observers": 50,
+      "genus": "Lasius",
+      "genus_id": 69086,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 7,
+      "largest_core_observer_share": 0.070707,
+      "live_api_total": 711,
+      "metadata_rows": 711,
+      "name": "Lasius americanus",
+      "personal_noncommercial_eligible_rows": 537,
+      "prior_overlap_by_source": {
+        "calibration_v1": 2
+      },
+      "prior_overlap_rows": 2,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 90,
+        "cc-by-nc": 427,
+        "cc-by-nc-nd": 26,
+        "cc-by-nc-sa": 12,
+        "cc-by-sa": 3,
+        "cc0": 7,
+        "unlicensed": 146
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 100,
+        "no_derivatives": 26,
+        "personal_noncommercial": 439,
+        "unlicensed_or_unknown": 146
+      },
+      "source_unlicensed_rows": 146,
+      "source_unlicensed_share": 0.205345,
+      "taxon_id": 966095,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        637569,
+        69086,
+        367372
+      ],
+      "approved_quota_capacity": {
+        "available": 532,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-08-31T22:27:04-04:00",
+      "core_created_at_min": "2017-04-14T15:24:12-04:00",
+      "core_license_eligible_rows": 93,
+      "core_observed_date_max": "2026-08-31",
+      "core_observed_date_min": "2016-12-01",
+      "core_quota_capacity": {
+        "available": 93,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 23
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 137
+      },
+      "core_state_counts": {
+        "CT": 0,
+        "MA": 15,
+        "ME": 5,
+        "NH": 1,
+        "NJ": 8,
+        "NY": 33,
+        "PA": 19,
+        "RI": 5,
+        "VT": 7
+      },
+      "core_states_present": 8,
+      "dated_aggregate_snapshot_count": 667,
+      "distinct_core_observers": 52,
+      "genus": "Lasius",
+      "genus_id": 69086,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 6,
+      "largest_core_observer_share": 0.064516,
+      "live_api_total": 667,
+      "metadata_rows": 667,
+      "name": "Lasius aphidicola",
+      "personal_noncommercial_eligible_rows": 532,
+      "prior_overlap_by_source": {},
+      "prior_overlap_rows": 0,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 76,
+        "cc-by-nc": 433,
+        "cc-by-nc-nd": 10,
+        "cc-by-nc-sa": 6,
+        "cc-by-sa": 3,
+        "cc0": 14,
+        "unlicensed": 125
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 93,
+        "no_derivatives": 10,
+        "personal_noncommercial": 439,
+        "unlicensed_or_unknown": 125
+      },
+      "source_unlicensed_rows": 125,
+      "source_unlicensed_share": 0.187406,
+      "taxon_id": 1032788,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        69143,
+        469105,
+        68931,
+        1353005
+      ],
+      "approved_quota_capacity": {
+        "available": 428,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-08-24T14:20:59-04:00",
+      "core_created_at_min": "2017-07-01T10:35:50-04:00",
+      "core_license_eligible_rows": 64,
+      "core_observed_date_max": "2026-08-24",
+      "core_observed_date_min": "2016-07-04",
+      "core_quota_capacity": {
+        "available": 64,
+        "illustrative_capacity_only": {
+          "development": 34,
+          "final_test": 30,
+          "train": 0
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 166
+      },
+      "core_state_counts": {
+        "CT": 0,
+        "MA": 2,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 11,
+        "NY": 31,
+        "PA": 20,
+        "RI": 0,
+        "VT": 0
+      },
+      "core_states_present": 4,
+      "dated_aggregate_snapshot_count": 581,
+      "distinct_core_observers": 28,
+      "genus": "Aphaenogaster",
+      "genus_id": 68931,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 17,
+      "largest_core_observer_share": 0.265625,
+      "live_api_total": 581,
+      "metadata_rows": 581,
+      "name": "Aphaenogaster rudis",
+      "personal_noncommercial_eligible_rows": 428,
+      "prior_overlap_by_source": {},
+      "prior_overlap_rows": 0,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 58,
+        "cc-by-nc": 358,
+        "cc-by-nc-nd": 8,
+        "cc-by-nc-sa": 6,
+        "cc0": 6,
+        "unlicensed": 145
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 64,
+        "no_derivatives": 8,
+        "personal_noncommercial": 364,
+        "unlicensed_or_unknown": 145
+      },
+      "source_unlicensed_rows": 145,
+      "source_unlicensed_share": 0.24957,
+      "taxon_id": 213893,
+      "warnings": [
+        "one observer contributes more than 25% of the core-license pool"
+      ]
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        637435,
+        47339,
+        1193117
+      ],
+      "approved_quota_capacity": {
+        "available": 459,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-07-18T16:52:19-04:00",
+      "core_created_at_min": "2013-05-22T11:48:29-04:00",
+      "core_license_eligible_rows": 114,
+      "core_observed_date_max": "2026-07-18",
+      "core_observed_date_min": "2013-05-20",
+      "core_quota_capacity": {
+        "available": 114,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 44
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 116
+      },
+      "core_state_counts": {
+        "CT": 2,
+        "MA": 56,
+        "ME": 3,
+        "NH": 14,
+        "NJ": 4,
+        "NY": 12,
+        "PA": 10,
+        "RI": 2,
+        "VT": 11
+      },
+      "core_states_present": 9,
+      "dated_aggregate_snapshot_count": 580,
+      "distinct_core_observers": 45,
+      "genus": "Formica",
+      "genus_id": 47339,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 30,
+      "largest_core_observer_share": 0.263158,
+      "live_api_total": 580,
+      "metadata_rows": 580,
+      "name": "Formica exsectoides",
+      "personal_noncommercial_eligible_rows": 459,
+      "prior_overlap_by_source": {},
+      "prior_overlap_rows": 0,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 70,
+        "cc-by-nc": 335,
+        "cc-by-nc-nd": 1,
+        "cc-by-nc-sa": 10,
+        "cc-by-nd": 1,
+        "cc-by-sa": 3,
+        "cc0": 41,
+        "unlicensed": 119
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 114,
+        "no_derivatives": 2,
+        "personal_noncommercial": 345,
+        "unlicensed_or_unknown": 119
+      },
+      "source_unlicensed_rows": 119,
+      "source_unlicensed_share": 0.205172,
+      "taxon_id": 133654,
+      "warnings": [
+        "one observer contributes more than 25% of the core-license pool"
+      ]
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        338275,
+        637438,
+        203420
+      ],
+      "approved_quota_capacity": {
+        "available": 399,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-09-03T14:05:19-04:00",
+      "core_created_at_min": "2015-06-15T06:30:13-04:00",
+      "core_license_eligible_rows": 86,
+      "core_observed_date_max": "2026-09-03",
+      "core_observed_date_min": "2014-04-09",
+      "core_quota_capacity": {
+        "available": 86,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 16
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 144
+      },
+      "core_state_counts": {
+        "CT": 2,
+        "MA": 11,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 10,
+        "NY": 40,
+        "PA": 23,
+        "RI": 0,
+        "VT": 0
+      },
+      "core_states_present": 5,
+      "dated_aggregate_snapshot_count": 495,
+      "distinct_core_observers": 32,
+      "genus": "Ponera",
+      "genus_id": 203420,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 18,
+      "largest_core_observer_share": 0.209302,
+      "live_api_total": 495,
+      "metadata_rows": 495,
+      "name": "Ponera pennsylvanica",
+      "personal_noncommercial_eligible_rows": 399,
+      "prior_overlap_by_source": {},
+      "prior_overlap_rows": 0,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 70,
+        "cc-by-nc": 292,
+        "cc-by-nc-nd": 4,
+        "cc-by-nc-sa": 21,
+        "cc-by-sa": 5,
+        "cc0": 11,
+        "unlicensed": 92
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 86,
+        "no_derivatives": 4,
+        "personal_noncommercial": 313,
+        "unlicensed_or_unknown": 92
+      },
+      "source_unlicensed_rows": 92,
+      "source_unlicensed_share": 0.185859,
+      "taxon_id": 203419,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        69143,
+        469107,
+        424607,
+        1408606
+      ],
+      "approved_quota_capacity": {
+        "available": 393,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-07-12T11:07:26-04:00",
+      "core_created_at_min": "2018-04-18T06:06:14-04:00",
+      "core_license_eligible_rows": 88,
+      "core_observed_date_max": "2026-07-12",
+      "core_observed_date_min": "2017-05-11",
+      "core_quota_capacity": {
+        "available": 88,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 18
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 142
+      },
+      "core_state_counts": {
+        "CT": 1,
+        "MA": 21,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 14,
+        "NY": 27,
+        "PA": 24,
+        "RI": 1,
+        "VT": 0
+      },
+      "core_states_present": 6,
+      "dated_aggregate_snapshot_count": 484,
+      "distinct_core_observers": 29,
+      "genus": "Temnothorax",
+      "genus_id": 424607,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 13,
+      "largest_core_observer_share": 0.147727,
+      "live_api_total": 484,
+      "metadata_rows": 484,
+      "name": "Temnothorax curvispinosus",
+      "personal_noncommercial_eligible_rows": 393,
+      "prior_overlap_by_source": {
+        "unknown_test_v1": 1
+      },
+      "prior_overlap_rows": 1,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 82,
+        "cc-by-nc": 286,
+        "cc-by-nc-nd": 6,
+        "cc-by-nc-sa": 19,
+        "cc-by-sa": 2,
+        "cc0": 5,
+        "unlicensed": 84
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 89,
+        "no_derivatives": 6,
+        "personal_noncommercial": 305,
+        "unlicensed_or_unknown": 84
+      },
+      "source_unlicensed_rows": 84,
+      "source_unlicensed_share": 0.173554,
+      "taxon_id": 232366,
+      "warnings": []
+    },
+    {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        244834,
+        637569,
+        69086,
+        1115224
+      ],
+      "approved_quota_capacity": {
+        "available": 345,
+        "illustrative_capacity_only": {
+          "development": 40,
+          "final_test": 30,
+          "train": 160
+        },
+        "numerically_ready": true,
+        "required": 230,
+        "shortfall": 0
+      },
+      "core_created_at_max": "2026-06-27T15:30:13-04:00",
+      "core_created_at_min": "2015-01-16T09:53:30-05:00",
+      "core_license_eligible_rows": 44,
+      "core_observed_date_max": "2026-06-27",
+      "core_observed_date_min": "2013-06-12",
+      "core_quota_capacity": {
+        "available": 44,
+        "illustrative_capacity_only": {
+          "development": 14,
+          "final_test": 30,
+          "train": 0
+        },
+        "numerically_ready": false,
+        "required": 230,
+        "shortfall": 186
+      },
+      "core_state_counts": {
+        "CT": 1,
+        "MA": 7,
+        "ME": 0,
+        "NH": 0,
+        "NJ": 5,
+        "NY": 13,
+        "PA": 18,
+        "RI": 0,
+        "VT": 0
+      },
+      "core_states_present": 5,
+      "dated_aggregate_snapshot_count": 474,
+      "distinct_core_observers": 32,
+      "genus": "Lasius",
+      "genus_id": 69086,
+      "internal_duplicate_rows": 0,
+      "is_active": true,
+      "largest_core_observer_count": 3,
+      "largest_core_observer_share": 0.068182,
+      "live_api_total": 474,
+      "metadata_rows": 474,
+      "name": "Lasius interjectus",
+      "personal_noncommercial_eligible_rows": 345,
+      "prior_overlap_by_source": {
+        "unknown_test_v1": 2
+      },
+      "prior_overlap_rows": 2,
+      "rank": "species",
+      "selected_photo_license_counts_all_rows": {
+        "cc-by": 37,
+        "cc-by-nc": 296,
+        "cc-by-nc-nd": 3,
+        "cc-by-nc-sa": 7,
+        "cc-by-nd": 2,
+        "cc-by-sa": 2,
+        "cc0": 5,
+        "unlicensed": 122
+      },
+      "selected_photo_license_tier_counts_all_rows": {
+        "core_reuse": 44,
+        "no_derivatives": 5,
+        "personal_noncommercial": 303,
+        "unlicensed_or_unknown": 122
+      },
+      "source_unlicensed_rows": 122,
+      "source_unlicensed_share": 0.257384,
+      "taxon_id": 222713,
+      "warnings": []
+    }
+  ]
+}

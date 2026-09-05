@@ -104,7 +104,42 @@ the best score would slowly turn this benchmark into something the model is
 indirectly fit to, the same problem it exists to avoid.
 
 Training dataset: 9,989 images across 50 species (~200 each), 7,990 train /
-1,999 val, sourced from the public iNaturalist open-data bucket.
+1,999 val, sourced through the public iNaturalist API.
+
+---
+
+## Data licensing and attribution
+
+The current 50-species dataset was collected with the legacy
+`data_pipeline/scrape_inat_api.py` path. It applied **no photo-license filter**:
+the scraper selected the first photo from each eligible research-grade
+observation and its manifest did not record either `license_code` or
+attribution. All 50 species in `training/artifacts/taxonomy.json` therefore
+belong to a legacy mixed/undocumented license pool; their historical per-photo
+license provenance cannot be reconstructed from the training manifest alone.
+The older S3 scraper also did not filter on a photo-license field.
+
+Beginning **2026-09-05**, the Northeast expansion uses an explicit personal,
+non-commercial pool: CC0, CC BY, CC BY-SA, CC BY-NC, and CC BY-NC-SA. The 15
+provisional species governed by this policy are *Nylanderia flavipes*, *Lasius
+neoniger*, *Lasius claviger*, *Camponotus novaeboracensis*, *Lasius
+emarginatus*, *Camponotus americanus*, *Camponotus subbarbatus*, *Camponotus
+nearcticus*, *Lasius americanus*, *Lasius aphidicola*, *Aphaenogaster rudis*,
+*Formica exsectoides*, *Ponera pennsylvanica*, *Temnothorax curvispinosus*, and
+*Lasius interjectus*. No expansion photos have been downloaded and this catalog
+is not frozen yet.
+
+The planned expansion dataset will include CC BY-NC / CC BY-NC-SA material and
+is restricted to this personal, non-commercial phase. Every candidate and
+future download-manifest row must preserve the selected photo's license code,
+observer attribution, source URL, observation UUID, and photo ID. Do not strip
+attribution from copied or derived records. NoDerivatives and
+unlicensed/all-rights-reserved photos are excluded from the approved expansion
+pool. An empty `photo_license` explicitly means that iNaturalist returned no
+license code; it is preserved as source truth but cannot enter the approved
+download pool. A licensing review is required before public deployment,
+redistribution, or any commercial use; this section records project policy and
+is not legal advice.
 
 ---
 
