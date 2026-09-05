@@ -6,8 +6,10 @@
   Northeast species. One catalog, not a Northeast-only replacement.
 - [Plan, provisional shortlist, and next bounded task](docs/plans/northeast-expansion-v1.md)
   and [public aggregate-count snapshot](docs/plans/northeast-counts-2026-09-05.json).
-- Next: train-only geo export and stale-sidecar handling, with synthetic tests;
-  then candidate metadata/quality review. No training or photo collection has started.
+- Train-only geo export, stale-sidecar replacement, and pinned train+val
+  membership are implemented and covered by focused synthetic tests.
+- Next: candidate metadata/quality and post-exclusion availability review.
+  No training or photo collection has started.
 - Keep personal local history and optional accounts on the roadmap. Public
   maps/social sharing remain deferred; no paid infrastructure without approval.
 

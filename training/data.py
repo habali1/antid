@@ -162,8 +162,9 @@ def _manifest_from_csv(csv_path: Path, root: Path) -> tuple[list[Sample], dict[i
         smp = Sample(str(path), slug_to_idx[r["slug"]], r["slug"])
         split = (r.get("split") or "").strip()
         if split:
-            # Only set the key when a real value exists: train.py treats a
-            # partially-split manifest as unsplit and falls back to a random split.
+            # Only set the key when a real value exists. train.py accepts a
+            # completely unsplit manifest (random split) but rejects partial
+            # split metadata rather than mixing it with reconstructed membership.
             smp.__dict__["split"] = split
         smp.__dict__["lat"] = _as_float(r.get("lat"))
         smp.__dict__["lon"] = _as_float(r.get("lon"))

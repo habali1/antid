@@ -17,6 +17,17 @@ Importable as `topk_accuracy(...)` (used by train.py) and runnable standalone:
     python evaluate.py                                  # cosine only
     python evaluate.py --geo                            # + geo re-ranking
     python evaluate.py --geo --geo-source train         # leak-free geo index
+
+`--geo-source train` requires a val_split.json pinning BOTH "train" and "val"
+membership (train.py's build_val_split_record writes both, additively, for
+new runs) and fails closed -- rather than falling back to the manifest's raw
+split column -- if that pinning is missing, incomplete, non-unique, or not
+disjoint from the val set actually being evaluated. See
+resolve_pinned_train_split. A legacy split file that only pins "val" cannot
+prove historical train membership from its complement: the manifest's split
+column is exactly what gets silently rewritten (see the reproducibility
+warning in training/artifacts/README.md), so "everything not in val" is an
+assumption, not a verified claim.
 """
 from __future__ import annotations
 
@@ -84,6 +95,13 @@ def load_geo_index(path: Path, taxonomy: dict[int, dict]
 
     The file is keyed by species SLUG; resolving through taxonomy is what keeps
     it aligned with prototype row order.
+
+    This return contract (cells, cell_size) is shared with eval_benchmark.py
+    and is intentionally left unchanged here. An index may also carry an
+    optional "source_split" provenance field (see train.py's
+    write_geo_index_sidecar); this function silently ignores it, exactly like
+    api/inference.py's _load_geo_index does -- see describe_geo_file_source
+    for the function that reads it, for labeling only.
     """
     geo = json.loads(path.read_text())
     cell_size = float(geo.get("cell_size_deg", 1.0))
@@ -101,9 +119,14 @@ def build_geo_index_from(samples, cell_size: float, min_obs_per_cell: int
     """Build the cell index from a sample list, keyed by class index.
 
     Mirrors train.py's build_geo_index, but takes whichever split it is handed.
-    Pass the TRAIN split only for a leak-free geo estimate: the index shipped in
-    artifacts/ is built from train+val, so evaluating against it lets each val
-    image's own coordinate vote for its own answer.
+    Pass the TRAIN split only for a leak-free geo estimate. New runs' shipped
+    geo_index.json is itself already train-only (see train.py's
+    write_geo_index_sidecar); this function exists for evaluate.py to
+    independently rebuild that same train-only index from a verified pinned
+    split (see resolve_pinned_train_split) rather than trusting the shipped
+    file's own claimed provenance. Older shipped indexes may have been built
+    from train+val (or have unknown provenance) -- see
+    describe_geo_file_source.
     """
     counts: dict[int, dict[tuple[int, int], int]] = {}
     for smp in samples:
@@ -120,6 +143,162 @@ def build_geo_index_from(samples, cell_size: float, min_obs_per_cell: int
         for label, per in counts.items()
         if any(n >= min_obs_per_cell for n in per.values())
     }
+
+
+def _find_duplicates(keys) -> list:
+    seen, dupes = set(), []
+    for k in keys:
+        if k in seen:
+            dupes.append(k)
+        else:
+            seen.add(k)
+    return dupes
+
+
+def resolve_pinned_train_split(samples, split_file: Path):
+    """Resolve the exact TRAIN-only sample list for a leak-free geo rebuild.
+
+    Requires split_file to pin BOTH "train" and "val" membership (the
+    additive field train.py's build_val_split_record writes for new runs),
+    and requires that pinning to be complete (every key resolves to exactly
+    one manifest sample), unique (no key repeated, no sample claimed twice),
+    and disjoint (no key pinned in both lists) before handing back a
+    train-only sample list.
+
+    Fails closed (raises SystemExit) rather than falling back to the
+    manifest's raw split column: a legacy split file that only pins "val"
+    cannot prove historical train membership from its complement -- the
+    manifest's split column is exactly what gets silently rewritten (see the
+    reproducibility warning in training/artifacts/README.md), so "everything
+    not in val" would be an assumption, not a verified claim.
+    """
+    if not split_file.exists():
+        raise SystemExit(
+            f"--geo-source train needs {split_file} pinning both 'train' and "
+            f"'val' membership, but it does not exist. Retrain to produce one "
+            f"(new runs pin both), or use --geo-source file."
+        )
+    try:
+        data = json.loads(split_file.read_text())
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError) as exc:
+        raise SystemExit(f"Cannot read pinned split {split_file}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise SystemExit(f"{split_file}: root must be a JSON object.")
+    if "train" not in data:
+        raise SystemExit(
+            f"{split_file} only pins 'val' membership (a legacy split file "
+            f"from before train.py pinned both). Its complement does not "
+            f"prove historical train membership -- retrain to produce a split "
+            f"file with pinned 'train' membership, or use --geo-source file."
+        )
+    if "val" not in data:
+        raise SystemExit(
+            f"{split_file} has a 'train' list but no 'val' list at all -- not "
+            f"a valid pinned split file."
+        )
+    train_keys, val_keys = data["train"], data["val"]
+    for label, keys in (("train", train_keys), ("val", val_keys)):
+        if (not isinstance(keys, list) or not keys
+                or any(not isinstance(k, str) or not k for k in keys)):
+            raise SystemExit(
+                f"{split_file}: '{label}' must be a non-empty JSON array of "
+                "non-empty sample-key strings."
+            )
+
+    counts = {}
+    for field in ("n_total", "n_train", "n_val"):
+        value = data.get(field)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+            raise SystemExit(f"{split_file}: '{field}' must be a positive integer.")
+        counts[field] = value
+    if counts["n_train"] != len(train_keys) or counts["n_val"] != len(val_keys):
+        raise SystemExit(
+            f"{split_file}: pinned-list lengths do not match n_train/n_val."
+        )
+    if counts["n_total"] != counts["n_train"] + counts["n_val"]:
+        raise SystemExit(
+            f"{split_file}: n_total does not equal n_train + n_val."
+        )
+
+    train_dupes = _find_duplicates(train_keys)
+    if train_dupes:
+        raise SystemExit(f"{split_file}: 'train' list has duplicate key(s), "
+                         f"e.g. {train_dupes[0]!r}.")
+    val_dupes = _find_duplicates(val_keys)
+    if val_dupes:
+        raise SystemExit(f"{split_file}: 'val' list has duplicate key(s), "
+                         f"e.g. {val_dupes[0]!r}.")
+
+    overlap = set(train_keys) & set(val_keys)
+    if overlap:
+        raise SystemExit(
+            f"{split_file}: {len(overlap)} key(s) pinned in BOTH 'train' and "
+            f"'val' (e.g. {sorted(overlap)[0]!r}) -- membership is not "
+            f"disjoint."
+        )
+
+    by_key: dict[str, list] = {}
+    for s in samples:
+        by_key.setdefault(f"{s.slug}/{Path(s.storage_path).stem}", []).append(s)
+
+    def resolve(keys, label):
+        missing = [k for k in keys if k not in by_key]
+        if missing:
+            raise SystemExit(
+                f"{split_file}: {len(missing)} pinned '{label}' key(s) do not "
+                f"resolve to any manifest sample (e.g. {missing[0]!r}); is "
+                f"this split file from a different dataset or manifest state?"
+            )
+        dup = [k for k in keys if len(by_key[k]) > 1]
+        if dup:
+            raise SystemExit(
+                f"{split_file}: {len(dup)} pinned '{label}' key(s) resolve to "
+                f"more than one manifest sample (e.g. {dup[0]!r}); the "
+                f"manifest has duplicate slug/photo entries."
+            )
+        return [by_key[k][0] for k in keys]
+
+    train = resolve(train_keys, "train")
+    resolve(val_keys, "val")  # same completeness/uniqueness guarantee, so the
+                              # disjointness check above actually means something
+    return train
+
+
+def describe_geo_file_source(geo_path: Path) -> str:
+    """Human-readable provenance label for a shipped geo_index.json.
+
+    Reads the file's own optional "source_split" field instead of asserting a
+    blanket claim. This is self-declared provenance, not independent proof:
+    new exports written by train.py's write_geo_index_sidecar declare
+    source_split="train"; an index that predates that field, or was built by
+    another script (e.g.
+    data_pipeline/build_geo_index.py), has provenance this function cannot
+    verify -- it must not be labeled train-only or train+val as an
+    established fact just because that used to be universally true.
+    """
+    try:
+        raw = json.loads(geo_path.read_text())
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        return f"{geo_path.name} (provenance unknown -- file could not be read for labeling)"
+    source_split = raw.get("source_split") if isinstance(raw, dict) else None
+    if source_split == "train":
+        return (f"{geo_path.name} (declares source_split=train; declaration "
+                f"not independently verified)")
+    if source_split is None:
+        return (f"{geo_path.name} (source_split not recorded -- provenance unknown; "
+                f"may include validation coordinates, not proven leak-free)")
+    return (f"{geo_path.name} (unsupported source_split={source_split!r}; "
+            f"provenance unknown, not proven leak-free)")
+
+
+def require_usable_geo_cells(cells) -> None:
+    """Keep evaluation's `--geo` behavior aligned with serving's active state."""
+    if not cells:
+        raise SystemExit(
+            "--geo requested, but the selected geo index has no usable "
+            "species cells. Serving would keep geo inactive rather than "
+            "reporting an unchanged score as geo re-ranking."
+        )
 
 
 def _accuracy_block(correct1, correct3, total, taxonomy) -> dict:
@@ -250,9 +429,14 @@ def main() -> None:
     ap.add_argument("--geo-index", type=Path, default=None,
                     help="geo_index.json to use (default: <artifacts>/geo_index.json).")
     ap.add_argument("--geo-source", choices=["file", "train"], default="file",
-                    help="'file' uses the shipped index (built from train+val, so "
-                         "val coordinates leak in); 'train' rebuilds it from the "
-                         "train split only for a leak-free estimate.")
+                    help="'file' uses the shipped index as-is; its provenance is "
+                         "read from the index's own optional source_split field "
+                         "(see describe_geo_file_source), not assumed. 'train' "
+                         "rebuilds a leak-free index from val_split.json's pinned "
+                         "train membership only -- it requires a split file "
+                         "pinning BOTH 'train' and 'val' and fails closed "
+                         "otherwise (see resolve_pinned_train_split), e.g. on a "
+                         "legacy val-only split file.")
     ap.add_argument("--geo-boost", type=float,
                     default=float(os.environ.get("GEO_BOOST", "0.05")),
                     help="Additive boost, matching api/inference.py GEO_BOOST.")
@@ -305,16 +489,13 @@ def main() -> None:
     if args.geo:
         geo_cfg = cfg.get("geo") or {}
         if args.geo_source == "train":
-            train_split = [s for s in samples if s.__dict__.get("split") == "train"]
-            if not train_split:
-                raise SystemExit(
-                    "--geo-source train needs an explicit train/val split in the "
-                    "manifest; this data source did not provide one."
-                )
+            train_split = resolve_pinned_train_split(samples, split_file)
             cell_size = float(geo_cfg.get("cell_size_deg", 1.0))
             cells = build_geo_index_from(
                 train_split, cell_size, int(geo_cfg.get("min_obs_per_cell", 2)))
-            source = f"rebuilt from {len(train_split)} train samples (leak-free)"
+            source = (f"rebuilt from {len(train_split)} train samples pinned by "
+                      f"{split_file.name} (record counts, unique resolution, "
+                      f"and train/val disjointness verified; leak-free)")
         else:
             gpath = args.geo_index or (args.artifacts / "geo_index.json")
             if not gpath.exists():
@@ -323,8 +504,9 @@ def main() -> None:
                     "coordinates, or build one with data_pipeline/build_geo_index.py."
                 )
             cells, cell_size = load_geo_index(gpath, taxonomy)
-            source = f"{gpath.name} (built from train+val; val coordinates leak in)"
+            source = describe_geo_file_source(gpath)
 
+        require_usable_geo_cells(cells)
         coords = [(s.__dict__.get("lat"), s.__dict__.get("lon")) for s in val]
         geo = GeoReranker(cells=cells, cell_size=cell_size, coords=coords,
                           boost=args.geo_boost, n_classes=protos.shape[0],

@@ -303,13 +303,17 @@ python evaluate.py --geo                  # + geographic re-ranking, side by sid
 python eval_benchmark.py                  # the reproducible baseline -- see Results above
 ```
 
-`evaluate.py` reads `artifacts/val_split.json` to recover the exact held-out set
-and warns loudly if it is missing. `--geo` uses the shipped `geo_index.json`,
-which `train.py` builds from train **and** val — so each val image's own
-coordinate votes for its own answer. For a leak-free measurement:
+`evaluate.py` reads `artifacts/val_split.json` to recover the held-out set and
+warns loudly if it is missing. New training runs pin both train and val
+membership; legacy files may pin only val, and the current checkpoint's
+original split was not preserved. New runs also
+emit `geo_index.json` from train membership only and record
+`source_split: "train"`. An older or externally built file without that field
+has unknown provenance; its coordinates may include validation observations.
+To rebuild the index from verified pinned train membership:
 
 ```bash
-python evaluate.py --geo --geo-source train   # rebuild the index from train only
+python evaluate.py --geo --geo-source train   # requires a new train+val split pin
 ```
 
 `eval_benchmark.py` is different: it doesn't touch `val_split.json` or the
@@ -390,6 +394,7 @@ onto the failure modes that actually occur here:
 | `python evaluate.py --geo` | preprocessing drift, prototype misalignment, geo-ranking drift |
 | `python eval_benchmark.py` | the reproducible baseline itself — the only number in Results not tied to a training-manifest split |
 | `python training/test_policy_generator.py` | policy evidence, schema, hashing, and generator failure paths |
+| `python training/test_geo_split.py` | pinned train/val integrity, train-only geo export, stale-sidecar replacement, and API compatibility |
 | `python api/test_inference_policy.py`, `python api/test_inference.py`, and `python api/test_main.py` | fail-safe policy loading, boundary semantics, geo independence, and API/health response behavior |
 | `npm run typecheck` | client/API contract drift (strict TypeScript) |
 

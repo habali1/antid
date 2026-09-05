@@ -46,8 +46,10 @@ the frozen 0.60 threshold. It is a validated confidence/abstention gate,
 out-of-scope ant photographs still passed it.
 
 Training/eval bookkeeping files that are **not** part of the serving contract:
-- `val_split.json` — the pinned held-out set for *this training run*, written
-  by `train.py` and read by `evaluate.py`. Without it the val split is only
+- `val_split.json` — split membership for *this training run*, written by
+  `train.py` and read by `evaluate.py`. New runs pin sorted `train` and `val`
+  keys plus their counts; legacy files may pin only `val`. The current
+  checkpoint's original split was not preserved. Without a pin, the val split is only
   implied by the manifest's split column and row order, both of which are
   rewritten when the manifest is regenerated — after which every reconstructed
   split mixes training images back in and accuracy is inflated. (This is
@@ -89,8 +91,15 @@ then re-ranks. The reported `similarity` stays the **raw** cosine; `geo_boosted`
 is true only when a result's rank *strictly improved* because of the boost.
 `geo_filtered` in the response means location was applied at all. If only one of
 lat/lon arrives, `main.py` drops both. The index is written two ways: `train.py`
-auto-emits it when the image manifest carries coordinates, or
-`data_pipeline/build_geo_index.py` builds it standalone from the iNat manifests.
+auto-emits it every run, built from the train split only (never val), with an
+optional `source_split: "train"` provenance field; an empty run writes an
+explicitly schema-valid empty sidecar rather than leaving a stale index in
+place, so the API intentionally reports it inactive with reason
+`no_usable_cells`. `data_pipeline/build_geo_index.py` builds one standalone
+from the iNat manifests instead. Indexes shipped before this provenance field
+existed may include validation coordinates or have unknown provenance —
+`training/evaluate.py`'s `describe_geo_file_source` reads the field for
+labeling rather than assuming either way.
 
 ## Commands
 
@@ -130,6 +139,7 @@ python evaluate.py --geo                               # + geo re-ranking, side 
 python evaluate.py --geo --geo-source train            # leak-free geo index (train split only)
 python eval_benchmark.py                                # the reproducible baseline -- see below
 python test_policy_generator.py                         # policy evidence/schema/generator tests
+python test_geo_split.py                                # pinned-split + geo-sidecar integrity tests
 ```
 CPU smoke run that exercises the whole training→artifact path in ~2 min (set
 `LOCAL_DATA_DIR` to any `{slug}/{img}.jpg` folder first):

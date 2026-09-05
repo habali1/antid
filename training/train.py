@@ -5,7 +5,12 @@ Outputs (into artifacts/):
   backbone.onnx     image (1,3,380,380) → 1792-dim embedding, dynamic batch
   prototypes.npy    (num_classes, 1792) mean train embedding per species
   taxonomy.json     class_idx → {species_name, common_name, taxon_id, slug}
-  geo_index.json    {cell_size_deg, cells: {slug: [[lat, lon], …]}} (if coords)
+  val_split.json    pinned train+val membership for this run (sorted keys)
+  geo_index.json    {cell_size_deg, cells: {slug: [[lat, lon], …]}, source_split:
+                    "train"} -- built from the train split only, written every
+                    run (an explicitly empty {} sidecar when there are no usable
+                    coordinates, so a stale index from an earlier run can never
+                    silently survive)
   eval.json         per-species + overall top-1 / top-3 accuracy
 
 Device: CUDA → MPS → CPU, auto-detected.
@@ -52,12 +57,28 @@ def pick_device() -> torch.device:
 
 def split_samples(samples, val_fraction: float, seed: int):
     """Use explicit DB split if present; else random split by val_fraction."""
-    have_split = all("split" in s.__dict__ for s in samples)
-    if have_split:
+    split_markers = ["split" in s.__dict__ for s in samples]
+    if any(split_markers):
+        if not all(split_markers):
+            raise ValueError(
+                "Only some samples carry an explicit split. Refusing to mix "
+                "explicit membership with a reconstructed random split."
+            )
+        invalid = sorted({
+            repr(s.__dict__["split"])
+            for s in samples if s.__dict__["split"] not in ("train", "val")
+        })
+        if invalid:
+            raise ValueError(
+                "Explicit sample splits must be 'train' or 'val'; found "
+                + ", ".join(invalid)
+            )
         train = [s for s in samples if s.__dict__["split"] == "train"]
         val = [s for s in samples if s.__dict__["split"] == "val"]
-        if train and val:
-            return train, val
+        if not train or not val:
+            raise ValueError("Explicit split must contain both train and val samples.")
+        assert len(train) + len(val) == len(samples)
+        return train, val
     g = torch.Generator().manual_seed(seed)
     idx = torch.randperm(len(samples), generator=g).tolist()
     n_val = max(1, int(len(samples) * val_fraction))
@@ -79,14 +100,19 @@ def build_geo_index(samples, taxonomy, cell_size_deg: float = 1.0,
         {"cell_size_deg": float, "cells": {slug: [[lat, lon], ...]}}
 
     Keyed by slug, NOT class index. The API resolves slugs through taxonomy and
-    reads cells from under the "cells" key, so a flat class-index-keyed file
-    loads as zero cells while still reporting geo_index_loaded: true — the geo
-    boost silently becomes a no-op. Keep this in step with
+    reads cells from under the "cells" key. A legacy flat class-index-keyed file
+    now loads as inactive with reason "no_usable_cells"; keep this in step with
     data_pipeline/build_geo_from_manifest.py, which writes the same format.
 
     Coordinates come from Sample.lat/lon when the source provided them (DB
     columns or a manifest CSV). Samples without coordinates are skipped; cells
     seen fewer than min_obs_per_cell times are dropped as noise.
+
+    Callers must pass the TRAIN split only (see split_samples) so the shipped
+    serving index can never leak validation-set coordinates. See
+    write_geo_index_sidecar for how this function's output is written to disk
+    (including the "source_split" provenance field, which is added by the
+    caller and does not change this function's own return type).
     """
     cs = float(cell_size_deg)
     counts: dict[int, dict[tuple[int, int], int]] = {}
@@ -105,6 +131,86 @@ def build_geo_index(samples, taxonomy, cell_size_deg: float = 1.0,
         if kept:
             cells[taxonomy[label]["slug"]] = kept
     return cells
+
+
+def write_geo_index_sidecar(geo_path: Path, cells: dict[str, list[list[int]]],
+                            cell_size_deg: float, source_split: str = "train") -> int:
+    """Write geo_index.json unconditionally, every run.
+
+    Previously, a run with no usable coordinates left an existing geo_index.json
+    untouched, so a stale index from an unrelated earlier run (a different
+    species catalog, a different prototype set) could silently keep boosting
+    results for a model it was never built for. This always overwrites
+    geo_path with a schema-valid sidecar -- an explicitly empty {"cells": {}}
+    when there is nothing to write -- so the API's own loader intentionally
+    reports it inactive (geo_index_loaded: false, reason "no_usable_cells")
+    instead of serving stale cells.
+
+    "source_split" is an additive top-level field; api/inference.py's
+    _load_geo_index (and evaluate.py's load_geo_index) only read
+    "cell_size_deg" and "cells", so this does not change their read contract.
+    It exists purely so a human or a future script can tell a train-only
+    export apart from an index of unknown or train+val provenance.
+
+    Returns the number of cells written (0 for the empty case), for the
+    caller's own logging.
+    """
+    geo_path.write_text(json.dumps(
+        {"cell_size_deg": float(cell_size_deg), "cells": cells,
+         "source_split": source_split}, indent=1))
+    return sum(len(v) for v in cells.values())
+
+
+def build_val_split_record(cfg: dict, train_s, val_s) -> dict:
+    """The pinned split record written to val_split.json.
+
+    Pins BOTH train and val membership as sorted "{slug}/{stem}" keys ("val"
+    existed before; "train" is new here) so a future run can verify complete,
+    unique, disjoint resolution against the manifest before trusting either
+    list -- in particular before rebuilding a leak-free geo index from the
+    train portion alone (see evaluate.py's resolve_pinned_train_split).
+    Additive: readers that only look at "val" are unaffected.
+    """
+    def keys(samples):
+        return sorted(f"{s.slug}/{Path(s.storage_path).stem}" for s in samples)
+
+    train_keys = keys(train_s)
+    val_keys = keys(val_s)
+    if not train_keys or not val_keys:
+        raise ValueError("Pinned split requires non-empty train and val membership.")
+
+    def duplicates(values):
+        seen, repeated = set(), set()
+        for value in values:
+            if value in seen:
+                repeated.add(value)
+            seen.add(value)
+        return sorted(repeated)
+
+    train_dupes = duplicates(train_keys)
+    val_dupes = duplicates(val_keys)
+    if train_dupes or val_dupes:
+        example = (train_dupes or val_dupes)[0]
+        raise ValueError(
+            "Sample keys must be unique within each pinned split; duplicate "
+            f"key {example!r}."
+        )
+    overlap = set(train_keys) & set(val_keys)
+    if overlap:
+        raise ValueError(
+            "Pinned train and val membership must be disjoint; shared key "
+            f"{sorted(overlap)[0]!r}."
+        )
+
+    return {
+        "seed": cfg["seed"],
+        "val_fraction": cfg["val_fraction"],
+        "n_total": len(train_keys) + len(val_keys),
+        "n_train": len(train_keys),
+        "n_val": len(val_keys),
+        "train": train_keys,
+        "val": val_keys,
+    }
 
 
 @torch.no_grad()
@@ -156,6 +262,9 @@ def main() -> None:
     samples, taxonomy = load_manifest(cfg)
     num_classes = len(taxonomy)
     train_s, val_s = split_samples(samples, cfg["val_fraction"], cfg["seed"])
+    # Validate logical-key integrity before an expensive training run. The same
+    # record is written after training succeeds.
+    split_record = build_val_split_record(cfg, train_s, val_s)
     print(f"[train] {len(train_s)} train / {len(val_s)} val / {num_classes} classes")
 
     train_ds = AntDataset(train_s, cfg, train=True)
@@ -224,19 +333,16 @@ def main() -> None:
 
     torch.save({"model": model.state_dict(), "config": cfg}, art / "model.pth")
 
-    # Pin the held-out set. Without this the val split is only implicit — it
-    # depends on the manifest's split column and row order, both of which are
-    # rewritten whenever the manifest is regenerated. Once that happens the
-    # reported accuracy can never be reproduced, because every reconstructed
-    # split silently mixes training images back in. Keys are {slug}/{stem} so
-    # the file is portable across machines and storage backends.
-    (art / "val_split.json").write_text(json.dumps({
-        "seed": cfg["seed"],
-        "val_fraction": cfg["val_fraction"],
-        "n_train": len(train_s),
-        "n_val": len(val_s),
-        "val": sorted(f"{s.slug}/{Path(s.storage_path).stem}" for s in val_s),
-    }, indent=1))
+    # Pin the held-out set, and (additively) the training set too. Without
+    # this the split is only implicit — it depends on the manifest's split
+    # column and row order, both of which are rewritten whenever the manifest
+    # is regenerated. Once that happens the reported accuracy can never be
+    # reproduced, because every reconstructed split silently mixes training
+    # images back in -- and a "train" set inferred as "everything not in val"
+    # would inherit the same rot. Keys are {slug}/{stem} so the file is
+    # portable across machines and storage backends.
+    (art / "val_split.json").write_text(
+        json.dumps(split_record, indent=1))
 
     print("[train] computing prototypes…")
     protos = compute_prototypes(model, proto_dl, num_classes, device,
@@ -248,23 +354,24 @@ def main() -> None:
     )
 
     # Geo index: grid cells per species from observation coordinates, if the
-    # source carries them (DB columns or a manifest CSV). Absent coords → no
-    # file written, and the API simply reports geo_index_loaded: false.
+    # source carries them (DB columns or a manifest CSV). Built from the TRAIN
+    # split only (never val), so the shipped index can't leak validation
+    # coordinates. Written every run, even when there is nothing usable, so a
+    # stale index from an earlier run (a different catalog, different
+    # prototypes) can never silently survive untouched.
     geo_cfg = cfg.get("geo") or {}
     cell_size = float(geo_cfg.get("cell_size_deg", 1.0))
-    cells = build_geo_index(samples, taxonomy, cell_size,
+    cells = build_geo_index(train_s, taxonomy, cell_size,
                             int(geo_cfg.get("min_obs_per_cell", 2)))
-    geo_path = art / "geo_index.json"
+    n_cells = write_geo_index_sidecar(art / "geo_index.json", cells, cell_size)
     if cells:
-        geo_path.write_text(json.dumps(
-            {"cell_size_deg": cell_size, "cells": cells}, indent=1))
-        n_cells = sum(len(v) for v in cells.values())
         print(f"[train] wrote geo_index.json "
-              f"({n_cells} cells across {len(cells)} species)")
-    elif geo_path.exists():
-        print(f"[train] WARNING: no coordinates in this run's data, so "
-              f"{geo_path.name} was left untouched — it is from an earlier run "
-              f"and may not match these prototypes.")
+              f"({n_cells} cells across {len(cells)} species, train split only)")
+    else:
+        print("[train] wrote an empty geo_index.json (no usable train "
+              "coordinates this run) -- any earlier index is intentionally "
+              "replaced, not left stale; the API reports geo_index_loaded: "
+              "false, reason 'no_usable_cells'.")
 
     print("[train] exporting ONNX backbone…")
     export_backbone(model, art / "backbone.onnx", cfg["image_size"], device)

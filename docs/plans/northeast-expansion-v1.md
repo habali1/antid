@@ -1,7 +1,7 @@
 # AntID: Northeast coverage expansion v1
 
-Status: scope approved; species shortlist provisional; no data collection or
-training started. Prepared 2026-09-05.
+Status: scope approved; Milestone 1 implemented and verified; species shortlist
+provisional; no data collection or training started. Prepared 2026-09-05.
 
 ## Decision and boundaries
 
@@ -98,7 +98,14 @@ all-time snapshot described above.
 
 ## Milestones still to do, in order
 
-### 1. Close the bounded retraining prerequisites
+### 1. Close the bounded retraining prerequisites — completed 2026-09-05
+
+Implemented in the working tree after the planning commit: train-only geo
+export, unconditional stale-sidecar replacement, sorted train+val split pins,
+fail-closed pinned-record validation, honest file-provenance labeling, and an
+inactive empty-index evaluation path. Verification: 27 focused synthetic tests,
+33 policy-generator tests, 11 policy-loader tests, 13 inference tests, 3 API-main
+tests, and Python compilation all passed. No model or frozen evaluation ran.
 
 The geo export format is already slug-keyed and compatible with the API. Do not
 reopen the old format bug. The remaining issues found in the current code are:
@@ -252,8 +259,16 @@ hosting, and any recurring cost before enabling those features.
 
 ## Next bounded terminal task
 
-Implement and test **milestone 1 only**, using this plan for context. Inspect
-current files first; do not repeat work already fixed. Preserve all current
-model artifacts, policies, frozen datasets/reports, and parity scripts. Use
-synthetic fixtures, no model runs or browser automation. Report the diff and
-tests, then stop before scraping, retraining, or proceeding to milestone 2.
+Begin **Milestone 2A: a metadata-only readiness audit** for the 15 provisional
+taxon IDs. Inspect current scripts and frozen exclusion sources first. Query
+public iNaturalist metadata at the recommended request pace; do not download
+photos. For each candidate, verify exact active species/genus lineage and report
+the observation/photo candidates remaining after every available training,
+benchmark, calibration, unknown-test, and duplicate exclusion. Also report
+distinct observers, state coverage, licenses, date coverage, and shortfalls
+against a proposed bounded train/development/final-test quota. Do not choose the
+quota after looking at model scores, do not freeze membership, and do not start
+training. Preserve all current artifacts, policies, frozen datasets/reports, and
+parity scripts. Write a reproducible, versioned metadata report plus its query
+parameters; show the proposed download/disk budget and stop for approval before
+any image download or final species substitution.
