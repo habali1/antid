@@ -1,0 +1,2694 @@
+{
+  "snapshot_schema_version": 1,
+  "purpose": "Read-only species-selection evidence, NOT a training manifest or accuracy evaluation.",
+  "retrieved_at_utc_range": {
+    "started": "2026-09-05T14:16:46.1890199Z",
+    "completed": "2026-09-05T15:47:57.6633370Z"
+  },
+  "source": "https://api.inaturalist.org/v1/observations/species_counts",
+  "taxonomy_sha256": "057819601f47613a0b3fa099982547d4234e4f28f0cd45170d50774695538cf9",
+  "filters": {
+    "taxon_id": 47336,
+    "rank": "species",
+    "quality_grade": "research",
+    "photos": true,
+    "captive": false,
+    "time_window": "all time; counts as returned during retrieval",
+    "per_page": 200
+  },
+  "query_completeness": "All ten responses returned exactly total_results rows; no pagination omitted.",
+  "region_definition": "U.S. Census Bureau Northeast: New England (CT, MA, ME, NH, RI, VT) plus Middle Atlantic (NJ, NY, PA). Broome County is a separate local diagnostic, already inside NY; never added to regional totals.",
+  "approved_scope": {
+    "retain_existing_species": 50,
+    "maximum_new_species": 15
+  },
+  "ranking_rule": "Missing supported taxon IDs/names, sorted by nine-state summed observation count descending, taxon_id ascending for ties. Broome count is context, not an extra weight.",
+  "shortlist_status": "PROVISIONAL: counts rank relevance, not label reliability, photo usability, licensing, deduplicated sample availability, or model performance. Admit fewer than 15 if readiness fails.",
+  "provisional_addition_taxon_ids": [
+    372712,
+    69311,
+    222712,
+    143252,
+    341143,
+    215970,
+    143505,
+    146942,
+    966095,
+    1032788,
+    213893,
+    133654,
+    203419,
+    232366,
+    222713
+  ],
+  "summary": {
+    "regional_species_observed": 142,
+    "regional_observations": 50762,
+    "supported_species_observed": 10,
+    "supported_observations": 29484,
+    "provisional_addition_observations": 14431,
+    "observations_represented_before": 0.5808281785587645,
+    "observations_represented_after": 0.8651156376817304,
+    "broome_observations": 121,
+    "broome_represented_before": 55,
+    "broome_represented_after": 98
+  },
+  "regions": [
+    {
+      "region": "NY",
+      "place_id": 48,
+      "species_count": 119,
+      "observation_count": 19357,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=48&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "CT",
+      "place_id": 49,
+      "species_count": 58,
+      "observation_count": 2105,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=49&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "MA",
+      "place_id": 2,
+      "species_count": 85,
+      "observation_count": 8220,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=2&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "RI",
+      "place_id": 8,
+      "species_count": 58,
+      "observation_count": 932,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=8&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "VT",
+      "place_id": 47,
+      "species_count": 45,
+      "observation_count": 1236,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=47&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "NH",
+      "place_id": 41,
+      "species_count": 54,
+      "observation_count": 961,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=41&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "ME",
+      "place_id": 17,
+      "species_count": 52,
+      "observation_count": 1514,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=17&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "PA",
+      "place_id": 42,
+      "species_count": 93,
+      "observation_count": 10725,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=42&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "NJ",
+      "place_id": 51,
+      "species_count": 81,
+      "observation_count": 5712,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=51&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    },
+    {
+      "region": "Broome",
+      "place_id": 692,
+      "species_count": 21,
+      "observation_count": 121,
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?taxon_id=47336&place_id=692&quality_grade=research&rank=species&photos=true&captive=false&per_page=200"
+    }
+  ],
+  "caveats": [
+    "Observation counts are not independent individual ants, unique photos, natural abundance, encounter probabilities, or accuracy.",
+    "Research-grade sampling favors photographable and identifiable taxa; zeros do not prove absence.",
+    "Aggregate counts do not apply training/benchmark/calibration/test exclusions or photo-license/duplicate checks.",
+    "No observation/photo records or image files were downloaded for this snapshot.",
+    "A taxon's occurrence count is not an endorsement of every underlying identification.",
+    "iNaturalist taxonomy and aggregate counts can change after this dated retrieval."
+  ],
+  "species": [
+    {
+      "taxon_id": 129902,
+      "name": "Camponotus pennsylvanicus",
+      "supported": true,
+      "total": 11439,
+      "counts": {
+        "NY": 3603,
+        "CT": 459,
+        "MA": 2482,
+        "RI": 228,
+        "VT": 407,
+        "NH": 387,
+        "ME": 400,
+        "Broome": 38,
+        "PA": 2497,
+        "NJ": 976
+      }
+    },
+    {
+      "taxon_id": 68142,
+      "name": "Prenolepis imparis",
+      "supported": true,
+      "total": 5917,
+      "counts": {
+        "NY": 2412,
+        "CT": 195,
+        "MA": 1249,
+        "RI": 95,
+        "VT": 64,
+        "NH": 43,
+        "ME": 11,
+        "Broome": 9,
+        "PA": 1264,
+        "NJ": 584
+      }
+    },
+    {
+      "taxon_id": 62780,
+      "name": "Camponotus chromaiodes",
+      "supported": true,
+      "total": 4509,
+      "counts": {
+        "NY": 1016,
+        "CT": 474,
+        "MA": 524,
+        "RI": 126,
+        "VT": 0,
+        "NH": 2,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1370,
+        "NJ": 997
+      }
+    },
+    {
+      "taxon_id": 569552,
+      "name": "Tetramorium immigrans",
+      "supported": true,
+      "total": 3742,
+      "counts": {
+        "NY": 1496,
+        "CT": 104,
+        "MA": 708,
+        "RI": 76,
+        "VT": 84,
+        "NH": 106,
+        "ME": 129,
+        "Broome": 4,
+        "PA": 716,
+        "NJ": 323
+      }
+    },
+    {
+      "taxon_id": 47340,
+      "name": "Tapinoma sessile",
+      "supported": true,
+      "total": 2781,
+      "counts": {
+        "NY": 1126,
+        "CT": 112,
+        "MA": 249,
+        "RI": 32,
+        "VT": 83,
+        "NH": 47,
+        "ME": 49,
+        "Broome": 4,
+        "PA": 719,
+        "NJ": 364
+      }
+    },
+    {
+      "taxon_id": 372712,
+      "name": "Nylanderia flavipes",
+      "supported": false,
+      "total": 2494,
+      "counts": {
+        "NY": 1574,
+        "CT": 58,
+        "MA": 228,
+        "RI": 8,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 466,
+        "NJ": 160
+      }
+    },
+    {
+      "taxon_id": 69311,
+      "name": "Lasius neoniger",
+      "supported": false,
+      "total": 1399,
+      "counts": {
+        "NY": 525,
+        "CT": 51,
+        "MA": 259,
+        "RI": 40,
+        "VT": 52,
+        "NH": 27,
+        "ME": 29,
+        "Broome": 2,
+        "PA": 265,
+        "NJ": 151
+      }
+    },
+    {
+      "taxon_id": 222712,
+      "name": "Lasius claviger",
+      "supported": false,
+      "total": 1345,
+      "counts": {
+        "NY": 580,
+        "CT": 106,
+        "MA": 193,
+        "RI": 26,
+        "VT": 5,
+        "NH": 8,
+        "ME": 0,
+        "Broome": 6,
+        "PA": 257,
+        "NJ": 170
+      }
+    },
+    {
+      "taxon_id": 143252,
+      "name": "Camponotus novaeboracensis",
+      "supported": false,
+      "total": 1266,
+      "counts": {
+        "NY": 328,
+        "CT": 9,
+        "MA": 127,
+        "RI": 3,
+        "VT": 255,
+        "NH": 114,
+        "ME": 357,
+        "Broome": 5,
+        "PA": 69,
+        "NJ": 4
+      }
+    },
+    {
+      "taxon_id": 341143,
+      "name": "Lasius emarginatus",
+      "supported": false,
+      "total": 1042,
+      "counts": {
+        "NY": 1002,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 40
+      }
+    },
+    {
+      "taxon_id": 215970,
+      "name": "Camponotus americanus",
+      "supported": false,
+      "total": 1027,
+      "counts": {
+        "NY": 197,
+        "CT": 103,
+        "MA": 427,
+        "RI": 55,
+        "VT": 6,
+        "NH": 17,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 132,
+        "NJ": 90
+      }
+    },
+    {
+      "taxon_id": 143505,
+      "name": "Camponotus subbarbatus",
+      "supported": false,
+      "total": 987,
+      "counts": {
+        "NY": 450,
+        "CT": 17,
+        "MA": 0,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 389,
+        "NJ": 130
+      }
+    },
+    {
+      "taxon_id": 146942,
+      "name": "Camponotus nearcticus",
+      "supported": false,
+      "total": 879,
+      "counts": {
+        "NY": 415,
+        "CT": 20,
+        "MA": 124,
+        "RI": 22,
+        "VT": 16,
+        "NH": 8,
+        "ME": 9,
+        "Broome": 2,
+        "PA": 189,
+        "NJ": 76
+      }
+    },
+    {
+      "taxon_id": 129272,
+      "name": "Camponotus castaneus",
+      "supported": true,
+      "total": 856,
+      "counts": {
+        "NY": 323,
+        "CT": 100,
+        "MA": 42,
+        "RI": 24,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 163,
+        "NJ": 204
+      }
+    },
+    {
+      "taxon_id": 966095,
+      "name": "Lasius americanus",
+      "supported": false,
+      "total": 711,
+      "counts": {
+        "NY": 293,
+        "CT": 25,
+        "MA": 84,
+        "RI": 9,
+        "VT": 13,
+        "NH": 4,
+        "ME": 28,
+        "Broome": 5,
+        "PA": 184,
+        "NJ": 71
+      }
+    },
+    {
+      "taxon_id": 1032788,
+      "name": "Lasius aphidicola",
+      "supported": false,
+      "total": 667,
+      "counts": {
+        "NY": 228,
+        "CT": 17,
+        "MA": 120,
+        "RI": 20,
+        "VT": 32,
+        "NH": 7,
+        "ME": 46,
+        "Broome": 4,
+        "PA": 143,
+        "NJ": 54
+      }
+    },
+    {
+      "taxon_id": 213893,
+      "name": "Aphaenogaster rudis",
+      "supported": false,
+      "total": 581,
+      "counts": {
+        "NY": 274,
+        "CT": 2,
+        "MA": 24,
+        "RI": 2,
+        "VT": 1,
+        "NH": 1,
+        "ME": 2,
+        "Broome": 0,
+        "PA": 166,
+        "NJ": 109
+      }
+    },
+    {
+      "taxon_id": 133654,
+      "name": "Formica exsectoides",
+      "supported": false,
+      "total": 580,
+      "counts": {
+        "NY": 153,
+        "CT": 9,
+        "MA": 146,
+        "RI": 7,
+        "VT": 38,
+        "NH": 31,
+        "ME": 51,
+        "Broome": 17,
+        "PA": 120,
+        "NJ": 25
+      }
+    },
+    {
+      "taxon_id": 203419,
+      "name": "Ponera pennsylvanica",
+      "supported": false,
+      "total": 495,
+      "counts": {
+        "NY": 235,
+        "CT": 14,
+        "MA": 59,
+        "RI": 12,
+        "VT": 3,
+        "NH": 3,
+        "ME": 2,
+        "Broome": 2,
+        "PA": 108,
+        "NJ": 59
+      }
+    },
+    {
+      "taxon_id": 232366,
+      "name": "Temnothorax curvispinosus",
+      "supported": false,
+      "total": 484,
+      "counts": {
+        "NY": 181,
+        "CT": 16,
+        "MA": 95,
+        "RI": 11,
+        "VT": 0,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 105,
+        "NJ": 75
+      }
+    },
+    {
+      "taxon_id": 222713,
+      "name": "Lasius interjectus",
+      "supported": false,
+      "total": 474,
+      "counts": {
+        "NY": 178,
+        "CT": 26,
+        "MA": 52,
+        "RI": 9,
+        "VT": 1,
+        "NH": 4,
+        "ME": 1,
+        "Broome": 0,
+        "PA": 122,
+        "NJ": 81
+      }
+    },
+    {
+      "taxon_id": 129277,
+      "name": "Aphaenogaster tennesseensis",
+      "supported": false,
+      "total": 454,
+      "counts": {
+        "NY": 105,
+        "CT": 4,
+        "MA": 4,
+        "RI": 0,
+        "VT": 13,
+        "NH": 20,
+        "ME": 5,
+        "Broome": 1,
+        "PA": 228,
+        "NJ": 75
+      }
+    },
+    {
+      "taxon_id": 213889,
+      "name": "Aphaenogaster fulva",
+      "supported": false,
+      "total": 437,
+      "counts": {
+        "NY": 171,
+        "CT": 16,
+        "MA": 48,
+        "RI": 6,
+        "VT": 0,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 103,
+        "NJ": 92
+      }
+    },
+    {
+      "taxon_id": 232368,
+      "name": "Temnothorax longispinosus",
+      "supported": false,
+      "total": 437,
+      "counts": {
+        "NY": 195,
+        "CT": 16,
+        "MA": 95,
+        "RI": 6,
+        "VT": 18,
+        "NH": 6,
+        "ME": 8,
+        "Broome": 2,
+        "PA": 79,
+        "NJ": 14
+      }
+    },
+    {
+      "taxon_id": 213892,
+      "name": "Aphaenogaster picea",
+      "supported": false,
+      "total": 434,
+      "counts": {
+        "NY": 190,
+        "CT": 27,
+        "MA": 74,
+        "RI": 12,
+        "VT": 24,
+        "NH": 5,
+        "ME": 14,
+        "Broome": 11,
+        "PA": 82,
+        "NJ": 6
+      }
+    },
+    {
+      "taxon_id": 68938,
+      "name": "Brachymyrmex depilis",
+      "supported": false,
+      "total": 406,
+      "counts": {
+        "NY": 212,
+        "CT": 13,
+        "MA": 47,
+        "RI": 11,
+        "VT": 5,
+        "NH": 2,
+        "ME": 6,
+        "Broome": 0,
+        "PA": 57,
+        "NJ": 53
+      }
+    },
+    {
+      "taxon_id": 133027,
+      "name": "Formica subsericea",
+      "supported": false,
+      "total": 348,
+      "counts": {
+        "NY": 85,
+        "CT": 5,
+        "MA": 73,
+        "RI": 10,
+        "VT": 14,
+        "NH": 3,
+        "ME": 45,
+        "Broome": 0,
+        "PA": 53,
+        "NJ": 60
+      }
+    },
+    {
+      "taxon_id": 69540,
+      "name": "Solenopsis molesta",
+      "supported": false,
+      "total": 281,
+      "counts": {
+        "NY": 128,
+        "CT": 8,
+        "MA": 41,
+        "RI": 9,
+        "VT": 3,
+        "NH": 2,
+        "ME": 2,
+        "Broome": 1,
+        "PA": 55,
+        "NJ": 33
+      }
+    },
+    {
+      "taxon_id": 217740,
+      "name": "Crematogaster cerasi",
+      "supported": false,
+      "total": 267,
+      "counts": {
+        "NY": 129,
+        "CT": 8,
+        "MA": 28,
+        "RI": 4,
+        "VT": 1,
+        "NH": 4,
+        "ME": 6,
+        "Broome": 0,
+        "PA": 72,
+        "NJ": 15
+      }
+    },
+    {
+      "taxon_id": 218623,
+      "name": "Dolichoderus plagiatus",
+      "supported": false,
+      "total": 241,
+      "counts": {
+        "NY": 36,
+        "CT": 8,
+        "MA": 111,
+        "RI": 7,
+        "VT": 4,
+        "NH": 18,
+        "ME": 7,
+        "Broome": 2,
+        "PA": 43,
+        "NJ": 7
+      }
+    },
+    {
+      "taxon_id": 119172,
+      "name": "Myrmica rubra",
+      "supported": true,
+      "total": 214,
+      "counts": {
+        "NY": 49,
+        "CT": 0,
+        "MA": 77,
+        "RI": 6,
+        "VT": 9,
+        "NH": 1,
+        "ME": 71,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 81745,
+      "name": "Formica incerta",
+      "supported": false,
+      "total": 208,
+      "counts": {
+        "NY": 85,
+        "CT": 3,
+        "MA": 35,
+        "RI": 4,
+        "VT": 12,
+        "NH": 3,
+        "ME": 4,
+        "Broome": 1,
+        "PA": 46,
+        "NJ": 16
+      }
+    },
+    {
+      "taxon_id": 222715,
+      "name": "Lasius nearcticus",
+      "supported": false,
+      "total": 193,
+      "counts": {
+        "NY": 83,
+        "CT": 9,
+        "MA": 38,
+        "RI": 1,
+        "VT": 11,
+        "NH": 1,
+        "ME": 12,
+        "Broome": 3,
+        "PA": 26,
+        "NJ": 12
+      }
+    },
+    {
+      "taxon_id": 143658,
+      "name": "Formica pallidefulva",
+      "supported": false,
+      "total": 178,
+      "counts": {
+        "NY": 62,
+        "CT": 8,
+        "MA": 39,
+        "RI": 4,
+        "VT": 1,
+        "NH": 1,
+        "ME": 1,
+        "Broome": 0,
+        "PA": 45,
+        "NJ": 17
+      }
+    },
+    {
+      "taxon_id": 215974,
+      "name": "Camponotus herculeanus",
+      "supported": false,
+      "total": 177,
+      "counts": {
+        "NY": 37,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 24,
+        "NH": 25,
+        "ME": 91,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69109,
+      "name": "Pheidole bicarinata",
+      "supported": false,
+      "total": 166,
+      "counts": {
+        "NY": 34,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 26,
+        "NJ": 106
+      }
+    },
+    {
+      "taxon_id": 232370,
+      "name": "Temnothorax schaumii",
+      "supported": false,
+      "total": 164,
+      "counts": {
+        "NY": 87,
+        "CT": 1,
+        "MA": 16,
+        "RI": 3,
+        "VT": 1,
+        "NH": 1,
+        "ME": 2,
+        "Broome": 0,
+        "PA": 23,
+        "NJ": 30
+      }
+    },
+    {
+      "taxon_id": 464798,
+      "name": "Stigmatomma pallipes",
+      "supported": false,
+      "total": 147,
+      "counts": {
+        "NY": 76,
+        "CT": 4,
+        "MA": 23,
+        "RI": 1,
+        "VT": 1,
+        "NH": 3,
+        "ME": 1,
+        "Broome": 0,
+        "PA": 20,
+        "NJ": 18
+      }
+    },
+    {
+      "taxon_id": 218625,
+      "name": "Dolichoderus taschenbergi",
+      "supported": false,
+      "total": 133,
+      "counts": {
+        "NY": 20,
+        "CT": 3,
+        "MA": 13,
+        "RI": 2,
+        "VT": 0,
+        "NH": 14,
+        "ME": 35,
+        "Broome": 0,
+        "PA": 38,
+        "NJ": 8
+      }
+    },
+    {
+      "taxon_id": 69486,
+      "name": "Pheidole pilifera",
+      "supported": false,
+      "total": 119,
+      "counts": {
+        "NY": 43,
+        "CT": 10,
+        "MA": 31,
+        "RI": 3,
+        "VT": 0,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 7,
+        "NJ": 24
+      }
+    },
+    {
+      "taxon_id": 69101,
+      "name": "Myrmecina americana",
+      "supported": false,
+      "total": 112,
+      "counts": {
+        "NY": 70,
+        "CT": 2,
+        "MA": 12,
+        "RI": 4,
+        "VT": 1,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 11,
+        "NJ": 11
+      }
+    },
+    {
+      "taxon_id": 232771,
+      "name": "Trachymyrmex septentrionalis",
+      "supported": false,
+      "total": 109,
+      "counts": {
+        "NY": 35,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 74
+      }
+    },
+    {
+      "taxon_id": 834348,
+      "name": "Pheidole tysoni",
+      "supported": false,
+      "total": 99,
+      "counts": {
+        "NY": 58,
+        "CT": 1,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 22,
+        "NJ": 18
+      }
+    },
+    {
+      "taxon_id": 69042,
+      "name": "Forelius pruinosus",
+      "supported": false,
+      "total": 95,
+      "counts": {
+        "NY": 54,
+        "CT": 0,
+        "MA": 0,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 3,
+        "NJ": 37
+      }
+    },
+    {
+      "taxon_id": 220171,
+      "name": "Formica dolosa",
+      "supported": false,
+      "total": 77,
+      "counts": {
+        "NY": 35,
+        "CT": 2,
+        "MA": 18,
+        "RI": 1,
+        "VT": 1,
+        "NH": 5,
+        "ME": 1,
+        "Broome": 0,
+        "PA": 2,
+        "NJ": 12
+      }
+    },
+    {
+      "taxon_id": 225415,
+      "name": "Myrmica punctiventris",
+      "supported": false,
+      "total": 77,
+      "counts": {
+        "NY": 45,
+        "CT": 3,
+        "MA": 17,
+        "RI": 2,
+        "VT": 0,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 4,
+        "NJ": 5
+      }
+    },
+    {
+      "taxon_id": 69581,
+      "name": "Temnothorax ambiguus",
+      "supported": false,
+      "total": 71,
+      "counts": {
+        "NY": 30,
+        "CT": 2,
+        "MA": 7,
+        "RI": 1,
+        "VT": 1,
+        "NH": 0,
+        "ME": 3,
+        "Broome": 0,
+        "PA": 24,
+        "NJ": 3
+      }
+    },
+    {
+      "taxon_id": 69313,
+      "name": "Lasius latipes",
+      "supported": false,
+      "total": 69,
+      "counts": {
+        "NY": 21,
+        "CT": 2,
+        "MA": 21,
+        "RI": 0,
+        "VT": 2,
+        "NH": 8,
+        "ME": 6,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 8
+      }
+    },
+    {
+      "taxon_id": 217741,
+      "name": "Crematogaster lineolata",
+      "supported": false,
+      "total": 69,
+      "counts": {
+        "NY": 27,
+        "CT": 2,
+        "MA": 19,
+        "RI": 2,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 17,
+        "NJ": 2
+      }
+    },
+    {
+      "taxon_id": 69312,
+      "name": "Lasius murphyi",
+      "supported": false,
+      "total": 67,
+      "counts": {
+        "NY": 44,
+        "CT": 7,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 9,
+        "NJ": 7
+      }
+    },
+    {
+      "taxon_id": 218624,
+      "name": "Dolichoderus pustulatus",
+      "supported": false,
+      "total": 65,
+      "counts": {
+        "NY": 37,
+        "CT": 1,
+        "MA": 8,
+        "RI": 0,
+        "VT": 2,
+        "NH": 1,
+        "ME": 4,
+        "Broome": 0,
+        "PA": 6,
+        "NJ": 6
+      }
+    },
+    {
+      "taxon_id": 213894,
+      "name": "Aphaenogaster treatae",
+      "supported": false,
+      "total": 62,
+      "counts": {
+        "NY": 30,
+        "CT": 0,
+        "MA": 3,
+        "RI": 4,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 2,
+        "NJ": 23
+      }
+    },
+    {
+      "taxon_id": 884896,
+      "name": "Lasius brevicornis",
+      "supported": false,
+      "total": 62,
+      "counts": {
+        "NY": 20,
+        "CT": 2,
+        "MA": 13,
+        "RI": 0,
+        "VT": 8,
+        "NH": 4,
+        "ME": 4,
+        "Broome": 1,
+        "PA": 8,
+        "NJ": 3
+      }
+    },
+    {
+      "taxon_id": 218622,
+      "name": "Dolichoderus mariae",
+      "supported": false,
+      "total": 58,
+      "counts": {
+        "NY": 16,
+        "CT": 0,
+        "MA": 3,
+        "RI": 1,
+        "VT": 1,
+        "NH": 3,
+        "ME": 8,
+        "Broome": 0,
+        "PA": 10,
+        "NJ": 16
+      }
+    },
+    {
+      "taxon_id": 220175,
+      "name": "Formica integra",
+      "supported": false,
+      "total": 55,
+      "counts": {
+        "NY": 23,
+        "CT": 0,
+        "MA": 9,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 5,
+        "Broome": 0,
+        "PA": 8,
+        "NJ": 10
+      }
+    },
+    {
+      "taxon_id": 69279,
+      "name": "Formica neogagates",
+      "supported": false,
+      "total": 53,
+      "counts": {
+        "NY": 16,
+        "CT": 9,
+        "MA": 12,
+        "RI": 0,
+        "VT": 3,
+        "NH": 1,
+        "ME": 2,
+        "Broome": 0,
+        "PA": 3,
+        "NJ": 7
+      }
+    },
+    {
+      "taxon_id": 367034,
+      "name": "Brachyponera chinensis",
+      "supported": false,
+      "total": 53,
+      "counts": {
+        "NY": 37,
+        "CT": 1,
+        "MA": 1,
+        "RI": 5,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 7,
+        "NJ": 2
+      }
+    },
+    {
+      "taxon_id": 227729,
+      "name": "Pheidole morrisii",
+      "supported": false,
+      "total": 50,
+      "counts": {
+        "NY": 33,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 17
+      }
+    },
+    {
+      "taxon_id": 319444,
+      "name": "Dorymyrmex bureni",
+      "supported": false,
+      "total": 44,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 0,
+        "NJ": 44,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 495060,
+      "name": "Vollenhovia emeryi",
+      "supported": false,
+      "total": 35,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 29,
+        "NJ": 6,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 218680,
+      "name": "Dorymyrmex grandulus",
+      "supported": false,
+      "total": 28,
+      "counts": {
+        "NY": 24,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 4
+      }
+    },
+    {
+      "taxon_id": 265969,
+      "name": "Monomorium carbonarium",
+      "supported": false,
+      "total": 28,
+      "counts": {
+        "NY": 23,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 2,
+        "NJ": 2
+      }
+    },
+    {
+      "taxon_id": 558147,
+      "name": "Nylanderia parvula",
+      "supported": false,
+      "total": 27,
+      "counts": {
+        "NY": 17,
+        "CT": 0,
+        "MA": 6,
+        "RI": 2,
+        "VT": 0,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 1
+      }
+    },
+    {
+      "taxon_id": 143612,
+      "name": "Formica ulkei",
+      "supported": false,
+      "total": 26,
+      "counts": {
+        "NY": 2,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 12,
+        "Broome": 0,
+        "PA": 12,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69122,
+      "name": "Tapinoma melanocephalum",
+      "supported": false,
+      "total": 24,
+      "counts": {
+        "NY": 12,
+        "CT": 0,
+        "MA": 4,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 6,
+        "NJ": 1
+      }
+    },
+    {
+      "taxon_id": 69388,
+      "name": "Paratrechina longicornis",
+      "supported": true,
+      "total": 24,
+      "counts": {
+        "NY": 3,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 21,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69600,
+      "name": "Tetramorium bicarinatum",
+      "supported": false,
+      "total": 23,
+      "counts": {
+        "NY": 14,
+        "CT": 1,
+        "MA": 5,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 3,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69307,
+      "name": "Lasius subumbratus",
+      "supported": false,
+      "total": 22,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 3,
+        "NH": 1,
+        "ME": 16,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 215971,
+      "name": "Camponotus caryae",
+      "supported": false,
+      "total": 20,
+      "counts": {
+        "NY": 12,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 1,
+        "Broome": 1,
+        "PA": 5,
+        "NJ": 1
+      }
+    },
+    {
+      "taxon_id": 544210,
+      "name": "Monomorium emarginatum",
+      "supported": false,
+      "total": 20,
+      "counts": {
+        "NY": 7,
+        "CT": 1,
+        "MA": 7,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 4,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69368,
+      "name": "Myrmica americana",
+      "supported": false,
+      "total": 19,
+      "counts": {
+        "NY": 8,
+        "CT": 1,
+        "MA": 6,
+        "RI": 0,
+        "VT": 2,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 855571,
+      "name": "Polyergus sanwaldi",
+      "supported": false,
+      "total": 19,
+      "counts": {
+        "NY": 13,
+        "CT": 0,
+        "MA": 1,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 4
+      }
+    },
+    {
+      "taxon_id": 222716,
+      "name": "Lasius speculiventris",
+      "supported": false,
+      "total": 18,
+      "counts": {
+        "NY": 6,
+        "CT": 1,
+        "MA": 3,
+        "RI": 1,
+        "VT": 1,
+        "NH": 0,
+        "ME": 3,
+        "Broome": 0,
+        "PA": 3,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 220186,
+      "name": "Formica subintegra",
+      "supported": false,
+      "total": 16,
+      "counts": {
+        "NY": 5,
+        "CT": 1,
+        "MA": 5,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 3,
+        "NJ": 2
+      }
+    },
+    {
+      "taxon_id": 736848,
+      "name": "Pheidole davisi",
+      "supported": false,
+      "total": 16,
+      "counts": {
+        "NY": 12,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 4
+      }
+    },
+    {
+      "taxon_id": 232371,
+      "name": "Temnothorax texanus",
+      "supported": false,
+      "total": 15,
+      "counts": {
+        "NY": 11,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 3
+      }
+    },
+    {
+      "taxon_id": 430042,
+      "name": "Nylanderia faisonensis",
+      "supported": false,
+      "total": 15,
+      "counts": {
+        "NY": 2,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 7,
+        "NJ": 6
+      }
+    },
+    {
+      "taxon_id": 220180,
+      "name": "Formica pergandei",
+      "supported": false,
+      "total": 14,
+      "counts": {
+        "NY": 8,
+        "CT": 0,
+        "MA": 2,
+        "RI": 0,
+        "VT": 0,
+        "NH": 2,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 1
+      }
+    },
+    {
+      "taxon_id": 222714,
+      "name": "Lasius minutus",
+      "supported": false,
+      "total": 14,
+      "counts": {
+        "NY": 5,
+        "CT": 0,
+        "MA": 3,
+        "RI": 0,
+        "VT": 2,
+        "NH": 0,
+        "ME": 4,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 538532,
+      "name": "Colobopsis mississippiensis",
+      "supported": false,
+      "total": 14,
+      "counts": {
+        "NY": 6,
+        "CT": 1,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 2,
+        "NJ": 5
+      }
+    },
+    {
+      "taxon_id": 69320,
+      "name": "Monomorium pharaonis",
+      "supported": false,
+      "total": 13,
+      "counts": {
+        "NY": 2,
+        "CT": 1,
+        "MA": 2,
+        "RI": 0,
+        "VT": 0,
+        "NH": 2,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 2,
+        "NJ": 4
+      }
+    },
+    {
+      "taxon_id": 69252,
+      "name": "Formica lasioides",
+      "supported": false,
+      "total": 12,
+      "counts": {
+        "NY": 3,
+        "CT": 0,
+        "MA": 6,
+        "RI": 0,
+        "VT": 1,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69309,
+      "name": "Lasius pallitarsis",
+      "supported": false,
+      "total": 12,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 5,
+        "NH": 2,
+        "ME": 5,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 98630,
+      "name": "Crematogaster pilosa",
+      "supported": false,
+      "total": 11,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 5,
+        "NJ": 5
+      }
+    },
+    {
+      "taxon_id": 47338,
+      "name": "Formica aserva",
+      "supported": false,
+      "total": 10,
+      "counts": {
+        "NY": 6,
+        "CT": 0,
+        "MA": 0,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 3,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 81527,
+      "name": "Formica glacialis",
+      "supported": false,
+      "total": 10,
+      "counts": {
+        "NY": 7,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 2,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 109970,
+      "name": "Polyergus lucidus",
+      "supported": false,
+      "total": 10,
+      "counts": {
+        "NY": 2,
+        "CT": 0,
+        "MA": 4,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 3,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 637719,
+      "name": "Strumigenys pilinasis",
+      "supported": false,
+      "total": 10,
+      "counts": {
+        "NY": 4,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 5,
+        "NJ": 1
+      }
+    },
+    {
+      "taxon_id": 805405,
+      "name": "Solenopsis carolinensis",
+      "supported": false,
+      "total": 10,
+      "counts": {
+        "NY": 2,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 7
+      }
+    },
+    {
+      "taxon_id": 69035,
+      "name": "Formica argentea",
+      "supported": false,
+      "total": 9,
+      "counts": {
+        "NY": 2,
+        "CT": 0,
+        "MA": 4,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 3,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69275,
+      "name": "Formica neorufibarbis",
+      "supported": false,
+      "total": 9,
+      "counts": {
+        "NY": 3,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 2,
+        "NH": 3,
+        "ME": 1,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 319447,
+      "name": "Formica difficilis",
+      "supported": false,
+      "total": 9,
+      "counts": {
+        "NY": 9,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 319449,
+      "name": "Stenamma schmittii",
+      "supported": false,
+      "total": 9,
+      "counts": {
+        "NY": 8,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 637715,
+      "name": "Strumigenys pergandei",
+      "supported": false,
+      "total": 9,
+      "counts": {
+        "NY": 5,
+        "CT": 0,
+        "MA": 1,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 1
+      }
+    },
+    {
+      "taxon_id": 69494,
+      "name": "Plagiolepis alluaudi",
+      "supported": false,
+      "total": 8,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 8,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 225417,
+      "name": "Myrmica spatulata",
+      "supported": false,
+      "total": 8,
+      "counts": {
+        "NY": 7,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 450689,
+      "name": "Crematogaster ashmeadi",
+      "supported": false,
+      "total": 8,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 1,
+        "NJ": 7,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 225412,
+      "name": "Myrmica latifrons",
+      "supported": false,
+      "total": 7,
+      "counts": {
+        "NY": 7,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 231515,
+      "name": "Stenamma brevicorne",
+      "supported": false,
+      "total": 7,
+      "counts": {
+        "NY": 5,
+        "CT": 0,
+        "MA": 0,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 319450,
+      "name": "Stenamma impar",
+      "supported": false,
+      "total": 7,
+      "counts": {
+        "NY": 4,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 2,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 424609,
+      "name": "Temnothorax americanus",
+      "supported": false,
+      "total": 7,
+      "counts": {
+        "NY": 3,
+        "CT": 0,
+        "MA": 2,
+        "RI": 2,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 225414,
+      "name": "Myrmica pinetorum",
+      "supported": false,
+      "total": 6,
+      "counts": {
+        "NY": 4,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 341630,
+      "name": "Myrmica detritinodis",
+      "supported": false,
+      "total": 6,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 4,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 1,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69077,
+      "name": "Hypoponera opacior",
+      "supported": false,
+      "total": 5,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 2,
+        "NJ": 3,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 220185,
+      "name": "Formica subaenescens",
+      "supported": false,
+      "total": 5,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 2,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 2,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 266232,
+      "name": "Proceratium crassicorne",
+      "supported": false,
+      "total": 5,
+      "counts": {
+        "NY": 3,
+        "CT": 0,
+        "MA": 1,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 424632,
+      "name": "Tetramorium atratulum",
+      "supported": false,
+      "total": 5,
+      "counts": {
+        "NY": 0,
+        "CT": 2,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 1,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 637722,
+      "name": "Strumigenys reflexa",
+      "supported": false,
+      "total": 5,
+      "counts": {
+        "NY": 5,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 220184,
+      "name": "Formica rubicunda",
+      "supported": false,
+      "total": 4,
+      "counts": {
+        "NY": 1,
+        "CT": 1,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 225413,
+      "name": "Myrmica lobifrons",
+      "supported": false,
+      "total": 4,
+      "counts": {
+        "NY": 4,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 228739,
+      "name": "Proceratium pergandei",
+      "supported": false,
+      "total": 4,
+      "counts": {
+        "NY": 1,
+        "CT": 1,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 228740,
+      "name": "Proceratium silaceum",
+      "supported": false,
+      "total": 4,
+      "counts": {
+        "NY": 2,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 2,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 232369,
+      "name": "Temnothorax pergandei",
+      "supported": false,
+      "total": 4,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 0,
+        "NJ": 4,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 430043,
+      "name": "Strumigenys rostrata",
+      "supported": false,
+      "total": 4,
+      "counts": {
+        "NY": 3,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 495052,
+      "name": "Colobopsis impressa",
+      "supported": false,
+      "total": 4,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 0,
+        "NJ": 4,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 129114,
+      "name": "Formica obscuriventris",
+      "supported": false,
+      "total": 3,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 1,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 484948,
+      "name": "Cardiocondyla obscurior",
+      "supported": false,
+      "total": 3,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 2,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69094,
+      "name": "Leptothorax canadensis",
+      "supported": false,
+      "total": 2,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69542,
+      "name": "Stenamma diecki",
+      "supported": false,
+      "total": 2,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 1,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 199356,
+      "name": "Pheidole megacephala",
+      "supported": false,
+      "total": 2,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 2,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 346973,
+      "name": "Myrmica rugulosa",
+      "supported": false,
+      "total": 2,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 2,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 637721,
+      "name": "Strumigenys pulchella",
+      "supported": false,
+      "total": 2,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 1,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 855570,
+      "name": "Polyergus montivagus",
+      "supported": false,
+      "total": 2,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 1
+      }
+    },
+    {
+      "taxon_id": 891181,
+      "name": "Pheidole navigans",
+      "supported": false,
+      "total": 2,
+      "counts": {
+        "NY": 2,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 1704594,
+      "name": "Allomerus auropunctatus",
+      "supported": false,
+      "total": 2,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 2,
+        "NJ": 0,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 67598,
+      "name": "Solenopsis invicta",
+      "supported": true,
+      "total": 1,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 68165,
+      "name": "Linepithema humile",
+      "supported": true,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69069,
+      "name": "Formica dakotensis",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69072,
+      "name": "Hypoponera punctatissima",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 1,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69377,
+      "name": "Myrmica incompleta",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 69598,
+      "name": "Tetramorium pacificum",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 300301,
+      "name": "Pseudomyrmex gracilis",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 1,
+        "NJ": 0,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 319437,
+      "name": "Pheidole dentata",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 1,
+        "NJ": 0,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 324240,
+      "name": "Odontomachus ruginodis",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 450699,
+      "name": "Aphaenogaster lamellidens",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 1,
+        "NJ": 0,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 495053,
+      "name": "Lasius subglaber",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 1,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 625860,
+      "name": "Nylanderia bourbonica",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 637871,
+      "name": "Formica knighti",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 638236,
+      "name": "Crematogaster vermiculata",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 1,
+        "NJ": 0,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 881109,
+      "name": "Polyergus bicolor",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    },
+    {
+      "taxon_id": 1353285,
+      "name": "Lasius pogonogynus",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 0,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "PA": 0,
+        "NJ": 1,
+        "Broome": 0
+      }
+    },
+    {
+      "taxon_id": 1399548,
+      "name": "Temnothorax minutissimus",
+      "supported": false,
+      "total": 1,
+      "counts": {
+        "NY": 1,
+        "CT": 0,
+        "MA": 0,
+        "RI": 0,
+        "VT": 0,
+        "NH": 0,
+        "ME": 0,
+        "Broome": 0,
+        "PA": 0,
+        "NJ": 0
+      }
+    }
+  ]
+}

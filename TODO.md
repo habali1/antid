@@ -1,5 +1,33 @@
 # TODO
 
+## Active roadmap: Northeast expansion
+
+- Scope approved: keep the existing 50 species and add up to 15 missing
+  Northeast species. One catalog, not a Northeast-only replacement.
+- [Plan, provisional shortlist, and next bounded task](docs/plans/northeast-expansion-v1.md)
+  and [public aggregate-count snapshot](docs/plans/northeast-counts-2026-09-05.json).
+- Next: train-only geo export and stale-sidecar handling, with synthetic tests;
+  then candidate metadata/quality review. No training or photo collection has started.
+- Keep personal local history and optional accounts on the roadmap. Public
+  maps/social sharing remain deferred; no paid infrastructure without approval.
+
+## Policy maintenance: verified closeout and boundaries
+
+- Training/API `policy_schema.py` copies are byte-identical; the existing
+  `test_training_and_api_schema_copies_are_byte_identical` test passed on
+  2026-09-05. Preserve this test when changing either copy.
+- The recorded `api/inference.py` **source hash is diagnostic provenance only**.
+  A source edit alone does not disable the gate. Runtime checks enforce the
+  three mandatory artifact hashes, preprocessing contract, CPU provider policy,
+  and schema/content integrity. Inspect `/health` reason fields when inactive.
+- After serving edits, verify behavior and regenerate provenance as appropriate.
+  Artifact/preprocessing changes need compatible evidence; regeneration alone
+  is not validation. The optional geo sidecar is intentionally not hash-bound.
+- Catalog expansion invalidates the current gate's evidence scope even without
+  backbone retraining. New prototypes/taxonomy need a freshly validated policy;
+  do not reuse old 0.60 evidence by merely replacing hashes. Preserve all old
+  benchmark/calibration/unknown-test files and parity reports.
+
 ## Parity scripts: deferred audit items (must be fixed before any future parity run)
 
 `training/parity_check.py`, `training/parity_diagnostic.py`, and
