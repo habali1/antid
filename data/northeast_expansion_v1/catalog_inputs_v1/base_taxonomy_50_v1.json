@@ -1,0 +1,302 @@
+{
+  "0": {
+    "species_name": "Anoplolepis custodiens",
+    "common_name": "Large Pugnacious Ant",
+    "taxon_id": 426275,
+    "slug": "anoplolepis-custodiens"
+  },
+  "1": {
+    "species_name": "Anoplolepis gracilipes",
+    "common_name": "Yellow Crazy Ant",
+    "taxon_id": 123386,
+    "slug": "anoplolepis-gracilipes"
+  },
+  "2": {
+    "species_name": "Atta mexicana",
+    "common_name": "Chicatana Leafcutter Ant",
+    "taxon_id": 300315,
+    "slug": "atta-mexicana"
+  },
+  "3": {
+    "species_name": "Atta texana",
+    "common_name": "Texas Leafcutter Ant",
+    "taxon_id": 151794,
+    "slug": "atta-texana"
+  },
+  "4": {
+    "species_name": "Brachymyrmex patagonicus",
+    "common_name": "Dark Rover Ant",
+    "taxon_id": 356419,
+    "slug": "brachymyrmex-patagonicus"
+  },
+  "5": {
+    "species_name": "Camponotus castaneus",
+    "common_name": "Chestnut Carpenter Ant",
+    "taxon_id": 129272,
+    "slug": "camponotus-castaneus"
+  },
+  "6": {
+    "species_name": "Camponotus chromaiodes",
+    "common_name": "Ferruginous Carpenter Ant",
+    "taxon_id": 62780,
+    "slug": "camponotus-chromaiodes"
+  },
+  "7": {
+    "species_name": "Camponotus pennsylvanicus",
+    "common_name": "Eastern Black Carpenter Ant",
+    "taxon_id": 129902,
+    "slug": "camponotus-pennsylvanicus"
+  },
+  "8": {
+    "species_name": "Cephalotes atratus",
+    "common_name": "Common Giant Turtle Ant",
+    "taxon_id": 366960,
+    "slug": "cephalotes-atratus"
+  },
+  "9": {
+    "species_name": "Colobopsis truncata",
+    "common_name": "European Gate-keeper Ant",
+    "taxon_id": 503397,
+    "slug": "colobopsis-truncata"
+  },
+  "10": {
+    "species_name": "Crematogaster peringueyi",
+    "common_name": "Black Cocktail Ant",
+    "taxon_id": 426236,
+    "slug": "crematogaster-peringueyi"
+  },
+  "11": {
+    "species_name": "Crematogaster scutellaris",
+    "common_name": "Mediterranean Acrobat Ant",
+    "taxon_id": 342899,
+    "slug": "crematogaster-scutellaris"
+  },
+  "12": {
+    "species_name": "Dolichoderus bispinosus",
+    "common_name": null,
+    "taxon_id": 300626,
+    "slug": "dolichoderus-bispinosus"
+  },
+  "13": {
+    "species_name": "Dolichoderus quadripunctatus",
+    "common_name": null,
+    "taxon_id": 343264,
+    "slug": "dolichoderus-quadripunctatus"
+  },
+  "14": {
+    "species_name": "Dolichoderus thoracicus",
+    "common_name": "Cocoa Black Ant",
+    "taxon_id": 626764,
+    "slug": "dolichoderus-thoracicus"
+  },
+  "15": {
+    "species_name": "Dorymyrmex bureni",
+    "common_name": "Buren's Pyramid Ant",
+    "taxon_id": 319444,
+    "slug": "dorymyrmex-bureni"
+  },
+  "16": {
+    "species_name": "Eciton burchellii",
+    "common_name": "Burchell's Army Ant",
+    "taxon_id": 126838,
+    "slug": "eciton-burchellii"
+  },
+  "17": {
+    "species_name": "Ectatomma tuberculatum",
+    "common_name": null,
+    "taxon_id": 300347,
+    "slug": "ectatomma-tuberculatum"
+  },
+  "18": {
+    "species_name": "Formica rufa",
+    "common_name": "Southern Wood Ant",
+    "taxon_id": 53853,
+    "slug": "formica-rufa"
+  },
+  "19": {
+    "species_name": "Iridomyrmex purpureus",
+    "common_name": "Southern Meat Ant",
+    "taxon_id": 202000,
+    "slug": "iridomyrmex-purpureus"
+  },
+  "20": {
+    "species_name": "Lasius fuliginosus",
+    "common_name": "Jet Ant",
+    "taxon_id": 124150,
+    "slug": "lasius-fuliginosus"
+  },
+  "21": {
+    "species_name": "Leptomyrmex erythrocephalus",
+    "common_name": "Red-headed Spider Ant",
+    "taxon_id": 129515,
+    "slug": "leptomyrmex-erythrocephalus"
+  },
+  "22": {
+    "species_name": "Linepithema humile",
+    "common_name": "Argentine Ant",
+    "taxon_id": 68165,
+    "slug": "linepithema-humile"
+  },
+  "23": {
+    "species_name": "Liometopum occidentale",
+    "common_name": "Western Velvety Tree Ant",
+    "taxon_id": 68993,
+    "slug": "liometopum-occidentale"
+  },
+  "24": {
+    "species_name": "Megaponera analis",
+    "common_name": "Matabele Ant",
+    "taxon_id": 426190,
+    "slug": "megaponera-analis"
+  },
+  "25": {
+    "species_name": "Messor barbarus",
+    "common_name": "Barbary Harvester Ant",
+    "taxon_id": 118487,
+    "slug": "messor-barbarus"
+  },
+  "26": {
+    "species_name": "Myrmecia pilosula",
+    "common_name": "Jack Jumper Ant",
+    "taxon_id": 122515,
+    "slug": "myrmecia-pilosula"
+  },
+  "27": {
+    "species_name": "Myrmecia pyriformis",
+    "common_name": "Inch Ant",
+    "taxon_id": 711955,
+    "slug": "myrmecia-pyriformis"
+  },
+  "28": {
+    "species_name": "Myrmica rubra",
+    "common_name": "European fire ant",
+    "taxon_id": 119172,
+    "slug": "myrmica-rubra"
+  },
+  "29": {
+    "species_name": "Odontomachus erythrocephalus",
+    "common_name": null,
+    "taxon_id": 321869,
+    "slug": "odontomachus-erythrocephalus"
+  },
+  "30": {
+    "species_name": "Odontomachus simillimus",
+    "common_name": "Common Oriental Trap-jaw Ant",
+    "taxon_id": 411282,
+    "slug": "odontomachus-simillimus"
+  },
+  "31": {
+    "species_name": "Odontoponera denticulata",
+    "common_name": null,
+    "taxon_id": 628334,
+    "slug": "odontoponera-denticulata"
+  },
+  "32": {
+    "species_name": "Oecophylla smaragdina",
+    "common_name": "Asian Weaver Ant",
+    "taxon_id": 117293,
+    "slug": "oecophylla-smaragdina"
+  },
+  "33": {
+    "species_name": "Paltothyreus tarsatus",
+    "common_name": "African stink ant",
+    "taxon_id": 475699,
+    "slug": "paltothyreus-tarsatus"
+  },
+  "34": {
+    "species_name": "Paraponera clavata",
+    "common_name": "Bullet Ant",
+    "taxon_id": 67986,
+    "slug": "paraponera-clavata"
+  },
+  "35": {
+    "species_name": "Paratrechina longicornis",
+    "common_name": "Longhorn Crazy Ant",
+    "taxon_id": 69388,
+    "slug": "paratrechina-longicornis"
+  },
+  "36": {
+    "species_name": "Pheidole pallidula",
+    "common_name": "Pallid Big-headed Ant",
+    "taxon_id": 343179,
+    "slug": "pheidole-pallidula"
+  },
+  "37": {
+    "species_name": "Pogonomyrmex barbatus",
+    "common_name": "Red Harvester Ant",
+    "taxon_id": 194690,
+    "slug": "pogonomyrmex-barbatus"
+  },
+  "38": {
+    "species_name": "Pogonomyrmex rugosus",
+    "common_name": "Rough Harvester Ant",
+    "taxon_id": 69517,
+    "slug": "pogonomyrmex-rugosus"
+  },
+  "39": {
+    "species_name": "Polyrhachis dives",
+    "common_name": "Rich Spiny Sugar ant",
+    "taxon_id": 424544,
+    "slug": "polyrhachis-dives"
+  },
+  "40": {
+    "species_name": "Polyrhachis schistacea",
+    "common_name": "Savanna Spiny Sugar Ant",
+    "taxon_id": 574721,
+    "slug": "polyrhachis-schistacea"
+  },
+  "41": {
+    "species_name": "Prenolepis imparis",
+    "common_name": "American Winter Ant",
+    "taxon_id": 68142,
+    "slug": "prenolepis-imparis"
+  },
+  "42": {
+    "species_name": "Pristomyrmex punctatus",
+    "common_name": "Japanese Queenless Ant",
+    "taxon_id": 360058,
+    "slug": "pristomyrmex-punctatus"
+  },
+  "43": {
+    "species_name": "Pseudomyrmex gracilis",
+    "common_name": "Graceful Twig Ant",
+    "taxon_id": 300301,
+    "slug": "pseudomyrmex-gracilis"
+  },
+  "44": {
+    "species_name": "Rhytidoponera metallica",
+    "common_name": "Green-head Ant",
+    "taxon_id": 201975,
+    "slug": "rhytidoponera-metallica"
+  },
+  "45": {
+    "species_name": "Solenopsis invicta",
+    "common_name": "Red Imported Fire Ant",
+    "taxon_id": 67598,
+    "slug": "solenopsis-invicta"
+  },
+  "46": {
+    "species_name": "Tapinoma sessile",
+    "common_name": "Odorous House Ant",
+    "taxon_id": 47340,
+    "slug": "tapinoma-sessile"
+  },
+  "47": {
+    "species_name": "Tetramorium immigrans",
+    "common_name": "Immigrant Pavement Ant",
+    "taxon_id": 569552,
+    "slug": "tetramorium-immigrans"
+  },
+  "48": {
+    "species_name": "Tetraponera rufonigra",
+    "common_name": "Arboreal Bicolored Slender Ant",
+    "taxon_id": 155026,
+    "slug": "tetraponera-rufonigra"
+  },
+  "49": {
+    "species_name": "Veromessor pergandei",
+    "common_name": null,
+    "taxon_id": 371172,
+    "slug": "veromessor-pergandei"
+  }
+}

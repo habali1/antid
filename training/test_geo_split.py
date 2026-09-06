@@ -10,16 +10,19 @@ JSON files under a temp directory. Run directly: python test_geo_split.py
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import train  # noqa: E402
 import evaluate  # noqa: E402
+import data  # noqa: E402
 from data import Sample  # noqa: E402
 
 
@@ -335,6 +338,62 @@ class TestApiConsumerCompatibility(unittest.TestCase):
         self.assertTrue(ident.geo_index_loaded)
         self.assertEqual(ident.geo_index_reason, "active")
         self.assertEqual(ident._geo_cells, {0: {(5, -75)}})
+
+
+REAL_NORTHEAST_MANIFEST = HERE.parent / "data" / "northeast_expansion_v1" / "manifest_all_northeast_v1.csv"
+REAL_LOCAL_DATA_DIR = HERE.parent / "data" / "clean"
+NORTHEAST_NEW_SPECIES_SLUGS = (
+    "aphaenogaster-rudis", "camponotus-americanus", "camponotus-nearcticus",
+    "camponotus-novaeboracensis", "camponotus-subbarbatus", "formica-exsectoides",
+    "lasius-americanus", "lasius-aphidicola", "lasius-claviger", "lasius-emarginatus",
+    "lasius-interjectus", "lasius-neoniger", "nylanderia-flavipes",
+    "ponera-pennsylvanica", "temnothorax-curvispinosus",
+)
+
+
+@unittest.skipUnless(REAL_NORTHEAST_MANIFEST.exists() and REAL_LOCAL_DATA_DIR.exists(),
+                     "real Northeast manifest / data/clean not present in this checkout")
+class TestNortheastCatalogTrainOnlyGeoIndex(unittest.TestCase):
+    """Integration: training/data.py resolves all 65 classes from the real,
+    coordinate-populated 65-species manifest, and a train-only geo index built
+    from it contains usable cells for every one of the 15 new species --
+    proving the coordinates-sidecar integration
+    (build_northeast_training_catalog.py) produces a usable geo signal, not
+    just non-blank lat/lon strings. Read-only: no artifact is written."""
+
+    @classmethod
+    def setUpClass(cls):
+        with mock.patch.dict(os.environ, {
+            "MANIFEST_CSV": str(REAL_NORTHEAST_MANIFEST), "LOCAL_DATA_DIR": str(REAL_LOCAL_DATA_DIR),
+        }, clear=False):
+            os.environ.pop("DATABASE_URL", None)
+            cls.samples, cls.taxonomy = data.load_manifest({})
+        cls.train_s, cls.val_s = train.split_samples(cls.samples, val_fraction=0.2, seed=0)
+
+    def test_65_classes_resolved(self):
+        self.assertEqual(len(self.taxonomy), 65)
+
+    def test_new_species_train_split_excludes_the_40_val_rows_each(self):
+        # Direct object-level proof that val rows never reach train_s: each
+        # new species has exactly 200 train + 40 val, not 240 train.
+        for slug in NORTHEAST_NEW_SPECIES_SLUGS:
+            n_train = sum(1 for s in self.train_s if s.slug == slug)
+            n_val = sum(1 for s in self.val_s if s.slug == slug)
+            self.assertEqual(n_train, 200, f"{slug}: train count")
+            self.assertEqual(n_val, 40, f"{slug}: val count")
+
+    def test_train_only_geo_index_has_usable_cells_for_all_15_new_species(self):
+        # Combined with test_uses_train_split_only_excludes_val_coordinates
+        # above (which proves build_geo_index(train_s, ...) structurally
+        # cannot see val_s at all) and the exact 200/40 split proven above,
+        # this closes the loop: validation coordinates cannot enter this
+        # train-only index, and the train-only index is genuinely usable.
+        cells = train.build_geo_index(self.train_s, self.taxonomy,
+                                      cell_size_deg=1.0, min_obs_per_cell=2)
+        missing = [slug for slug in NORTHEAST_NEW_SPECIES_SLUGS
+                  if not cells.get(slug)]
+        self.assertEqual(missing, [],
+                         f"new species with no usable train-only geo cells: {missing}")
 
 
 if __name__ == "__main__":

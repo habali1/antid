@@ -10,7 +10,10 @@ Three sources, in priority order:
      last-resort fallback when there is no DB and no manifest.
 
 Whichever source is used, the class index is contiguous 0..N-1, sorted by species
-slug, so the mapping is reproducible and matches taxonomy.json.
+slug, so the mapping is reproducible and matches taxonomy.json. Every taxonomy
+entry from every source also carries "genus" (the species name's first token),
+so it survives into a freshly written taxonomy.json regardless of which
+loader path produced it.
 """
 from __future__ import annotations
 
@@ -36,6 +39,18 @@ class Sample:
     storage_path: str          # local path or gs://… / s3://… URI
     label: int
     slug: str
+
+
+def _genus_from_species_name(species_name: str) -> str:
+    """First token of the authoritative binomial species name -- the genus.
+
+    Every taxonomy entry must carry this (see the genus-presentation feature
+    in docs/plans/northeast-expansion-v1.md), so it has to survive every
+    loader path here, not just a one-off hand-built snapshot: train.py writes
+    taxonomy.json straight from whatever load_manifest() returns.
+    """
+    parts = (species_name or "").split()
+    return parts[0] if parts else ""
 
 
 # ---------------------------------------------------------------- transforms
@@ -100,6 +115,7 @@ def _manifest_from_db(database_url: str) -> tuple[list[Sample], dict[int, dict]]
             "common_name": meta_by_slug[s][1],
             "taxon_id": meta_by_slug[s][2],
             "slug": s,
+            "genus": _genus_from_species_name(meta_by_slug[s][0]),
         }
         for s in slugs
     }
@@ -178,12 +194,14 @@ def _manifest_from_csv(csv_path: Path, root: Path) -> tuple[list[Sample], dict[i
 
     meta: dict[str, dict] = {}
     for r in rows:
+        species_name = ((r.get("species") or "").strip()
+                        or r["slug"].replace("-", " ").capitalize())
         meta.setdefault(r["slug"], {
-            "species_name": (r.get("species") or "").strip()
-                            or r["slug"].replace("-", " ").capitalize(),
+            "species_name": species_name,
             "common_name": (r.get("common_name") or "").strip() or None,
             "taxon_id": _as_int(r.get("taxon_id")),
             "slug": r["slug"],
+            "genus": _genus_from_species_name(species_name),
         })
     taxonomy = {slug_to_idx[s]: meta[s] for s in slugs}
 
@@ -207,6 +225,7 @@ def _manifest_from_dir(root: Path) -> tuple[list[Sample], dict[int, dict]]:
             "common_name": None,
             "taxon_id": None,
             "slug": s,
+            "genus": _genus_from_species_name(s.replace("-", " ").capitalize()),
         }
         for s in slugs
     }

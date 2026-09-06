@@ -1,8 +1,11 @@
 # AntID: Northeast coverage expansion v1
 
-Status: scope and personal/non-commercial license pool approved; Milestone 1 and
-metadata-only Milestone 2A implemented and verified; species shortlist remains
-provisional; no photos downloaded and no training started. Prepared 2026-09-05.
+Status: scope and personal/non-commercial license pool approved; Milestone 1
+implemented and verified; Milestone 2A metadata audit complete; the 15-species
+train/development/final-test photo download is complete and frozen
+(`northeast_expansion_v1`, `northeast_final_test_v1`); the resulting 65-species
+training catalog is merged into a versioned manifest and taxonomy (see
+`TODO.md`); no training has started. Prepared 2026-09-05.
 
 ## Decision and boundaries
 
@@ -38,6 +41,123 @@ provisional; no photos downloaded and no training started. Prepared 2026-09-05.
 5. Training/API schema files have the same SHA-256 and the existing byte-identity
    unit test passed on 2026-09-05. Shared hash:
    `4c1ca49fda7faf23472c49a8beb239b519b27f369065ccbd87c3d19b5bae150b`.
+6. The 15-species train/development/final-test photo download is complete and
+   frozen: 3,600 train/development images (240/species: 200 train + 40
+   development, `northeast_expansion_v1`) and a disjoint 450 final-test images
+   (30/species, `northeast_final_test_v1`), zero sha256 overlap with each
+   other or with `benchmark_v1`/`calibration_v1`/`unknown_test_v1`. A versioned
+   65-species catalog now exists outside the live serving artifacts:
+   `data/northeast_expansion_v1/northeast_taxonomy_v1.json` and
+   `manifest_all_northeast_v1.csv` (13,581 usable rows — 8 legacy rows across
+   **6 species** — Linepithema humile, Tetramorium immigrans, Paratrechina
+   longicornis, Crematogaster scutellaris, Dolichoderus thoracicus, and
+   Dorymyrmex bureni — were excluded as already rejected by `clean.py`). Every
+   row carries a `provenance_status` (`northeast_v1_complete` or
+   `legacy_partial`); legacy rows carry a real, freshly computed `sha256` for
+   all 9,981 rows and a real `observation_uuid` for 9,912 of them (the
+   remaining 69, plus all legacy license/attribution/source-URL fields, are
+   left blank, never a placeholder string), verified 64-hex-char and
+   file-byte-matching with zero duplicates or frozen-set overlap. **Known
+   limitation, accepted rather than corrected:** the 15 new species get 200
+   train images each while the original 50 mostly get ~160 (158–160 after the
+   8 exclusions) — a roughly 25% per-class train-count gap that a first
+   expanded-catalog run will simply inherit. `training/artifacts/taxonomy.json`
+   and `data/manifest_all.csv` remain the original, unmodified 50-species
+   files; no training has run against the 65-species catalog. **Still
+   pending, before any training:** a manual labeled-photo quality review and a
+   perceptual near-duplicate review (sha256 dedup does not catch
+   recompressed/resized duplicates) — neither has been done.
+7. Both versioned catalog files are reproducible, not hand-maintained:
+   `data_pipeline/build_northeast_training_catalog.py` deterministically
+   rebuilds them from three small **committed** metadata snapshots under
+   `data/northeast_expansion_v1/catalog_inputs_v1/` (`base_manifest_50_v1.csv`,
+   `base_taxonomy_50_v1.json`, `legacy_photo_observation_map_v1.json` --
+   byte-identical, hash-verified copies of the original `data/manifest_all.csv`,
+   the pinned `training/artifacts/v1_50species/taxonomy.json`, and the legacy
+   photo->observation map) plus `data/clean/` and `northeast_train_dev_v1.csv`.
+   The script never writes to `data/manifest_all.csv` or `training/artifacts/`.
+   **Precisely stated:** only the metadata derivation is portable this way --
+   a fresh clone gets the three small committed inputs, but a full check-mode
+   run still needs the real `data/clean/` image tree (the original 50 species
+   has no committed restore path at all; the 15 Northeast species are
+   restorable via `data_pipeline/scrape_northeast_expansion.py --restore` then
+   copied into `data/clean/`, but that copy step isn't scripted yet either).
+   Do not call this "clean-clone reproducible" -- the image tree remains a
+   separate, unproven, local prerequisite. No-argument run = check mode
+   (rebuilds into a temp dir, diffs byte-for-byte against the frozen outputs,
+   writes nothing); `--write` regenerates them in place. Every
+   `northeast_v1_complete` row is required, fail-closed, to have non-blank
+   `photo_license`/`photo_attribution`/`observation_uuid`/`photo_id`/
+   `source_url`/`sha256`. Covered by
+   `data_pipeline/test_build_northeast_training_catalog.py` (determinism,
+   fail-closed fault injection including per-field blank-provenance checks)
+   and `training/test_taxonomy_loaders.py` (the latter proves exact
+   full-object taxonomy equality -- not just genus -- between what
+   `training/data.py` derives from the manifest and the versioned taxonomy
+   snapshot; this also caught and fixed a real gap where the manifest's
+   missing `common_name` column would have silently dropped all 50 curated
+   common names on retrain).
+   **Retraining the 65-species catalog must use exactly**
+   `MANIFEST_CSV=data/northeast_expansion_v1/manifest_all_northeast_v1.csv`,
+   `LOCAL_DATA_DIR=data/clean`, and **`DATABASE_URL` unset** (`data.py` tries
+   `DATABASE_URL` first and would otherwise silently ignore `MANIFEST_CSV`).
+   Do not use the bare-directory loader for this catalog: it loses the pinned
+   train/val split, taxon IDs, coordinates, and all other manifest metadata.
+   The current 50-species serving artifacts are backed up and hash-verified at
+   `training/artifacts/v1_50species/` (gitignored, local-only) so the live app
+   is restorable if the 65-species retrain is worse.
+8. **Geo coverage gap: resolved, Option A approved and verified.** Originally
+   found: **9,974 / 9,981** legacy rows had a usable lat+lon; **0 / 3,600**
+   Northeast rows did, because `northeast_train_dev_v1.csv` never carried
+   coordinates. A train-only `geo_index.json` built as-is would have contained
+   grid cells for the old 50 species only, systematically favoring them via
+   `GEO_BOOST`. **User approved Option A** (audited public/obscured-coordinate
+   sidecar) over Option B (disable geo re-ranking). For this fixed,
+   already-frozen 3,600-row dataset, Option A means **complete** coverage --
+   an earlier draft's 70% acceptance threshold was removed as an invented,
+   unnecessary bar for a dataset whose size is already fixed and known.
+   - Two-stage, reviewed build, not a single script: `fetch_northeast_coordinates.py`
+     produced a raw, **unreviewed** capture (preserved byte-for-byte at
+     `northeast_coordinates_capture_v1.json`, sha256
+     `8275b487ff40d4095dfc9adc6e403299500b7185632104e2ad2f1fe2415a0677`);
+     `finalize_northeast_coordinates.py` then builds the actual frozen sidecar
+     **offline, from that capture alone, with no network access**, enforcing
+     exactly 3,600/3,600 coverage (fail-closed, never a percentage), no
+     duplicate/missing/unexpected observation UUID, every coordinate
+     numeric/finite/in-range, every source row's `geoprivacy` refused if
+     `private`, and taxonomic self-consistency per row. Atomic write, refuses
+     to overwrite a frozen sidecar unless byte-identical. Frozen sidecar:
+     `data/northeast_expansion_v1/northeast_coordinates_v1.json`, sha256
+     `17680f64ab81573969e3994f202a01ab9dad89f7aa8467d56a857f88e0cd98aa`.
+     `northeast_train_dev_v1.csv` itself was never touched (hash-verified
+     unchanged: `9840997f...4215f7`).
+   - **Known, documented limitation:** the raw capture recorded only
+     latitude/longitude per observation, not the iNaturalist API's own
+     per-observation `geoprivacy`/`obscured` fields, so the "private from
+     captured API metadata" cross-check could not be independently repeated
+     without a new fetch; the finalize step relies on the frozen source
+     manifest's own `geoprivacy` column instead (verified: none are private).
+   - **Correction to the obscured-coordinate reasoning:** an obscured location
+     is *not* guaranteed to remain in the same 1-degree geo-index cell as the
+     true one -- obscuring can cross a cell boundary. AntID's 3x3-neighbor
+     cell check can mitigate a one-cell displacement in the Northeast, but
+     that is a partial mitigation, not proof of zero precision loss.
+   - `data_pipeline/test_finalize_northeast_coordinates.py` (21 tests, fully
+     offline/mocked) covers deterministic finalization and every fault
+     scenario (hash mismatch, missing/unexpected/duplicate UUID, private
+     observation, NaN/infinite/out-of-range coordinates, incomplete coverage,
+     taxonomy mismatch, overwrite refusal, atomic-failure safety,
+     byte-identical verification mode).
+   - **Integrated into the generator:** `build_northeast_training_catalog.py`
+     takes the sidecar as a versioned, hash-bound input and joins coordinates
+     by `observation_uuid`, requiring all 3,600 Northeast rows to resolve one.
+     `manifest_all_northeast_v1.csv` was regenerated (hash changed, as
+     expected, since lat/lon are no longer blank); `northeast_taxonomy_v1.json`
+     stayed byte-identical, as expected. `training/test_geo_split.py` gained
+     an integration test proving `training/data.py` resolves all 65 classes
+     and a train-only `build_geo_index` produces usable cells for every one of
+     the 15 new species, with validation rows structurally excluded from the
+     train split passed to it.
 
 Maintenance correction: `api/inference.py`'s recorded source hash is diagnostic
 provenance, not a live runtime binding. An arbitrary source edit does not itself
@@ -147,8 +267,10 @@ observation. Exact active species and genus ancestry were verified. Under the
 predeclared 230-observation quota, 1/15 candidates is numerically ready using
 CC0/CC BY/CC BY-SA alone. The approved 2026-09-05 personal/non-commercial pool
 also admits CC BY-NC and CC BY-NC-SA, under which all 15 are numerically ready.
-No image-quality review, byte-hash check, perceptual-duplicate check, split
-assignment, or species freeze has occurred.
+The dataset has since been downloaded, byte-hashed (zero frozen-set
+collisions), split-assigned (train/development/final-test), and frozen — see
+milestone 6 above. No image-quality review or perceptual-duplicate check has
+occurred.
 
 The previously agreed **150-image admission floor is not currently binding**:
 each of the 15 candidates clears the larger 230-observation quota under the
@@ -282,8 +404,9 @@ hosting, and any recurring cost before enabling those features.
 
 ## Next bounded terminal task
 
-Design a small, balanced labeled-photo review for diagnostic visibility, label
-plausibility, license/attribution completeness, and lookalike risk under the
-approved personal/non-commercial pool. Do not bulk-download images yet. Stop
-again before the bulk image download, final species substitution, or dataset
-freeze.
+The bulk train/development/final-test download and dataset freeze are
+complete (see milestone 6). Design a small, balanced labeled-photo review for
+diagnostic visibility, label plausibility, license/attribution completeness,
+and lookalike risk under the approved personal/non-commercial pool, using the
+now-frozen data. Stop again before training or evaluating against the
+65-species catalog.
