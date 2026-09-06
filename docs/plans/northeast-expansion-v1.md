@@ -402,6 +402,110 @@ friend/community additions, and social identification activity. Nothing becomes
 public automatically. Assess privacy, consent, moderation, location precision,
 hosting, and any recurring cost before enabling those features.
 
+## Phase 4A: training harness hardened for the first B4-65 development run
+
+Before any training: the harness itself was hardened across two review
+passes (the second specifically finding and fixing two blocking integration
+bugs plus stale documentation), and every check was verified via
+`--preflight-only`, unit tests, and a real orchestration integration test
+only -- no model has been initialized, no weights downloaded, and no
+training or evaluation has run. **This section describes the harness as
+implemented today; see `TODO.md`'s "Phase 4A" entry for full detail**,
+including the corrections list.
+
+- **Frozen selection rule for this and the later EfficientNetV2-S
+  comparison:** after every epoch, recompute augmentation-free L2-normalized
+  prototypes from the pinned train split and evaluate raw (no-geo) cosine
+  top-1/top-3 on the pinned val split. Select by (1) highest top-1, (2) tie
+  -> highest top-3, (3) tie -> earliest epoch. Never the classifier-head
+  result, never geo re-ranking, for selection. Run every configured epoch;
+  no early stopping, so the comparison has a stable control.
+- **Full-FP32 numerical policy**, pinned in `training/numerics.py` and
+  applied/logged identically by `train.py`, `evaluate.py`, and
+  `eval_benchmark.py`: TF32 disabled for both cudnn convolutions and
+  matmul, `float32_matmul_precision("highest")`, `cudnn.benchmark=False`,
+  `cudnn.deterministic=True`, no AMP/autocast/GradScaler. This only removes
+  an ambient reduced-precision/algorithm-selection variable -- it is not
+  evidence of ONNX-CPU serving parity, which remains a separate, later
+  required step.
+- **Corrected resume RNG ordering:** model (`pretrained=False`) -> optimizer
+  -> `load_state_dict` -> DataLoaders -> RNG/generator state restored LAST,
+  immediately before the resumed epoch loop. An earlier draft restored RNG
+  state before model construction, which would have silently desynced a
+  resumed run's random stream from an uninterrupted run's -- caught and
+  proven fixed by a real interrupted-vs-uninterrupted integration test
+  (`training/test_train_orchestration.py`), not just a unit test on the
+  capture/restore functions in isolation.
+- **Crash-consistent, versioned checkpointing:** `checkpoint_last.pth` is
+  the sole canonical, resumable commit marker (model + optimizer +
+  RNG/generator state + a reference to the current best checkpoint + the
+  full canonical per-epoch history), written atomically after every epoch.
+  Whenever the selection rule improves, an immutable, versioned
+  `checkpoint_best_epoch_NNN.pth` (model + metrics + config + provenance
+  only -- no optimizer/RNG state) is written *before* `checkpoint_last`
+  references it, and a superseded version is removed only *after* that
+  reference safely commits. `history.jsonl` is a pure cache, always
+  rederivable from `checkpoint_last`'s canonical history, repaired
+  deterministically on resume if stale or missing. The unversioned
+  `checkpoint_best.pth` is materialized only at successful finalization,
+  which additionally asserts the restored best model's recomputed top1/top3
+  exactly match the metrics recorded at training time.
+  `--resume` fails closed unless manifest/taxonomy/pinned-split hashes,
+  resolved config, backbone/class count, git commit, the numerical policy,
+  `run_kind`, `limit_batches`, and `wandb_enabled` all still match.
+  `run_manifest.json` status must be `initialized`/`running`/
+  `paused_for_smoke`/`failed` to resume -- `paused_for_smoke` is
+  deliberately resumable (it is written only after a fully committed
+  epoch), which an earlier draft of this harness got backwards; `completed`
+  always refuses. A fresh run refuses a nonempty `--artifacts-dir` without
+  `--resume`; this experiment always uses
+  `training/artifacts/northeast_v1_b4_dev`, never the live
+  `training/artifacts/` default.
+- **One shared run_manifest.json schema** (`training/run_manifest_schema.py`),
+  imported by both `train.py` (writer) and `evaluate.py` (reader), staged to
+  match the real lifecycle (`initialized` -> `data_verified` -> `epoch_committed`
+  -> `completed`) so the two can never silently drift and a malformed
+  manifest produces a specific, field-named error rather than a raw
+  `KeyError`. An earlier draft of `train.py` never persisted the
+  `manifest`/`taxonomy_source`/`val_split` fields `evaluate.py`'s
+  provenance-aware path actually reads -- a real bug that would have failed
+  a completed run's standalone evaluation outright, found by review and
+  fixed here.
+- **Standalone evaluation bound to its own run:** for a provenance-aware
+  checkpoint, `evaluate.py` resolves its data source from `run_manifest.json`
+  (schema-validated, hash-and-image-byte re-verified) rather than
+  `config.yaml`/`DATABASE_URL`/environment, cross-checks `run_manifest.json`'s
+  recorded hashes against the checkpoint's own embedded provenance, and --
+  when the run completed -- cross-checks the actual on-disk artifacts
+  against `run_manifest.final_artifact_hashes`. A clearly labeled legacy
+  fallback is preserved only for checkpoints with no embedded provenance
+  (e.g. the live 50-species one). `eval_benchmark.py` reports the embedded
+  `resolved_config_sha256` for a provenance-aware checkpoint rather than an
+  unused `config.yaml`'s hash as if it were authoritative.
+- **Known 158-160 vs. 200 per-class train-count imbalance is recorded, not
+  corrected**, in this first control run -- no class weighting, resampling,
+  or subsampling was added. The later EfficientNetV2-S run must reuse the
+  same seed, data, split, epoch budget, optimizer, augmentations, selection
+  rule, and numerical policy for the comparison to mean anything.
+- **Development model selection may use only the pinned 2,596-image val
+  split.** `benchmark_v1`, `calibration_v1`, `unknown_test_v1`,
+  `northeast_final_test_v1`, and the live 50-species artifacts (plus their
+  local `v1_50species/` backup) remain untouched during development/tuning.
+- **The old 0.60 confidence-gate evidence cannot be reused for this
+  catalog.** No `inference_policy.json` is created or updated by this
+  harness; a new backbone/prototypes/taxonomy requires freshly validated
+  policy evidence, not a hash swap onto the old evaluation.
+- **`--pause-after-epoch N`** (one-based, requires `--limit-batches`, excluded
+  from provenance) exists to smoke-test this real resume path end to end
+  before committing to the full 30-epoch run: pause only after a fully
+  committed epoch, resume with `--limit-batches` still present but
+  `--pause-after-epoch` optionally omitted.
+- See `TODO.md`'s "Phase 4A" entry for full detail, including the
+  `dataset_selection_seed`/`seed` distinction and why
+  `dataset_selection_seed` is a `train.py` constant rather than a
+  `config.yaml` key (editing `config.yaml` for this purpose broke a frozen
+  calibration-evidence hash check during this phase and was reverted).
+
 ## Next bounded terminal task
 
 The bulk train/development/final-test download and dataset freeze are

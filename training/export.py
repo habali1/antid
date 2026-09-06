@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import torch
@@ -50,29 +51,38 @@ def export_backbone(model: AntIDModel, out_path: Path, image_size: int,
         opset_version=17,
         do_constant_folding=True,
     )
+    # Export to a temp path and os.replace into place at the end, so a
+    # crash or failed onnx-checker validation never leaves a truncated or
+    # partially-written file at out_path.
+    tmp_path = out_path.parent / f"{out_path.stem}.tmp{os.getpid()}{out_path.suffix}"
     try:
-        # torch>=2.x routes through the dynamo exporter by default; we use the
-        # legacy (dynamic_axes) path explicitly for a stable opset-17 graph.
-        torch.onnx.export(wrapper, dummy, str(out_path), dynamo=False, **export_kwargs)
-    except TypeError:
-        # Older torch without a `dynamo` kwarg.
-        torch.onnx.export(wrapper, dummy, str(out_path), **export_kwargs)
+        try:
+            # torch>=2.x routes through the dynamo exporter by default; we use
+            # the legacy (dynamic_axes) path explicitly for a stable opset-17 graph.
+            torch.onnx.export(wrapper, dummy, str(tmp_path), dynamo=False, **export_kwargs)
+        except TypeError:
+            # Older torch without a `dynamo` kwarg.
+            torch.onnx.export(wrapper, dummy, str(tmp_path), **export_kwargs)
 
-    # Sanity-check the exported graph loads and runs.
-    try:
-        import onnx
-        onnx.checker.check_model(onnx.load(str(out_path)))
-    except ImportError:
-        pass
+        # Sanity-check the exported graph loads and runs.
+        try:
+            import onnx
+            onnx.checker.check_model(onnx.load(str(tmp_path)))
+        except ImportError:
+            pass
 
-    model.backbone.to(orig_device)  # restore the caller's model to its device
+        os.replace(tmp_path, out_path)
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
+        model.backbone.to(orig_device)  # restore the caller's model to its device
     return out_path
 
 
 def _load_model_from_checkpoint(ckpt: Path, taxonomy: Path) -> tuple[AntIDModel, int]:
     tax = json.loads(Path(taxonomy).read_text())
     num_classes = len(tax)
-    state = torch.load(ckpt, map_location="cpu")
+    state = torch.load(ckpt, map_location="cpu", weights_only=False)  # our own trusted checkpoints
     cfg = state.get("config", {}) if isinstance(state, dict) else {}
     model_cfg = cfg.get("model", {})
     model = AntIDModel(

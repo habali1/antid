@@ -32,6 +32,7 @@ assumption, not a verified claim.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -41,8 +42,110 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
+import yaml
+
+import numerics
+import run_manifest_schema
+from data_provenance import (
+    load_explicit_manifest_source,
+    resolved_config_sha256,
+    taxonomy_matches_committed,
+    verify_image_bytes,
+)
 
 HERE = Path(__file__).resolve().parent
+DEFAULT_CONFIG_PATH = HERE / "config.yaml"
+
+
+def resolve_eval_config(supplied_config_path: Path | None, run_config: dict,
+                        expected_config_sha256: str) -> dict:
+    """Decide which config to evaluate a PROVENANCE-AWARE checkpoint with:
+    the run's own recorded config by default, UNLESS the caller explicitly
+    supplied a --config different from the CLI default, in which case it
+    must hash-match this run's resolved_config_sha256 or this fails closed
+    (never silently ignored, never silently substituted)."""
+    if supplied_config_path is not None and supplied_config_path != DEFAULT_CONFIG_PATH:
+        supplied_cfg = yaml.safe_load(supplied_config_path.read_text())
+        actual = resolved_config_sha256(supplied_cfg)
+        if actual != expected_config_sha256:
+            raise SystemExit(
+                f"--config {supplied_config_path} (resolved sha256 {actual}) does not "
+                f"match this run's resolved_config_sha256 ({expected_config_sha256}) -- "
+                f"refusing to evaluate with a mismatched config. Omit --config to use "
+                f"the run's own recorded config."
+            )
+        return supplied_cfg
+    return run_config
+
+
+def load_and_validate_run_manifest(run_manifest_path: Path) -> dict:
+    """Load run_manifest.json, validate it against the shared schema at the
+    "data_verified" stage (evaluate.py cannot resolve a data source without
+    those fields), and confirm it actually recorded an explicit source.
+
+    Raises SystemExit with a specific, field-named message -- never lets a
+    raw KeyError from a missing/malformed field propagate to the caller.
+    """
+    if not run_manifest_path.exists():
+        raise SystemExit(f"{run_manifest_path} does not exist -- cannot resolve a "
+                         f"provenance-aware run's data source.")
+    run_manifest = json.loads(run_manifest_path.read_text())
+    try:
+        run_manifest_schema.validate_run_manifest(run_manifest, stage="data_verified")
+    except run_manifest_schema.RunManifestValidationError as e:
+        raise SystemExit(
+            f"{run_manifest_path} failed schema validation: {e} -- refusing to read any "
+            f"nested field from a run_manifest that doesn't conform to the schema train.py "
+            f"and evaluate.py share (see run_manifest_schema.py)."
+        ) from e
+    if run_manifest["manifest"] is None or run_manifest["taxonomy_source"] is None:
+        raise SystemExit(
+            f"{run_manifest_path} has no recorded manifest/taxonomy_source -- this run did "
+            f"not use an explicit data source, so a provenance-aware evaluation cannot "
+            f"resolve one. (Its checkpoint should not have carried non-null "
+            f"manifest_sha256/taxonomy_sha256 provenance in that case; this is likely a "
+            f"corrupted or hand-edited run_manifest.json.)"
+        )
+    return run_manifest
+
+
+def verify_run_manifest_matches_checkpoint_provenance(run_manifest: dict, provenance: dict) -> None:
+    """run_manifest.json and the checkpoint's embedded provenance are two
+    independently written records of the same three facts (manifest,
+    taxonomy_source, val_split hashes) -- they must agree before either is
+    trusted. Raises SystemExit naming the first field that disagrees."""
+    cross_checks = (
+        ("manifest", run_manifest["manifest"]["sha256"], provenance["manifest_sha256"]),
+        ("taxonomy_source", run_manifest["taxonomy_source"]["sha256"], provenance["taxonomy_sha256"]),
+        ("val_split", run_manifest["val_split"]["sha256"], provenance["val_split_sha256"]),
+    )
+    for name, from_manifest, from_provenance in cross_checks:
+        if from_manifest != from_provenance:
+            raise SystemExit(
+                f"run_manifest.json's {name}.sha256 ({from_manifest}) does not match the "
+                f"checkpoint's embedded provenance {name}_sha256 ({from_provenance}) -- "
+                f"refusing to evaluate with disagreeing provenance records."
+            )
+
+
+def verify_final_artifacts_against_run_manifest(run_manifest: dict, artifacts_dir: Path,
+                                                ckpt_path: Path) -> None:
+    """When a run completed successfully, run_manifest.json's
+    final_artifact_hashes is an independent record of what SHOULD be on disk
+    right now -- verify model.pth/prototypes.npy/taxonomy.json/val_split.json
+    still match it before evaluating. No-op if the run isn't 'completed'."""
+    if run_manifest.get("status") != "completed":
+        return
+    final_hashes = run_manifest["final_artifact_hashes"]
+    for name in ("model.pth", "prototypes.npy", "taxonomy.json", "val_split.json"):
+        path = ckpt_path if name == "model.pth" else (artifacts_dir / name)
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != final_hashes[name]:
+            raise SystemExit(
+                f"{path} sha256 {actual} does not match run_manifest.json's "
+                f"final_artifact_hashes[{name!r}] ({final_hashes[name]}) -- refusing to "
+                f"evaluate a completed run whose artifacts have changed since finalization."
+            )
 
 
 # --------------------------------------------------------------------- geo
@@ -407,7 +510,6 @@ def topk_accuracy(model, prototypes, loader, taxonomy, device,
 
 
 def main() -> None:
-    import yaml
     from data import AntDataset, load_manifest
     from model import AntIDModel
     from torch.utils.data import DataLoader
@@ -415,8 +517,20 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--artifacts", type=Path, default=HERE / "artifacts")
-    ap.add_argument("--config", type=Path, default=HERE / "config.yaml")
+    ap.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH,
+                    help="For a PROVENANCE-AWARE checkpoint (one with an embedded "
+                         "'provenance' key), this is ignored in favor of the run's own "
+                         "recorded config UNLESS explicitly overridden, in which case it "
+                         "must hash-match the run's resolved config or this refuses to "
+                         "run. For a legacy (pre-provenance) checkpoint, used as before.")
     ap.add_argument("--checkpoint", type=Path, default=None)
+    ap.add_argument("--run-manifest", type=Path, dest="run_manifest", default=None,
+                    help="run_manifest.json for a provenance-aware run (default: "
+                         "<artifacts>/run_manifest.json). Required to evaluate a "
+                         "provenance-aware checkpoint.")
+    ap.add_argument("--local-data-dir", type=Path, dest="local_data_dir", default=None,
+                    help="Required to evaluate a provenance-aware checkpoint -- the "
+                         "image root its recorded manifest path resolves against.")
     ap.add_argument("--split-file", type=Path, default=None,
                     help="val_split.json pinning the held-out set (default: "
                          "<artifacts>/val_split.json if present). Strongly "
@@ -447,40 +561,129 @@ def main() -> None:
                     help="Print metrics without writing a file.")
     args = ap.parse_args()
 
-    cfg = yaml.safe_load(args.config.read_text())
-    taxonomy_raw = json.loads((args.artifacts / "taxonomy.json").read_text())
-    taxonomy = {int(k): v for k, v in taxonomy_raw.items()}
-    protos = np.load(args.artifacts / "prototypes.npy")
+    numerical_policy = numerics.apply_numerical_policy()
+    print(f"[eval] numerical policy: {numerical_policy}")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     ckpt = args.checkpoint or (args.artifacts / "model.pth")
-    state = torch.load(ckpt, map_location=device)
+    state = torch.load(ckpt, map_location=device, weights_only=False)  # our own trusted checkpoints
     sd = state["model"] if isinstance(state, dict) and "model" in state else state
+    provenance = state.get("provenance") if isinstance(state, dict) else None
+    input_hashes: dict | None = None
+
+    if provenance is not None:
+        # ---- provenance-aware path: bind evaluation to the run that produced this
+        # checkpoint. Never falls back to a DB, directory walk, manifest split, or
+        # global config for this path. ----
+        run_manifest_path = args.run_manifest or (args.artifacts / "run_manifest.json")
+        run_manifest = load_and_validate_run_manifest(run_manifest_path)
+        if args.local_data_dir is None:
+            raise SystemExit("--local-data-dir is required to evaluate a "
+                             "provenance-aware run.")
+        if os.environ.get("DATABASE_URL"):
+            raise SystemExit("DATABASE_URL is set -- refusing to evaluate a "
+                             "provenance-aware run against anything other than its "
+                             "recorded explicit manifest.")
+
+        verify_run_manifest_matches_checkpoint_provenance(run_manifest, provenance)
+
+        cfg = resolve_eval_config(
+            args.config if args.config != DEFAULT_CONFIG_PATH else None,
+            state["config"], provenance["resolved_config_sha256"],
+        )
+        taxonomy_raw = json.loads((args.artifacts / "taxonomy.json").read_text())
+        taxonomy = {int(k): v for k, v in taxonomy_raw.items()}
+
+        manifest_info = run_manifest["manifest"]
+        taxonomy_info = run_manifest["taxonomy_source"]
+        manifest_path = Path(manifest_info["path"])
+        taxonomy_path = Path(taxonomy_info["path"])
+        samples, verified_taxonomy, manifest_sha256, taxonomy_sha256, _ = load_explicit_manifest_source(
+            manifest_path, args.local_data_dir, taxonomy_path,
+            manifest_info["sha256"], taxonomy_info["sha256"],
+            database_url=os.environ.get("DATABASE_URL"),
+        )
+        image_stats = verify_image_bytes(manifest_path, args.local_data_dir)
+        print(f"[eval] verified {image_stats['files_verified']} image files "
+             f"({image_stats['total_bytes']} bytes) against recorded sha256")
+
+        # taxonomy.json (the artifact actually used for inference below) must
+        # be the exact same object as the freshly re-verified taxonomy source
+        # -- full-object equality, not merely the same length.
+        if not taxonomy_matches_committed(verified_taxonomy, taxonomy_raw):
+            raise SystemExit(
+                f"{args.artifacts / 'taxonomy.json'} does not exactly match the "
+                f"hash-verified taxonomy source recorded in run_manifest.json -- refusing "
+                f"to evaluate with a taxonomy.json that has drifted from its source."
+            )
+
+        val_split_path = args.artifacts / "val_split.json"
+        if not val_split_path.exists():
+            raise SystemExit(f"{val_split_path} does not exist -- required for a "
+                             f"provenance-aware evaluation.")
+        val_split_bytes = val_split_path.read_bytes()
+        val_split_sha256 = hashlib.sha256(val_split_bytes).hexdigest()
+        if val_split_sha256 != run_manifest["val_split"]["sha256"]:
+            raise SystemExit(f"{val_split_path} sha256 {val_split_sha256} does not match "
+                             f"run_manifest.json's recorded val_split.sha256 "
+                             f"{run_manifest['val_split']['sha256']} -- refusing to "
+                             f"evaluate against an unexpected split.")
+        split_record = json.loads(val_split_bytes)
+        val_keys = set(split_record["val"])
+        val = [s for s in samples if f"{s.slug}/{Path(s.storage_path).stem}" in val_keys]
+        if len(val) != split_record["n_val"]:
+            raise SystemExit(f"resolved {len(val)} val samples from the pinned split, "
+                             f"expected {split_record['n_val']}")
+        print(f"[eval] provenance-aware: {len(val)} pinned val images resolved and "
+             f"hash-verified (manifest={manifest_sha256}, taxonomy={taxonomy_sha256})")
+
+        verify_final_artifacts_against_run_manifest(run_manifest, args.artifacts, Path(ckpt))
+        if run_manifest.get("status") == "completed":
+            print("[eval] provenance-aware: model.pth/prototypes.npy/taxonomy.json/"
+                 "val_split.json all match run_manifest.json's final_artifact_hashes")
+
+        input_hashes = {
+            "manifest_sha256": manifest_sha256, "taxonomy_sha256": taxonomy_sha256,
+            "val_split_sha256": val_split_sha256,
+        }
+        split_file = val_split_path
+    else:
+        # ---- LEGACY fallback: only ever used for a checkpoint with no
+        # embedded provenance (e.g. the live pre-Phase-4A 50-species
+        # checkpoint). Never used for a provenance-aware artifact. ----
+        print(f"[eval] LEGACY MODE: {ckpt} has no embedded provenance -- using --config "
+             f"{args.config} and environment-driven load_manifest(). This path is never "
+             f"used for a provenance-aware run.")
+        cfg = yaml.safe_load(args.config.read_text())
+        taxonomy_raw = json.loads((args.artifacts / "taxonomy.json").read_text())
+        taxonomy = {int(k): v for k, v in taxonomy_raw.items()}
+        samples, _ = load_manifest(cfg)
+        split_file = args.split_file or (args.artifacts / "val_split.json")
+        if split_file.exists():
+            keys = set(json.loads(split_file.read_text())["val"])
+            val = [s for s in samples
+                   if f"{s.slug}/{Path(s.storage_path).stem}" in keys]
+            if not val:
+                raise SystemExit(
+                    f"{split_file} matched none of the {len(samples)} manifest samples. "
+                    "Is this split file from a different dataset?"
+                )
+            print(f"[eval] held-out set pinned by {split_file.name}: "
+                  f"{len(val)}/{len(keys)} images resolved")
+        else:
+            val = [s for s in samples if s.__dict__.get("split") == "val"] or samples
+            print(f"[eval] WARNING: no {split_file.name}; falling back to the "
+                  f"manifest split ({len(val)} images). If the manifest was "
+                  f"regenerated after training, this set overlaps the training "
+                  f"data and the numbers below are inflated.")
+
+    protos = np.load(args.artifacts / "prototypes.npy")
     model = AntIDModel(num_classes=len(taxonomy),
                        backbone=cfg["model"]["backbone"], pretrained=False,
                        dropout=cfg["dropout"],
                        embedding_dim=cfg["model"]["embedding_dim"]).to(device)
     model.load_state_dict(sd)
 
-    samples, _ = load_manifest(cfg)
-    split_file = args.split_file or (args.artifacts / "val_split.json")
-    if split_file.exists():
-        keys = set(json.loads(split_file.read_text())["val"])
-        val = [s for s in samples
-               if f"{s.slug}/{Path(s.storage_path).stem}" in keys]
-        if not val:
-            raise SystemExit(
-                f"{split_file} matched none of the {len(samples)} manifest samples. "
-                "Is this split file from a different dataset?"
-            )
-        print(f"[eval] held-out set pinned by {split_file.name}: "
-              f"{len(val)}/{len(keys)} images resolved")
-    else:
-        val = [s for s in samples if s.__dict__.get("split") == "val"] or samples
-        print(f"[eval] WARNING: no {split_file.name}; falling back to the "
-              f"manifest split ({len(val)} images). If the manifest was "
-              f"regenerated after training, this set overlaps the training "
-              f"data and the numbers below are inflated.")
     # shuffle=False: geo coords are matched to images by position in this list.
     loader = DataLoader(AntDataset(val, cfg, train=False),
                         batch_size=cfg["batch_size"], shuffle=False)
@@ -513,6 +716,16 @@ def main() -> None:
                           source=source)
 
     metrics = topk_accuracy(model, protos, loader, taxonomy, device, geo=geo)
+    metrics["numerical_policy"] = numerical_policy
+    if input_hashes is not None:
+        metrics["input_hashes"] = {
+            **input_hashes,
+            "model_pth_sha256": hashlib.sha256(Path(ckpt).read_bytes()).hexdigest(),
+            "prototypes_npy_sha256": hashlib.sha256(
+                (args.artifacts / "prototypes.npy").read_bytes()).hexdigest(),
+            "taxonomy_json_sha256": hashlib.sha256(
+                (args.artifacts / "taxonomy.json").read_bytes()).hexdigest(),
+        }
 
     o = metrics["overall"]
     print(f"[eval] cosine            n={o['n']}  "

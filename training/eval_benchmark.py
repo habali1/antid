@@ -34,7 +34,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+import numerics
 from data import AntDataset, Sample
+from data_provenance import resolved_config_sha256
 from evaluate import GeoReranker, load_geo_index
 from model import AntIDModel
 
@@ -157,7 +159,14 @@ def main() -> None:
     ap.add_argument("--benchmark-dir", type=Path,
                     default=HERE.parent / "data" / "benchmark_v1")
     ap.add_argument("--artifacts", type=Path, default=HERE / "artifacts")
-    ap.add_argument("--config", type=Path, default=HERE / "config.yaml")
+    ap.add_argument("--config", type=Path, default=HERE / "config.yaml",
+                    help="For a PROVENANCE-AWARE checkpoint (one with an embedded "
+                         "'provenance' key -- e.g. a future EfficientNetV2-S run), this "
+                         "is ignored in favor of the checkpoint's own recorded config "
+                         "UNLESS explicitly overridden, in which case it must hash-match "
+                         "the checkpoint's resolved config or this refuses to run -- so a "
+                         "different architecture's config.yaml can never be silently "
+                         "used to instantiate the wrong model here.")
     ap.add_argument("--checkpoint", type=Path, default=None)
     ap.add_argument("--geo-boost", type=float,
                     default=float(os.environ.get("GEO_BOOST", "0.05")))
@@ -165,7 +174,42 @@ def main() -> None:
                     default=HERE.parent / "data" / "benchmark_v1" / "benchmark_v1_eval.json")
     args = ap.parse_args()
 
-    cfg = yaml.safe_load(args.config.read_text())
+    numerical_policy = numerics.apply_numerical_policy()
+    print(f"[bench-eval] numerical policy: {numerical_policy}")
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    ckpt_path = args.checkpoint or (args.artifacts / "model.pth")
+    state = torch.load(ckpt_path, map_location=device, weights_only=False)  # our own trusted checkpoints
+    sd = state["model"] if isinstance(state, dict) and "model" in state else state
+    provenance = state.get("provenance") if isinstance(state, dict) else None
+    supplied_config_verified_sha256: str | None = None
+
+    if provenance is not None:
+        default_config = HERE / "config.yaml"
+        if args.config != default_config:
+            supplied_cfg = yaml.safe_load(args.config.read_text())
+            actual = resolved_config_sha256(supplied_cfg)
+            if actual != provenance["resolved_config_sha256"]:
+                raise SystemExit(
+                    f"--config {args.config} (resolved sha256 {actual}) does not match "
+                    f"this checkpoint's resolved_config_sha256 "
+                    f"({provenance['resolved_config_sha256']}) -- refusing to run (this "
+                    f"would risk instantiating the wrong architecture). Omit --config to "
+                    f"use the checkpoint's own recorded config."
+                )
+            # Explicitly supplied AND verified to match -- safe to report as
+            # a second, distinctly-labeled hash. args.config itself was NOT
+            # used to build cfg either way (state["config"] always is); this
+            # is purely a record that an external file was cross-checked.
+            supplied_config_verified_sha256 = sha256_file(args.config)
+        cfg = state["config"]
+        print(f"[bench-eval] provenance-aware checkpoint: using its embedded config "
+             f"(backbone={cfg['model']['backbone']})")
+    else:
+        cfg = yaml.safe_load(args.config.read_text())
+        print(f"[bench-eval] LEGACY MODE: {ckpt_path} has no embedded provenance -- "
+             f"using --config {args.config}")
+
     taxonomy_raw = json.loads((args.artifacts / "taxonomy.json").read_text())
     taxonomy = {int(k): v for k, v in taxonomy_raw.items()}
     slug_to_idx = {v["slug"]: k for k, v in taxonomy.items()}
@@ -173,10 +217,6 @@ def main() -> None:
     protos_np = np.load(args.artifacts / "prototypes.npy")
     n_classes = protos_np.shape[0]
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    ckpt_path = args.checkpoint or (args.artifacts / "model.pth")
-    state = torch.load(ckpt_path, map_location=device)
-    sd = state["model"] if isinstance(state, dict) and "model" in state else state
     model = AntIDModel(num_classes=n_classes, backbone=cfg["model"]["backbone"],
                        pretrained=False, dropout=cfg["dropout"],
                        embedding_dim=cfg["model"]["embedding_dim"]).to(device)
@@ -257,7 +297,18 @@ def main() -> None:
         name: sha256_file(args.artifacts / name)
         for name in ("model.pth", "backbone.onnx", "prototypes.npy", "taxonomy.json", "geo_index.json")
     }
-    config_hash = sha256_file(args.config)
+    # NEVER report args.config's hash as "the config used" when it was
+    # ignored (provenance-aware path, no matching --config override): that
+    # would misrepresent an unused default file as authoritative. Report the
+    # embedded resolved_config_sha256 (what state["config"] actually hashes
+    # to) instead, and the external file's hash only when one was explicitly
+    # supplied and verified to match.
+    if provenance is not None:
+        config_hashes = {"resolved_config_sha256": provenance["resolved_config_sha256"]}
+        if supplied_config_verified_sha256 is not None:
+            config_hashes["supplied_config_yaml_sha256"] = supplied_config_verified_sha256
+    else:
+        config_hashes = {"config_yaml_sha256": sha256_file(args.config)}
 
     results = {
         "benchmark": "benchmark_v1",
@@ -328,11 +379,12 @@ def main() -> None:
         },
         "hashes": {
             "benchmark_v1_csv_sha256": csv_hash,
-            "config_yaml_sha256": config_hash,
+            **config_hashes,
             "artifacts_sha256": artifact_hashes,
         },
         "checkpoint_path": str(ckpt_path),
         "device": str(device),
+        "numerical_policy": numerical_policy,
     }
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
