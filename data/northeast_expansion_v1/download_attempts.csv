@@ -1,0 +1,4 @@
+species,photo_id,observation_uuid,reason,detail,transferred_bytes,cache_path
+Temnothorax curvispinosus,575402578,73a7f293-349c-480c-a701-7bda18a22470,under_200px,dimensions=239x159,9843,data\northeast_expansion_v1\_download_cache\temnothorax-curvispinosus\575402578.jpg
+Temnothorax curvispinosus,278949687,6ce0f4fa-0498-4317-ad62-b25eba47e30b,under_200px,dimensions=118x210,7912,data\northeast_expansion_v1\_download_cache\temnothorax-curvispinosus\278949687.jpg
+Camponotus novaeboracensis,3818107,09310678-7cd1-4631-8ced-1fd2fc32d72c,under_200px,dimensions=194x141,13515,data\northeast_expansion_v1\_download_cache\camponotus-novaeboracensis\3818107.jpg

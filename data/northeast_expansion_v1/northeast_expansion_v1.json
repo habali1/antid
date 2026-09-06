@@ -1,0 +1,81 @@
+{
+  "counts": {
+    "per_species": {
+      "Aphaenogaster rudis": 240,
+      "Camponotus americanus": 240,
+      "Camponotus nearcticus": 240,
+      "Camponotus novaeboracensis": 240,
+      "Camponotus subbarbatus": 240,
+      "Formica exsectoides": 240,
+      "Lasius americanus": 240,
+      "Lasius aphidicola": 240,
+      "Lasius claviger": 240,
+      "Lasius emarginatus": 240,
+      "Lasius interjectus": 240,
+      "Lasius neoniger": 240,
+      "Nylanderia flavipes": 240,
+      "Ponera pennsylvanica": 240,
+      "Temnothorax curvispinosus": 240
+    },
+    "per_split": {
+      "development": 600,
+      "train": 3000
+    }
+  },
+  "frozen_at_utc": "2026-09-05T22:03:36.276785Z",
+  "frozen_evaluation_hash_sources": {
+    "benchmark_v1": {
+      "path": "data/benchmark_v1/benchmark_v1.csv",
+      "rows": 1591,
+      "sha256": "61b3439850da9100b4ae8393f4f9cd90d45b4d5b381f20eaa1ea63d8fb1ec38c"
+    },
+    "calibration_v1": {
+      "path": "data/calibration_v1/calibration_v1.csv",
+      "rows": 1005,
+      "sha256": "83a80351f8ac65e89ea6124ac7de6d2cb6a3c68efc1f33eb3ecc2eca8c5f63c0"
+    },
+    "unknown_test_v1": {
+      "path": "data/unknown_test_v1/unknown_test_v1.csv",
+      "rows": 573,
+      "sha256": "b010af9a66db79fd6b40cd808d666f5f6dd5ebe376321c139707d05dd1849b07"
+    }
+  },
+  "initial_run": {
+    "frozen_set_hash_collisions": 0,
+    "rejections": {
+      "under_200px": 3
+    },
+    "transferred_bytes": 514730377
+  },
+  "license_scope": "personal, non-commercial; includes CC BY-NC and CC BY-NC-SA",
+  "manifest": {
+    "path": "data/northeast_expansion_v1/northeast_train_dev_v1.csv",
+    "required_provenance": [
+      "photo_license",
+      "photo_attribution",
+      "observation_uuid",
+      "photo_id",
+      "source_url",
+      "sha256"
+    ],
+    "rows": 3600,
+    "sha256": "9840997f7121907eabc9c5675244749f9d0eaa3908844bfd9db781d2424215f7"
+  },
+  "name": "northeast_expansion_v1",
+  "purpose": "Northeast expansion train/development data",
+  "restore": "Run data_pipeline/scrape_northeast_expansion.py --restore --manifest <this manifest> --out-root <manifest parent>. Restore never modifies the manifest and fails on any missing or mismatched image.",
+  "schema_version": 1,
+  "selection": {
+    "candidate_csv": {
+      "path": "data/northeast_readiness_v1/candidates.csv",
+      "sha256": "082522f359585db13319378e14a1066c4fb7ffdda98194a9fae829e531cdc5ed"
+    },
+    "ordering": "ascending sha256(seed + NUL + taxon_id + NUL + observation_uuid + NUL + photo_id)",
+    "quota": {
+      "development": 40,
+      "final_test": 30,
+      "train": 200
+    },
+    "seed": 20260905
+  }
+}

@@ -1,0 +1,16 @@
+species,approved_pool,reserve,usable,quota,shortfall,download_failure,decode_failure,under_200px,frozen_set_hash_collision,internal_hash_duplicate,transferred_bytes
+Lasius interjectus,345,75,270,270,0,0,0,0,0,0,35147965
+Temnothorax curvispinosus,393,123,270,270,0,0,0,2,0,0,25755733
+Ponera pennsylvanica,399,129,270,270,0,0,0,0,0,0,36309649
+Aphaenogaster rudis,428,158,270,270,0,0,0,0,0,0,44429148
+Formica exsectoides,459,189,270,270,0,0,0,0,0,0,36305765
+Lasius aphidicola,532,262,270,270,0,0,0,0,0,0,36733780
+Lasius americanus,537,267,270,270,0,0,0,0,0,0,39505938
+Camponotus nearcticus,683,413,270,270,0,0,0,0,0,0,31709023
+Camponotus subbarbatus,777,507,270,270,0,0,0,0,0,0,28598064
+Lasius emarginatus,798,528,270,270,0,0,0,0,0,0,29906093
+Camponotus americanus,818,548,270,270,0,0,0,0,0,0,33896385
+Camponotus novaeboracensis,955,685,270,270,0,0,0,1,0,0,35086145
+Lasius claviger,1003,733,270,270,0,0,0,0,0,0,33057668
+Lasius neoniger,1074,804,270,270,0,0,0,0,0,0,38160851
+Nylanderia flavipes,2030,1760,270,270,0,0,0,0,0,0,30128170
