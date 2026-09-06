@@ -750,7 +750,7 @@ def run_preflight(args, cfg: dict) -> int:
         last_ckpt_path = art / "checkpoint_last.pth"
         if last_ckpt_path.exists():
             try:
-                saved = ckpt_mod.torch_load_trusted(last_ckpt_path, map_location="cpu")
+                saved = ckpt_mod.load_resume_checkpoint(last_ckpt_path)  # always CPU -- see checkpoint.py
                 if samples is not None:
                     current_provenance = build_provenance(
                         manifest_sha256=manifest_sha256, taxonomy_sha256=taxonomy_sha256,
@@ -993,7 +993,7 @@ def main() -> int:
         _write_json_atomic(run_manifest_path, run_manifest)
 
         if args.resume:
-            saved = ckpt_mod.torch_load_trusted(last_ckpt_path, map_location=device)
+            saved = ckpt_mod.load_resume_checkpoint(last_ckpt_path)  # always CPU -- see checkpoint.py
             mismatches = ckpt_mod.provenance_mismatches(provenance, saved["provenance"])
             if mismatches:
                 raise SystemExit(

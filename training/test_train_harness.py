@@ -29,6 +29,7 @@ from unittest import mock
 
 import numpy as np
 import torch
+import torch.nn as nn
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -674,6 +675,94 @@ class TestRNGDeterminism(unittest.TestCase):
         state_b = random.getstate()
 
         self.assertNotEqual(state_a, state_b)
+
+
+# ------------------------------------------------------------ resume checkpoint loading
+class TestLoadResumeCheckpoint(unittest.TestCase):
+    """Regression coverage for the CUDA resume bug a real smoke test found:
+    main() loaded checkpoint_last.pth with map_location=device, which remaps
+    the RNG-state tensors it carries (torch.get_rng_state(),
+    torch.cuda.get_rng_state_all(), a bare torch.Generator()'s state -- all
+    always CPU-resident) to CUDA, and torch.set_rng_state()/
+    torch.cuda.set_rng_state_all()/Generator.set_state() all reject a
+    non-CPU tensor. checkpoint.load_resume_checkpoint() is the single, now
+    map_location="cpu"-only, loading path -- these tests exercise that real
+    helper, not a reimplementation."""
+
+    def _build_checkpoint(self, td: Path) -> Path:
+        numerics.seed_everything(42)
+        rng_state = numerics.capture_rng_state()
+        gen = torch.Generator()
+        gen.manual_seed(7)
+        payload = {
+            "model": {"w": torch.tensor([1.0, 2.0])},
+            "optimizer": {"state": {}, "param_groups": []},
+            "completed_epoch": 0, "best": None,
+            "rng_state": rng_state, "train_generator_state": gen.get_state(),
+            "provenance": {"p": 1}, "resolved_config": {"c": 1}, "history": [],
+        }
+        path = td / "checkpoint_last.pth"
+        ckpt_mod.atomic_torch_save(payload, path)
+        return path
+
+    def test_always_loads_via_map_location_cpu(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = self._build_checkpoint(Path(td))
+            with mock.patch.object(ckpt_mod, "torch_load_trusted",
+                                   wraps=ckpt_mod.torch_load_trusted) as spy:
+                ckpt_mod.load_resume_checkpoint(path)
+                spy.assert_called_once_with(path, map_location="cpu")
+
+    def test_torch_cpu_rng_state_is_a_cpu_uint8_tensor(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = self._build_checkpoint(Path(td))
+            saved = ckpt_mod.load_resume_checkpoint(path)
+            t = saved["rng_state"]["torch_cpu"]
+            self.assertEqual(t.device.type, "cpu")
+            self.assertEqual(t.dtype, torch.uint8)
+
+    def test_restore_rng_state_accepts_the_loaded_checkpoint(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = self._build_checkpoint(Path(td))
+            saved = ckpt_mod.load_resume_checkpoint(path)
+            numerics.restore_rng_state(saved["rng_state"])  # must not raise
+            gen = torch.Generator()
+            gen.set_state(saved["train_generator_state"])  # must not raise
+
+    @unittest.skipUnless(torch.cuda.is_available(), "requires a CUDA device")
+    def test_cuda_resume_places_optimizer_state_on_cuda_and_steps(self):
+        device = torch.device("cuda")
+        model_a = nn.Linear(4, 2)
+        opt_a = torch.optim.AdamW(model_a.parameters(), lr=0.01)
+        loss = model_a(torch.randn(3, 4)).sum()
+        loss.backward()
+        opt_a.step()  # populate exp_avg/exp_avg_sq in opt_a's state
+
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "checkpoint_last.pth"
+            ckpt_mod.atomic_torch_save({
+                "model": model_a.state_dict(), "optimizer": opt_a.state_dict(),
+                "completed_epoch": 0, "best": None,
+                "rng_state": numerics.capture_rng_state(),
+                "train_generator_state": torch.Generator().get_state(),
+                "provenance": {}, "resolved_config": {}, "history": [],
+            }, path)
+
+            saved = ckpt_mod.load_resume_checkpoint(path)
+            model_b = nn.Linear(4, 2).to(device)
+            opt_b = torch.optim.AdamW(model_b.parameters(), lr=0.01)
+            model_b.load_state_dict(saved["model"])
+            opt_b.load_state_dict(saved["optimizer"])
+
+            for group in opt_b.param_groups:
+                for p in group["params"]:
+                    state = opt_b.state[p]
+                    self.assertEqual(state["exp_avg"].device.type, "cuda")
+                    self.assertEqual(state["exp_avg_sq"].device.type, "cuda")
+
+            loss2 = model_b(torch.randn(3, 4, device=device)).sum()
+            loss2.backward()
+            opt_b.step()  # must not raise
 
 
 # ------------------------------------------------------------ taxonomy equality

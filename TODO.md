@@ -387,6 +387,64 @@ below. Do not describe a design other than the one in this section.
   Plus a clean re-run of every previously-existing training and
   data_pipeline suite. `python train.py --preflight-only` against the real
   catalog: every check PASSes except (expectedly, pre-commit) git-state.
+- **Real smoke test (commit `13636f5`), first attempt: pause succeeded,
+  resume failed on a real CUDA bug the CPU-only synthetic orchestration test
+  could not have caught.** Epoch 1 (2 capped training batches, full
+  10,985-image prototype pass, full 2,596-image validation pass) trained,
+  committed, and paused cleanly -- `checkpoint_last.pth`/
+  `checkpoint_best_epoch_000.pth` verified schema-valid and integrity-checked
+  before resume was attempted. Resuming in a fresh process crashed:
+  `TypeError: RNG state must be a torch.ByteTensor`. Root cause: `main()`
+  loaded `checkpoint_last.pth` with `map_location=device` (`"cuda"`), which
+  remaps every tensor in the file to CUDA -- including the RNG-state tensors
+  (`torch.get_rng_state()`, `torch.cuda.get_rng_state_all()`, a bare
+  `torch.Generator()`'s state) that are always CPU-resident by definition,
+  regardless of which device training runs on. `torch.set_rng_state()` /
+  `torch.cuda.set_rng_state_all()` / `Generator.set_state()` all reject a
+  non-CPU tensor. The harness's own failure handling worked exactly as
+  designed despite the bug: `run_manifest.json` was updated to
+  `status: "failed"` with the exact error recorded, `last_completed_epoch`
+  and `best` were preserved untouched, and neither `checkpoint_last.pth` nor
+  `checkpoint_best_epoch_000.pth` was corrupted (the crash occurred before
+  any epoch-2 write began). All six live 50-species artifacts were confirmed
+  byte-identical to their pre-run baseline afterward.
+- **Correction:** `checkpoint.load_resume_checkpoint()` (new, in
+  `checkpoint.py`) is now the single resume-loading path, always via
+  `map_location="cpu"` -- never the target training device. Model/optimizer
+  tensors still end up on the right device for free: `model.load_state_dict()`
+  and `optimizer.load_state_dict()` already copy/cast CPU-loaded state onto
+  whichever device the live model/optimizer parameters are already
+  constructed on (AdamW's per-parameter `exp_avg`/`exp_avg_sq` moments move
+  to CUDA automatically; a scalar step counter may intentionally stay on
+  CPU). No blanket "move every tensor to CUDA" step was added. The existing
+  resume ordering is unchanged: CPU checkpoint load -> construct CUDA
+  model/optimizer -> load model state -> load optimizer state -> construct
+  DataLoaders -> restore CPU/CUDA RNG and the DataLoader generator
+  immediately before `run_epochs`. Covered by
+  `test_train_harness.py::TestLoadResumeCheckpoint` (4 tests, including one
+  gated on real CUDA that ran on this machine during this correction pass:
+  loading a CPU checkpoint into a CUDA model/AdamW optimizer places
+  `exp_avg`/`exp_avg_sq` on CUDA and one optimizer step succeeds).
+- **The failed smoke evidence is preserved, not reused:**
+  `training/artifacts/northeast_v1_b4_smoke_resume` (status `failed`, bound
+  to commit `13636f5`) was not deleted, modified, resumed, or repurposed.
+  The next attempt uses a fresh directory
+  (`northeast_v1_b4_smoke_resume_v2`) against the corrected code.
+- **Timing recorded from the failed run's completed epoch 1 (not yet
+  re-measured against the fix):** training 40.8s for only the 2 capped
+  batches -- **not a full-epoch number and must never be extrapolated as
+  one**; prototype construction 989.5s over the full 10,985 train images;
+  validation 234.4s over the full 2,596 val images. Prototype+validation
+  together are genuine full-dataset measurements: at face value that is
+  ~1,224s/epoch of evaluation overhead, or **~10.2 hours across a 30-epoch
+  run if performed every epoch**, before any full-epoch training cost is
+  added. No change to validation frequency, prototype sampling, or
+  checkpoint selection has been made in response to this -- three options
+  (validate every N epochs under one frozen shared protocol; a deterministic
+  class-balanced prototype subset for development selection with full
+  prototypes only at finalization; or keep full validation every epoch) are
+  on the table but **none is authorized yet**. The corrected `_v2` smoke
+  run's timing will be reported separately before that decision is made.
 
 ## Policy maintenance: verified closeout and boundaries
 

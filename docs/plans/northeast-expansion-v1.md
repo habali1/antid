@@ -500,6 +500,25 @@ including the corrections list.
   before committing to the full 30-epoch run: pause only after a fully
   committed epoch, resume with `--limit-batches` still present but
   `--pause-after-epoch` optionally omitted.
+- **Real smoke test, first attempt (commit `13636f5`): pause succeeded,
+  CUDA resume failed, corrected.** Epoch 1 paused cleanly and passed every
+  integrity check. Resume crashed (`RNG state must be a torch.ByteTensor`)
+  because `main()` loaded `checkpoint_last.pth` with `map_location=device`
+  ("cuda"), silently remapping the always-CPU-resident RNG-state tensors it
+  carries to CUDA. The harness's own failure handling worked as designed --
+  `run_manifest.json` recorded `status: "failed"` with the exact error,
+  and neither checkpoint file was corrupted. **Correction:**
+  `checkpoint.load_resume_checkpoint()` now always loads via
+  `map_location="cpu"`; `model.load_state_dict()`/`optimizer.load_state_dict()`
+  already move parameter-associated state (e.g. AdamW's moments) to the live
+  CUDA model's device without any added blanket-move step. The failed
+  evidence directory (`northeast_v1_b4_smoke_resume`, still bound to commit
+  `13636f5`) is preserved, not reused; the next attempt uses a fresh
+  `northeast_v1_b4_smoke_resume_v2` directory. See `TODO.md`'s "Phase 4A"
+  entry for the full timing breakdown from the failed run's completed epoch
+  1 (prototype+validation alone extrapolate to ~10.2 hours of overhead
+  across 30 epochs if run every epoch, before training cost) -- no decision
+  on validation frequency/prototype sampling has been made yet.
 - See `TODO.md`'s "Phase 4A" entry for full detail, including the
   `dataset_selection_seed`/`seed` distinction and why
   `dataset_selection_seed` is a `train.py` constant rather than a

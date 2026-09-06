@@ -94,6 +94,35 @@ def torch_load_trusted(path: Path, map_location=None):
     return torch.load(path, map_location=map_location, weights_only=False)
 
 
+def load_resume_checkpoint(path: Path) -> dict:
+    """Load checkpoint_last.pth for a resume. ALWAYS via map_location="cpu"
+    -- never the target training device.
+
+    checkpoint_last.pth mixes model/optimizer tensors (which may ultimately
+    run on CUDA) with RNG state that must remain CPU-resident regardless of
+    where training runs: torch.get_rng_state() is always a CPU ByteTensor,
+    torch.cuda.get_rng_state_all() always returns CPU ByteTensors (one per
+    GPU, not device tensors), and a bare torch.Generator()'s state is always
+    CPU-resident too. Loading with map_location=<cuda device> would silently
+    remap ALL of these to CUDA tensors, and torch.set_rng_state /
+    torch.cuda.set_rng_state_all / Generator.set_state all reject anything
+    that isn't a genuine CPU tensor -- this is exactly the bug a real CUDA
+    smoke-test resume caught (map_location=device -> "RNG state must be a
+    torch.ByteTensor").
+
+    Loading via CPU costs nothing for the model/optimizer state: model.
+    load_state_dict() and optimizer.load_state_dict() both already copy/cast
+    CPU-loaded tensors onto whichever device the live model/optimizer
+    parameters are already on (optimizer.load_state_dict() in particular
+    moves each parameter-associated state tensor, e.g. AdamW's exp_avg/
+    exp_avg_sq, to match that parameter's device; a scalar step counter may
+    intentionally stay on CPU). Do not add a blanket "move every tensor to
+    CUDA" step here -- it is unnecessary and would fight PyTorch's own
+    device-casting logic instead of relying on it.
+    """
+    return torch_load_trusted(path, map_location="cpu")
+
+
 def atomic_torch_save(obj, path: Path) -> None:
     """torch.save through a temp file + os.replace so a checkpoint is never
     observed half-written -- a crash mid-save leaves the previous checkpoint
