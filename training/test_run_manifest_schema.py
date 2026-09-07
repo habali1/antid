@@ -49,13 +49,22 @@ def _valid_final_artifact_hashes() -> dict:
 def _base_manifest(status: str = "initialized") -> dict:
     return {
         "run_manifest_schema_version": rms.RUN_MANIFEST_SCHEMA_VERSION,
-        "status": status, "run_kind": "full",
+        "status": status, "run_kind": "full", "validation_cadence": 3,
         "git_head": "abc123", "git_dirty": False,
         "invocations": [{"timestamp_utc": "2026-01-01T00:00:00Z", "argv": [],
                          "resume": False, "pause_after_epoch": None}],
         "started_at_utc": "2026-01-01T00:00:00Z", "updated_at_utc": "2026-01-01T00:00:00Z",
         "finished_at_utc": None, "final_artifact_hashes": None,
     }
+
+
+def _base_manifest_v1(status: str = "initialized") -> dict:
+    """A schema-v1 manifest: predates validation_cadence entirely -- no such
+    key at all, implicitly meaning "validate every epoch" (cadence 1)."""
+    m = _base_manifest(status)
+    m["run_manifest_schema_version"] = 1
+    del m["validation_cadence"]
+    return m
 
 
 def _initialized_manifest() -> dict:
@@ -81,6 +90,24 @@ def _paused_for_smoke_manifest() -> dict:
 
 def _completed_manifest() -> dict:
     m = _running_manifest()
+    m["status"] = "completed"
+    m["finished_at_utc"] = "2026-01-02T00:00:00Z"
+    m["final_artifact_hashes"] = _valid_final_artifact_hashes()
+    return m
+
+
+def _running_manifest_v1() -> dict:
+    m = _base_manifest_v1("running")
+    m["manifest"] = _valid_manifest_section()
+    m["taxonomy_source"] = _valid_taxonomy_section()
+    m["val_split"] = _valid_val_split_section()
+    m["last_completed_epoch"] = 2
+    m["best"] = _valid_best_section(epoch=1)
+    return m
+
+
+def _completed_manifest_v1() -> dict:
+    m = _running_manifest_v1()
     m["status"] = "completed"
     m["finished_at_utc"] = "2026-01-02T00:00:00Z"
     m["final_artifact_hashes"] = _valid_final_artifact_hashes()
@@ -115,6 +142,53 @@ class TestValidCompleted(unittest.TestCase):
 
     def test_completed_manifest_also_valid_at_any_stage(self):
         rms.validate_run_manifest(_completed_manifest(), stage="any")
+
+
+class TestSchemaVersioning(unittest.TestCase):
+    """Schema v1 (implicit cadence=1, predating validation_cadence) remains
+    READABLE; schema v2 requires an explicit validation_cadence. Resume
+    refusal for a v1 run is train.py's responsibility (bootstrap_run_manifest)
+    -- this file only covers what validate_run_manifest itself accepts."""
+
+    def test_current_schema_version_constant_is_2(self):
+        self.assertEqual(rms.RUN_MANIFEST_SCHEMA_VERSION, 2)
+
+    def test_v1_and_v2_are_both_supported_for_reading(self):
+        self.assertEqual(rms.SUPPORTED_SCHEMA_VERSIONS, (1, 2))
+
+    def test_v1_manifest_with_no_validation_cadence_key_is_valid(self):
+        m = _running_manifest_v1()
+        self.assertNotIn("validation_cadence", m)
+        rms.validate_run_manifest(m, stage="epoch_committed")  # must not raise
+
+    def test_v1_completed_manifest_is_valid_for_reading(self):
+        rms.validate_run_manifest(_completed_manifest_v1(), stage="completed")
+
+    def test_v2_manifest_without_validation_cadence_is_rejected(self):
+        m = _running_manifest()
+        del m["validation_cadence"]
+        with self.assertRaises(rms.RunManifestValidationError) as cm:
+            rms.validate_run_manifest(m, stage="epoch_committed")
+        self.assertIn("validation_cadence", str(cm.exception))
+
+    def test_v2_manifest_with_zero_validation_cadence_is_rejected(self):
+        m = _running_manifest()
+        m["validation_cadence"] = 0
+        with self.assertRaises(rms.RunManifestValidationError):
+            rms.validate_run_manifest(m, stage="epoch_committed")
+
+    def test_v2_manifest_with_bool_validation_cadence_is_rejected(self):
+        m = _running_manifest()
+        m["validation_cadence"] = True
+        with self.assertRaises(rms.RunManifestValidationError):
+            rms.validate_run_manifest(m, stage="epoch_committed")
+
+    def test_unsupported_schema_version_is_rejected(self):
+        m = _running_manifest()
+        m["run_manifest_schema_version"] = 999
+        with self.assertRaises(rms.RunManifestValidationError) as cm:
+            rms.validate_run_manifest(m, stage="epoch_committed")
+        self.assertIn("unsupported", str(cm.exception))
 
 
 class TestMissingRequiredFields(unittest.TestCase):

@@ -301,7 +301,8 @@ def check_resumable_status(run_manifest: dict, run_manifest_path: Path) -> None:
 
 
 def bootstrap_run_manifest(run_manifest_path: Path, *, resume: bool, invocation_record: dict,
-                           run_kind: str, git_commit: str | None, git_dirty: bool | None) -> dict:
+                           run_kind: str, git_commit: str | None, git_dirty: bool | None,
+                           validation_cadence: int) -> dict:
     """The exact status-transition gate main() uses for BOTH a fresh run and
     a resume: create (fresh) or load-schema-validate-and-check (resume) the
     in-memory run_manifest dict. Does NOT write it -- the caller writes once
@@ -309,8 +310,11 @@ def bootstrap_run_manifest(run_manifest_path: Path, *, resume: bool, invocation_
     for resume; the fresh-run caller does the same after this returns).
 
     Fails closed (SystemExit) on: --resume with no existing file, an
-    existing file that fails schema validation, or a non-resumable status
-    (see check_resumable_status) -- this is what makes "paused_for_smoke ->
+    existing file that fails schema validation, a schema version other than
+    the current one (a schema-v1 run -- implicit cadence 1, predating this
+    field entirely -- is readable for evaluation but can never be resumed
+    under this harness version), or a non-resumable status (see
+    check_resumable_status) -- this is what makes "paused_for_smoke ->
     --resume" (and every other real status transition) an actually-tested
     code path, not just a run_epochs-level simulation.
     """
@@ -322,6 +326,16 @@ def bootstrap_run_manifest(run_manifest_path: Path, *, resume: bool, invocation_
             run_manifest_schema.validate_run_manifest(run_manifest, stage="any")
         except run_manifest_schema.RunManifestValidationError as e:
             raise SystemExit(f"{run_manifest_path} failed schema validation: {e}") from e
+        found_version = run_manifest.get("run_manifest_schema_version")
+        if found_version != run_manifest_schema.RUN_MANIFEST_SCHEMA_VERSION:
+            raise SystemExit(
+                f"Refusing to resume: {run_manifest_path} has "
+                f"run_manifest_schema_version={found_version!r}, but this harness only "
+                f"resumes run_manifest_schema_version="
+                f"{run_manifest_schema.RUN_MANIFEST_SCHEMA_VERSION!r}. A schema-v1 run "
+                f"(implicit cadence=1, predating validation_cadence) remains readable for "
+                f"evaluation but cannot be resumed under this harness version."
+            )
         check_resumable_status(run_manifest, run_manifest_path)
         run_manifest.setdefault("invocations", []).append(invocation_record)
         run_manifest["status"] = "running"
@@ -335,6 +349,7 @@ def bootstrap_run_manifest(run_manifest_path: Path, *, resume: bool, invocation_
         run_manifest = {
             "run_manifest_schema_version": run_manifest_schema.RUN_MANIFEST_SCHEMA_VERSION,
             "status": "initialized", "run_kind": run_kind,
+            "validation_cadence": validate_validation_cadence(validation_cadence),
             "git_head": git_commit, "git_dirty": git_dirty,
             "invocations": [invocation_record],
             "started_at_utc": _now_iso(), "updated_at_utc": _now_iso(),
@@ -437,7 +452,8 @@ def collect_environment_info() -> dict:
 def build_provenance(*, manifest_sha256: str | None, taxonomy_sha256: str | None,
                      val_split_sha256: str, cfg: dict, backbone: str, num_classes: int,
                      git_commit: str | None, numerical_policy: dict, run_kind: str,
-                     limit_batches: int | None, wandb_enabled: bool) -> dict:
+                     limit_batches: int | None, wandb_enabled: bool,
+                     validation_cadence: int) -> dict:
     return {
         "manifest_sha256": manifest_sha256,
         "taxonomy_sha256": taxonomy_sha256,
@@ -450,6 +466,7 @@ def build_provenance(*, manifest_sha256: str | None, taxonomy_sha256: str | None
         "run_kind": run_kind,
         "limit_batches": limit_batches,
         "wandb_enabled": wandb_enabled,
+        "validation_cadence": validate_validation_cadence(validation_cadence),
     }
 
 
@@ -460,8 +477,32 @@ def _write_json_atomic(path: Path, obj) -> None:
 # ----------------------------------------------------------------- selection rule
 def selection_key(top1: float, top3: float, epoch: int) -> tuple[float, float, int]:
     """Frozen selection rule: (1) highest val raw-cosine top1; (2) tie ->
-    highest top3; (3) tie -> earliest epoch."""
+    highest top3; (3) tie -> earliest epoch. Only ever compared between
+    VALIDATED epochs (see should_validate) -- an unvalidated epoch never
+    produces a candidate to compare."""
     return (top1, top3, -epoch)
+
+
+# ----------------------------------------------------------------- validation cadence
+def validate_validation_cadence(value) -> int:
+    """A strict positive integer, nothing else -- bool (an int subclass in
+    Python), zero, negative values, floats, and strings are all rejected."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"validation_cadence must be a strict positive integer, got {value!r}")
+    if value <= 0:
+        raise ValueError(f"validation_cadence must be a strict positive integer, got {value!r}")
+    return value
+
+
+def should_validate(epoch_number: int, total_epochs: int, validation_cadence: int) -> bool:
+    """One-based epoch_number. Validate at epoch 1, every validation_cadence-
+    th epoch, and always the final epoch -- frozen for the Northeast B4
+    control and the later EfficientNetV2-S comparison. For (30, 3) this
+    produces exactly [1,3,6,9,12,15,18,21,24,27,30]."""
+    validate_validation_cadence(validation_cadence)
+    return (epoch_number == 1
+           or epoch_number % validation_cadence == 0
+           or epoch_number == total_epochs)
 
 
 # ----------------------------------------------------------------- artifact size estimate
@@ -538,9 +579,21 @@ def run_epochs(*, art: Path, cfg: dict, start_epoch: int, model, opt, train_dl, 
                provenance: dict, canonical_history: list[dict], best_ref: dict | None,
                train_gen, run_manifest: dict, run_manifest_path: Path,
                limit_batches: int | None, pause_after_epoch: int | None,
-               use_wandb: bool, tqdm_fn, on_batch=None) -> tuple[dict | None, list[dict], str]:
+               validation_cadence: int, use_wandb: bool, tqdm_fn,
+               on_batch=None) -> tuple[dict | None, list[dict], str]:
     """Runs cfg['epochs'] epochs starting at start_epoch (inclusive), doing a
-    full crash-consistent commit (checkpoint.commit_epoch) after every epoch.
+    full crash-consistent commit (checkpoint.commit_epoch) after every epoch
+    regardless of whether that epoch validated.
+
+    Validation cadence (see should_validate): epoch 1 always validates, then
+    every validation_cadence-th epoch, and always the final epoch. On a
+    skipped epoch: no prototypes are constructed, the val loader never runs,
+    is_best is always False, the existing best epoch/metrics are preserved
+    untouched, and checkpoint_best is never rewritten -- but training still
+    completes, RNG state is still captured, checkpoint_last is still
+    committed atomically, and history/run_manifest are still updated, so
+    interrupting on a skipped epoch remains exactly as safe to resume from as
+    interrupting on a validated one.
 
     Returns (best_ref, canonical_history, outcome), outcome in
     {"completed", "paused"}.
@@ -555,12 +608,14 @@ def run_epochs(*, art: Path, cfg: dict, start_epoch: int, model, opt, train_dl, 
     on training.
     """
     loss_fn = nn.CrossEntropyLoss()
-    for epoch in range(start_epoch, cfg["epochs"]):
+    total_epochs = cfg["epochs"]
+    for epoch in range(start_epoch, total_epochs):
+        epoch_number = epoch + 1  # one-based, for cadence and display only
         t_epoch_start = time.monotonic()
         model.train()
         running = 0.0
         n_batches = 0
-        for bi, (imgs, labels) in enumerate(tqdm_fn(train_dl, desc=f"epoch {epoch+1}")):
+        for bi, (imgs, labels) in enumerate(tqdm_fn(train_dl, desc=f"epoch {epoch_number}")):
             if limit_batches and bi >= limit_batches:
                 break
             imgs, labels = imgs.to(device), labels.to(device)
@@ -576,31 +631,48 @@ def run_epochs(*, art: Path, cfg: dict, start_epoch: int, model, opt, train_dl, 
         avg_loss = running / max(1, n_batches)
         t_train = time.monotonic() - t_epoch_start
 
-        t0 = time.monotonic()
-        protos = compute_prototypes(model, proto_dl, num_classes, device, embedding_dim)
-        t_proto = time.monotonic() - t0
+        do_validate = should_validate(epoch_number, total_epochs, validation_cadence)
 
-        t0 = time.monotonic()
-        metrics = topk_accuracy(model, protos, val_dl, taxonomy, device)
-        t_val = time.monotonic() - t0
+        if do_validate:
+            t0 = time.monotonic()
+            protos = compute_prototypes(model, proto_dl, num_classes, device, embedding_dim)
+            t_proto = time.monotonic() - t0
 
-        top1, top3 = metrics["overall"]["top1"], metrics["overall"]["top3"]
-        print(f"[train] epoch {epoch+1}/{cfg['epochs']} loss={avg_loss:.4f} "
-             f"val_top1={top1:.4f} val_top3={top3:.4f} "
-             f"(train={t_train:.1f}s proto={t_proto:.1f}s val={t_val:.1f}s)")
-        if use_wandb:
-            import wandb
-            wandb.log({"epoch": epoch + 1, "train_loss": avg_loss, "val_top1": top1, "val_top3": top3})
+            t0 = time.monotonic()
+            metrics = topk_accuracy(model, protos, val_dl, taxonomy, device)
+            t_val = time.monotonic() - t0
 
-        is_best = (best_ref is None or
-                  selection_key(top1, top3, epoch) > selection_key(
-                      best_ref["metrics"]["top1"], best_ref["metrics"]["top3"], best_ref["epoch"]))
+            top1, top3 = metrics["overall"]["top1"], metrics["overall"]["top3"]
+            print(f"[train] epoch {epoch_number}/{total_epochs} loss={avg_loss:.4f} "
+                 f"val_top1={top1:.4f} val_top3={top3:.4f} "
+                 f"(train={t_train:.1f}s proto={t_proto:.1f}s val={t_val:.1f}s)")
+            if use_wandb:
+                import wandb
+                wandb.log({"epoch": epoch_number, "train_loss": avg_loss,
+                          "val_top1": top1, "val_top3": top3})
+
+            is_best = (best_ref is None or
+                      selection_key(top1, top3, epoch) > selection_key(
+                          best_ref["metrics"]["top1"], best_ref["metrics"]["top3"], best_ref["epoch"]))
+            epoch_metrics = {"top1": top1, "top3": top3}
+            best_epoch_so_far = epoch if is_best else best_ref["epoch"]
+        else:
+            print(f"[train] epoch {epoch_number}/{total_epochs} loss={avg_loss:.4f} "
+                 f"validation skipped (cadence={validation_cadence}) (train={t_train:.1f}s)")
+            if use_wandb:
+                import wandb
+                wandb.log({"epoch": epoch_number, "train_loss": avg_loss})
+
+            is_best = False
+            top1 = top3 = t_proto = t_val = None
+            epoch_metrics = {"top1": None, "top3": None}
+            best_epoch_so_far = best_ref["epoch"] if best_ref is not None else None
 
         history_row = {
             "epoch": epoch, "train_loss": avg_loss, "val_top1": top1, "val_top3": top3,
             "duration_seconds": {"train": t_train, "prototypes": t_proto, "validation": t_val},
-            "is_best": is_best,
-            "best_epoch_so_far": epoch if is_best else best_ref["epoch"],
+            "validation_ran": do_validate, "is_best": is_best,
+            "best_epoch_so_far": best_epoch_so_far,
             "timestamp_utc": _now_iso(),
         }
 
@@ -609,7 +681,7 @@ def run_epochs(*, art: Path, cfg: dict, start_epoch: int, model, opt, train_dl, 
             art, epoch=epoch, is_best=is_best, model_state=model.state_dict(),
             optimizer_state=opt.state_dict(), provenance=provenance, resolved_config=cfg,
             rng_state=rng_state, train_generator_state=train_gen.get_state(),
-            metrics={"top1": top1, "top3": top3}, canonical_history=canonical_history,
+            metrics=epoch_metrics, canonical_history=canonical_history,
             history_row=history_row, previous_best=best_ref,
         )
         canonical_history = canonical_history + [history_row]
@@ -621,12 +693,12 @@ def run_epochs(*, art: Path, cfg: dict, start_epoch: int, model, opt, train_dl, 
         run_manifest_schema.validate_run_manifest(run_manifest, stage="epoch_committed")
         _write_json_atomic(run_manifest_path, run_manifest)
 
-        if pause_after_epoch and (epoch + 1) == pause_after_epoch:
+        if pause_after_epoch and epoch_number == pause_after_epoch:
             run_manifest["status"] = "paused_for_smoke"
             run_manifest["updated_at_utc"] = _now_iso()
             run_manifest_schema.validate_run_manifest(run_manifest, stage="epoch_committed")
             _write_json_atomic(run_manifest_path, run_manifest)
-            print(f"[train] paused after epoch {epoch+1} (--pause-after-epoch) -- exiting "
+            print(f"[train] paused after epoch {epoch_number} (--pause-after-epoch) -- exiting "
                  f"without finalizing")
             return best_ref, canonical_history, "paused"
 
@@ -657,7 +729,8 @@ def run_preflight(args, cfg: dict) -> int:
 
     run_kind = "smoke" if args.limit_batches else "full"
     print(f"[preflight] run_kind={run_kind} limit_batches={args.limit_batches} "
-         f"pause_after_epoch={args.pause_after_epoch} wandb_enabled={args.wandb_enabled}")
+         f"pause_after_epoch={args.pause_after_epoch} wandb_enabled={args.wandb_enabled} "
+         f"validation_cadence={args.validation_cadence}")
 
     art = Path(args.artifacts_dir) if args.artifacts_dir else Path(cfg["artifacts_dir"])
     if not art.is_absolute():
@@ -674,6 +747,13 @@ def run_preflight(args, cfg: dict) -> int:
         try:
             existing_manifest = json.loads((art / "run_manifest.json").read_text())
             run_manifest_schema.validate_run_manifest(existing_manifest, stage="any")
+            found_version = existing_manifest.get("run_manifest_schema_version")
+            if found_version != run_manifest_schema.RUN_MANIFEST_SCHEMA_VERSION:
+                raise SystemExit(
+                    f"run_manifest_schema_version={found_version!r} cannot be resumed "
+                    f"under this harness (only {run_manifest_schema.RUN_MANIFEST_SCHEMA_VERSION!r} "
+                    f"is resumable)."
+                )
             check_resumable_status(existing_manifest, art / "run_manifest.json")
             print(f"[preflight] PASS: run_manifest schema valid, status "
                  f"{existing_manifest.get('status')!r} is resumable")
@@ -759,6 +839,7 @@ def run_preflight(args, cfg: dict) -> int:
                         git_commit=git_commit, numerical_policy=numerical_policy,
                         run_kind=run_kind, limit_batches=args.limit_batches,
                         wandb_enabled=args.wandb_enabled,
+                        validation_cadence=args.validation_cadence,
                     )
                     mismatches = ckpt_mod.provenance_mismatches(current_provenance, saved["provenance"])
                     if mismatches:
@@ -857,6 +938,14 @@ def main() -> int:
     ap.add_argument("--wandb", action="store_true", dest="wandb_enabled",
                     help="Explicit opt-in for Weights & Biases logging. Disabled by "
                          "default regardless of WANDB_API_KEY.")
+    ap.add_argument("--validation-cadence", type=int, dest="validation_cadence", default=1,
+                    help="Validate at epoch 1, every Nth epoch, and always the final "
+                         "epoch (e.g. cadence 3 over 30 epochs validates "
+                         "1,3,6,...,27,30). Frozen at 3 for the Northeast B4 control "
+                         "and the later EfficientNetV2-S comparison; default 1 "
+                         "preserves the historical every-epoch behavior. Must be a "
+                         "strict positive integer; bound into provenance, so a resume "
+                         "with a different cadence is refused.")
     ap.add_argument("--preflight-only", action="store_true", dest="preflight_only",
                     help="Perform every data/hash/split/taxonomy/image-byte/output-"
                          "safety/git check and exit. Initializes no model, downloads "
@@ -874,6 +963,10 @@ def main() -> int:
             ap.error("--pause-after-epoch requires --limit-batches (smoke-testing only).")
         if args.pause_after_epoch < 1:
             ap.error("--pause-after-epoch is one-based and must be >= 1.")
+    try:
+        validate_validation_cadence(args.validation_cadence)
+    except ValueError as e:
+        ap.error(str(e))
 
     cfg = load_config(args.config, {
         "epochs": args.epochs, "batch_size": args.batch_size, "lr": args.lr,
@@ -919,6 +1012,7 @@ def main() -> int:
     run_manifest = bootstrap_run_manifest(
         run_manifest_path, resume=args.resume, invocation_record=invocation_record,
         run_kind=run_kind, git_commit=git_commit, git_dirty=git_dirty,
+        validation_cadence=args.validation_cadence,
     )
     _write_json_atomic(run_manifest_path, run_manifest)
 
@@ -970,6 +1064,7 @@ def main() -> int:
             val_split_sha256=val_split_sha256, cfg=cfg, backbone=cfg["model"]["backbone"],
             num_classes=num_classes, git_commit=git_commit, numerical_policy=numerical_policy,
             run_kind=run_kind, limit_batches=args.limit_batches, wandb_enabled=args.wandb_enabled,
+            validation_cadence=args.validation_cadence,
         )
 
         # Persist (fresh) or verify-without-overwriting (resume) the exact
@@ -1085,7 +1180,7 @@ def main() -> int:
             provenance=provenance, canonical_history=canonical_history, best_ref=best_ref,
             train_gen=train_gen, run_manifest=run_manifest, run_manifest_path=run_manifest_path,
             limit_batches=args.limit_batches, pause_after_epoch=args.pause_after_epoch,
-            use_wandb=use_wandb, tqdm_fn=tqdm,
+            validation_cadence=args.validation_cadence, use_wandb=use_wandb, tqdm_fn=tqdm,
         )
 
         if outcome == "paused":

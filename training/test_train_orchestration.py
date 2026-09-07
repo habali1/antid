@@ -25,6 +25,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import torch
 import torch.nn as nn
@@ -119,6 +120,7 @@ def _fixed_provenance(**overrides) -> dict:
         "backbone": "tiny-test-model", "num_classes": NUM_CLASSES,
         "git_commit": "test-commit", "numerical_policy": dict(numerics.NUMERICAL_POLICY),
         "run_kind": "smoke", "limit_batches": None, "wandb_enabled": False,
+        "validation_cadence": 1,
     }
     base.update(overrides)
     return base
@@ -142,7 +144,7 @@ def _invocation_record(resume: bool = False, pause_after_epoch=None) -> dict:
            "pause_after_epoch": pause_after_epoch}
 
 
-def _valid_run_manifest(art: Path) -> dict:
+def _valid_run_manifest(art: Path, validation_cadence: int = 1) -> dict:
     """A schema-valid run_manifest dict at "data_verified" stage, built via
     the REAL functions main() itself calls (bootstrap_run_manifest,
     persist_or_verify_data_provenance) -- not a reimplementation -- so
@@ -151,6 +153,7 @@ def _valid_run_manifest(art: Path) -> dict:
     rm = train.bootstrap_run_manifest(
         art / "run_manifest.json", resume=False, invocation_record=_invocation_record(),
         run_kind="smoke", git_commit="test-commit", git_dirty=False,
+        validation_cadence=validation_cadence,
     )
     train.persist_or_verify_data_provenance(
         rm, resume=False, manifest_record=_fixed_manifest_record(),
@@ -192,7 +195,8 @@ class TestInterruptedVsUninterrupted(unittest.TestCase):
                 device=torch.device("cpu"), provenance=provenance, canonical_history=[],
                 best_ref=None, train_gen=train_gen_a, run_manifest=_valid_run_manifest(art_a),
                 run_manifest_path=art_a / "run_manifest.json", limit_batches=None,
-                pause_after_epoch=None, use_wandb=False, tqdm_fn=lambda x, **k: x,
+                pause_after_epoch=None, validation_cadence=1, use_wandb=False,
+                tqdm_fn=lambda x, **k: x,
                 on_batch=lambda epoch, bi, labels, loss: batches_a.append((epoch, labels, loss)),
             )
             self.assertEqual(outcome_a, "completed")
@@ -212,7 +216,8 @@ class TestInterruptedVsUninterrupted(unittest.TestCase):
                 device=torch.device("cpu"), provenance=provenance, canonical_history=[],
                 best_ref=None, train_gen=train_gen_b1, run_manifest=_valid_run_manifest(art_b),
                 run_manifest_path=art_b / "run_manifest.json", limit_batches=None,
-                pause_after_epoch=1, use_wandb=False, tqdm_fn=lambda x, **k: x,
+                pause_after_epoch=1, validation_cadence=1, use_wandb=False,
+                tqdm_fn=lambda x, **k: x,
                 on_batch=lambda epoch, bi, labels, loss: batches_b_epoch1.append((epoch, labels, loss)),
             )
             self.assertEqual(outcome_b, "paused")
@@ -247,6 +252,7 @@ class TestInterruptedVsUninterrupted(unittest.TestCase):
                 art_b / "run_manifest.json", resume=True,
                 invocation_record=_invocation_record(resume=True),
                 run_kind="smoke", git_commit="test-commit", git_dirty=False,
+                validation_cadence=1,
             )
             train.persist_or_verify_data_provenance(
                 resumed_run_manifest, resume=True, manifest_record=_fixed_manifest_record(),
@@ -263,7 +269,8 @@ class TestInterruptedVsUninterrupted(unittest.TestCase):
                 canonical_history=saved["history"], best_ref=saved["best"],
                 train_gen=train_gen_b2, run_manifest=resumed_run_manifest,
                 run_manifest_path=art_b / "run_manifest.json", limit_batches=None,
-                pause_after_epoch=None, use_wandb=False, tqdm_fn=lambda x, **k: x,
+                pause_after_epoch=None, validation_cadence=1, use_wandb=False,
+                tqdm_fn=lambda x, **k: x,
                 on_batch=lambda epoch, bi, labels, loss: batches_b_epoch2.append((epoch, labels, loss)),
             )
             self.assertEqual(outcome_b2, "completed")
@@ -321,7 +328,8 @@ class TestPauseNeverMidEpoch(unittest.TestCase):
                 device=torch.device("cpu"), provenance=provenance, canonical_history=[],
                 best_ref=None, train_gen=train_gen, run_manifest=_valid_run_manifest(art),
                 run_manifest_path=art / "run_manifest.json", limit_batches=None,
-                pause_after_epoch=1, use_wandb=False, tqdm_fn=lambda x, **k: x,
+                pause_after_epoch=1, validation_cadence=1, use_wandb=False,
+                tqdm_fn=lambda x, **k: x,
             )
             self.assertEqual(outcome, "paused")
             self.assertTrue((art / "checkpoint_last.pth").exists())
@@ -352,11 +360,161 @@ class TestPauseNeverMidEpoch(unittest.TestCase):
                 device=torch.device("cpu"), provenance=provenance, canonical_history=[],
                 best_ref=None, train_gen=train_gen, run_manifest=_valid_run_manifest(art),
                 run_manifest_path=art / "run_manifest.json", limit_batches=None,
-                pause_after_epoch=None, use_wandb=False, tqdm_fn=lambda x, **k: x,
+                pause_after_epoch=None, validation_cadence=1, use_wandb=False,
+                tqdm_fn=lambda x, **k: x,
             )
             self.assertEqual(outcome, "completed")
             self.assertIsNone(best_ref)
             self.assertFalse((art / "checkpoint_last.pth").exists())
+
+
+class TestValidationCadenceOrchestration(unittest.TestCase):
+    """Real run_epochs() exercise of the validation-cadence gating -- not a
+    reimplementation of should_validate (see TestValidationCadenceSchedule in
+    test_train_harness.py for that), but proof that run_epochs actually skips
+    the expensive prototype/validation work, still commits every epoch, and
+    only ever moves checkpoint_best on a validated improvement."""
+
+    def _run(self, cfg, validation_cadence, pause_after_epoch=None, start_epoch=0,
+             art=None, model=None, opt=None, train_gen=None, run_manifest=None,
+             canonical_history=None, best_ref=None):
+        train_gen = train_gen or numerics.seed_everything(SEED)
+        model = model or TinyEmbedModel(NUM_CLASSES)
+        opt = opt or torch.optim.AdamW(model.parameters(), lr=0.01)
+        train_dl, proto_dl, val_dl = _build_loaders(train_gen)
+        return train.run_epochs(
+            art=art, cfg=cfg, start_epoch=start_epoch, model=model, opt=opt,
+            train_dl=train_dl, proto_dl=proto_dl, val_dl=val_dl,
+            num_classes=NUM_CLASSES, embedding_dim=EMBEDDING_DIM, taxonomy=_fixed_taxonomy(),
+            device=torch.device("cpu"), provenance=_fixed_provenance(validation_cadence=validation_cadence),
+            canonical_history=canonical_history if canonical_history is not None else [],
+            best_ref=best_ref, train_gen=train_gen,
+            run_manifest=run_manifest if run_manifest is not None else _valid_run_manifest(art, validation_cadence),
+            run_manifest_path=art / "run_manifest.json", limit_batches=None,
+            pause_after_epoch=pause_after_epoch, validation_cadence=validation_cadence,
+            use_wandb=False, tqdm_fn=lambda x, **k: x,
+        )
+
+    def test_skipped_epochs_never_call_prototypes_or_validation(self):
+        # cadence 3 over 4 epochs validates [1,3,4] -- epoch 2 is skipped.
+        cfg = {"epochs": 4}
+        with tempfile.TemporaryDirectory() as td:
+            art = Path(td)
+            with mock.patch.object(train, "compute_prototypes",
+                                   wraps=train.compute_prototypes) as proto_spy, \
+                 mock.patch.object(train, "topk_accuracy",
+                                   wraps=train.topk_accuracy) as val_spy:
+                best_ref, history, outcome = self._run(cfg, validation_cadence=3, art=art)
+            self.assertEqual(outcome, "completed")
+            self.assertEqual(len(history), 4)
+            self.assertEqual(proto_spy.call_count, 3)  # epochs 1, 3, 4 -- never epoch 2
+            self.assertEqual(val_spy.call_count, 3)
+
+    def test_skipped_epoch_history_row_has_nulls_not_zeros(self):
+        cfg = {"epochs": 4}
+        with tempfile.TemporaryDirectory() as td:
+            art = Path(td)
+            best_ref, history, outcome = self._run(cfg, validation_cadence=3, art=art)
+            skipped_row = history[1]  # epoch_number 2, zero-based index 1
+            self.assertEqual(skipped_row["epoch"], 1)
+            self.assertFalse(skipped_row["validation_ran"])
+            self.assertIsNone(skipped_row["val_top1"])
+            self.assertIsNone(skipped_row["val_top3"])
+            self.assertIsNone(skipped_row["duration_seconds"]["prototypes"])
+            self.assertIsNone(skipped_row["duration_seconds"]["validation"])
+            self.assertIsNotNone(skipped_row["duration_seconds"]["train"])
+            self.assertFalse(skipped_row["is_best"])
+            for i in (0, 2, 3):  # validated epochs must have real numbers, never null
+                self.assertTrue(history[i]["validation_ran"])
+                self.assertIsNotNone(history[i]["val_top1"])
+                self.assertIsNotNone(history[i]["val_top3"])
+
+    def test_checkpoint_last_and_history_and_run_manifest_committed_on_skipped_epoch(self):
+        cfg = {"epochs": 4}
+        with tempfile.TemporaryDirectory() as td:
+            art = Path(td)
+            # Pause right after the skipped epoch (epoch_number 2) to inspect
+            # exactly what got committed for it.
+            best_ref, history, outcome = self._run(cfg, validation_cadence=3,
+                                                    pause_after_epoch=2, art=art)
+            self.assertEqual(outcome, "paused")
+            self.assertTrue((art / "checkpoint_last.pth").exists())
+            last = ckpt_mod.torch_load_trusted(art / "checkpoint_last.pth", map_location="cpu")
+            self.assertEqual(last["completed_epoch"], 1)  # epoch_number 2, zero-based 1
+            self.assertEqual(len(last["history"]), 2)
+            self.assertFalse(last["history"][1]["validation_ran"])
+            ckpt_mod.verify_referenced_best(art, last)  # best (from epoch 1) still verifies
+            self.assertEqual(last["best"]["epoch"], 0)  # only epoch 1 (index 0) ever validated so far
+            history_rows = (art / "history.jsonl").read_text().splitlines()
+            self.assertEqual(len(history_rows), 2)
+            saved_manifest = json.loads((art / "run_manifest.json").read_text())
+            self.assertEqual(saved_manifest["status"], "paused_for_smoke")
+            self.assertEqual(saved_manifest["last_completed_epoch"], 1)
+
+    def test_checkpoint_best_never_written_for_a_skipped_epoch(self):
+        cfg = {"epochs": 4}
+        with tempfile.TemporaryDirectory() as td:
+            art = Path(td)
+            best_ref, history, outcome = self._run(cfg, validation_cadence=3, art=art)
+            best_files = sorted(p.name for p in art.glob("checkpoint_best_epoch_*.pth"))
+            # Only ever epoch indices 0, 2, or 3 (epoch_numbers 1, 3, 4) can
+            # appear -- epoch index 1 (the skipped one) must never appear,
+            # and every row with is_best=True must have validation_ran=True.
+            self.assertNotIn("checkpoint_best_epoch_001.pth", best_files)
+            for row in history:
+                if row["is_best"]:
+                    self.assertTrue(row["validation_ran"], row)
+
+    def test_interruption_after_skipped_epoch_resumes_correctly(self):
+        cfg = {"epochs": 4}
+        with tempfile.TemporaryDirectory() as td:
+            art = Path(td)
+            # ---- Pause right after the skipped epoch (epoch_number 2) ----
+            best_ref, history, outcome = self._run(cfg, validation_cadence=3,
+                                                    pause_after_epoch=2, art=art)
+            self.assertEqual(outcome, "paused")
+
+            # ---- Simulate a brand-new process resuming ----
+            saved = ckpt_mod.load_resume_checkpoint(art / "checkpoint_last.pth")
+            model2 = TinyEmbedModel(NUM_CLASSES)
+            opt2 = torch.optim.AdamW(model2.parameters(), lr=0.01)
+            model2.load_state_dict(saved["model"])
+            opt2.load_state_dict(saved["optimizer"])
+            train_gen2 = torch.Generator()
+            train_dl2, proto_dl2, val_dl2 = _build_loaders(train_gen2)
+            numerics.restore_rng_state(saved["rng_state"])
+            train_gen2.set_state(saved["train_generator_state"])
+
+            resumed_rm = train.bootstrap_run_manifest(
+                art / "run_manifest.json", resume=True,
+                invocation_record=_invocation_record(resume=True), run_kind="smoke",
+                git_commit="test-commit", git_dirty=False, validation_cadence=3,
+            )
+            train.persist_or_verify_data_provenance(
+                resumed_rm, resume=True, manifest_record=_fixed_manifest_record(),
+                taxonomy_record=_fixed_taxonomy_record(),
+                val_split_record=_fixed_val_split_record(art),
+            )
+
+            best_ref2, history2, outcome2 = train.run_epochs(
+                art=art, cfg=cfg, start_epoch=saved["completed_epoch"] + 1,
+                model=model2, opt=opt2, train_dl=train_dl2, proto_dl=proto_dl2,
+                val_dl=val_dl2, num_classes=NUM_CLASSES, embedding_dim=EMBEDDING_DIM,
+                taxonomy=_fixed_taxonomy(), device=torch.device("cpu"),
+                provenance=_fixed_provenance(validation_cadence=3),
+                canonical_history=saved["history"], best_ref=saved["best"],
+                train_gen=train_gen2, run_manifest=resumed_rm,
+                run_manifest_path=art / "run_manifest.json", limit_batches=None,
+                pause_after_epoch=None, validation_cadence=3, use_wandb=False,
+                tqdm_fn=lambda x, **k: x,
+            )
+            self.assertEqual(outcome2, "completed")
+            self.assertEqual(len(history2), 4)
+            validation_ran_flags = [row["validation_ran"] for row in history2]
+            self.assertEqual(validation_ran_flags, [True, False, True, True])
+            last2 = ckpt_mod.torch_load_trusted(art / "checkpoint_last.pth", map_location="cpu")
+            self.assertEqual(last2["completed_epoch"], 3)
+            ckpt_mod.verify_referenced_best(art, last2)  # final best still verifies
 
 
 class TestResumeGateStatusTransition(unittest.TestCase):
@@ -379,6 +537,7 @@ class TestResumeGateStatusTransition(unittest.TestCase):
                 art / "run_manifest.json", resume=False,
                 invocation_record=_invocation_record(), run_kind="smoke",
                 git_commit="test-commit", git_dirty=False,
+                validation_cadence=1,
             )
             self.assertEqual(rm["status"], "initialized")
             manifest_record = _fixed_manifest_record()
@@ -413,6 +572,7 @@ class TestResumeGateStatusTransition(unittest.TestCase):
                 art / "run_manifest.json", resume=True,
                 invocation_record=_invocation_record(resume=True), run_kind="smoke",
                 git_commit="test-commit", git_dirty=False,
+                validation_cadence=1,
             )
             self.assertEqual(resumed_rm["status"], "running")  # flipped back by bootstrap
             self.assertEqual(len(resumed_rm["invocations"]), 2)
@@ -431,6 +591,7 @@ class TestResumeGateStatusTransition(unittest.TestCase):
                 art / "run_manifest.json", resume=False,
                 invocation_record=_invocation_record(), run_kind="smoke",
                 git_commit="test-commit", git_dirty=False,
+                validation_cadence=1,
             )
             train.persist_or_verify_data_provenance(
                 rm, resume=False, manifest_record=_fixed_manifest_record(),
@@ -452,6 +613,7 @@ class TestResumeGateStatusTransition(unittest.TestCase):
                     art / "run_manifest.json", resume=True,
                     invocation_record=_invocation_record(resume=True), run_kind="smoke",
                     git_commit="test-commit", git_dirty=False,
+                    validation_cadence=1,
                 )
             self.assertIn("completed", str(cm.exception))
 
@@ -463,6 +625,7 @@ class TestResumeGateStatusTransition(unittest.TestCase):
                 art / "run_manifest.json", resume=False,
                 invocation_record=_invocation_record(), run_kind="smoke",
                 git_commit="test-commit", git_dirty=False,
+                validation_cadence=1,
             )
             train.persist_or_verify_data_provenance(
                 rm, resume=False, manifest_record=_fixed_manifest_record(),
@@ -476,6 +639,7 @@ class TestResumeGateStatusTransition(unittest.TestCase):
                 art / "run_manifest.json", resume=True,
                 invocation_record=_invocation_record(resume=True), run_kind="smoke",
                 git_commit="test-commit", git_dirty=False,
+                validation_cadence=1,
             )
             tampered_manifest_record = {**_fixed_manifest_record(), "rows": 999}
             with self.assertRaises(SystemExit) as cm:
@@ -485,6 +649,42 @@ class TestResumeGateStatusTransition(unittest.TestCase):
                     val_split_record=_fixed_val_split_record(art),
                 )
             self.assertIn("manifest", str(cm.exception))
+
+    def test_schema_v1_run_manifest_cannot_be_resumed(self):
+        # A schema-v1 manifest (no validation_cadence field at all, implicit
+        # cadence=1) is readable (see test_train_harness.py's evaluate.py-
+        # binding tests) but must never be resumable under this harness.
+        with tempfile.TemporaryDirectory() as td:
+            art = Path(td)
+            v1_manifest = {
+                "run_manifest_schema_version": 1,
+                "status": "running", "run_kind": "full",
+                "git_head": "abc123", "git_dirty": False,
+                "invocations": [_invocation_record()],
+                "started_at_utc": "2026-01-01T00:00:00Z",
+                "updated_at_utc": "2026-01-01T00:00:00Z",
+                "finished_at_utc": None, "final_artifact_hashes": None,
+                "manifest": _fixed_manifest_record(),
+                "taxonomy_source": _fixed_taxonomy_record(),
+                "val_split": _fixed_val_split_record(art),
+                "last_completed_epoch": 2,
+                "best": {"epoch": 1, "metrics": {"top1": 0.5, "top3": 0.7},
+                        "filename": "checkpoint_best_epoch_001.pth", "sha256": "a" * 64},
+            }
+            self.assertNotIn("validation_cadence", v1_manifest)
+            run_manifest_schema.validate_run_manifest(v1_manifest, stage="epoch_committed")  # readable
+            art.mkdir(parents=True, exist_ok=True)
+            train._write_json_atomic(art / "run_manifest.json", v1_manifest)
+
+            with self.assertRaises(SystemExit) as cm:
+                train.bootstrap_run_manifest(
+                    art / "run_manifest.json", resume=True,
+                    invocation_record=_invocation_record(resume=True), run_kind="full",
+                    git_commit="abc123", git_dirty=False, validation_cadence=3,
+                )
+            message = str(cm.exception)
+            self.assertIn("run_manifest_schema_version", message)
+            self.assertIn("1", message)
 
 
 if __name__ == "__main__":

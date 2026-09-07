@@ -393,6 +393,58 @@ class TestSelectionRule(unittest.TestCase):
         self.assertFalse(train.selection_key(0.60, 0.80, 5) > train.selection_key(0.60, 0.80, 5))
 
 
+# ------------------------------------------------------------ validation cadence
+class TestValidationCadenceSchedule(unittest.TestCase):
+    def test_cadence_3_over_30_epochs_produces_the_frozen_schedule(self):
+        schedule = [e for e in range(1, 31) if train.should_validate(e, 30, 3)]
+        self.assertEqual(schedule, [1, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30])
+
+    def test_final_epoch_forced_when_not_divisible_by_cadence(self):
+        # 29 is not divisible by 3, so epoch 29 must still validate as the final epoch.
+        schedule = [e for e in range(1, 30) if train.should_validate(e, 29, 3)]
+        self.assertIn(29, schedule)
+        self.assertEqual(schedule[-1], 29)
+        self.assertNotEqual(29 % 3, 0)  # confirms 29 wasn't already a cadence hit
+
+    def test_cadence_1_validates_every_epoch(self):
+        schedule = [e for e in range(1, 11) if train.should_validate(e, 10, 1)]
+        self.assertEqual(schedule, list(range(1, 11)))
+
+    def test_epoch_1_always_validates_regardless_of_cadence(self):
+        for cadence in (2, 3, 5, 100):
+            with self.subTest(cadence=cadence):
+                self.assertTrue(train.should_validate(1, 50, cadence))
+
+    def test_invalid_cadence_bool_rejected(self):
+        with self.assertRaises(ValueError):
+            train.validate_validation_cadence(True)
+        with self.assertRaises(ValueError):
+            train.validate_validation_cadence(False)
+
+    def test_invalid_cadence_zero_rejected(self):
+        with self.assertRaises(ValueError):
+            train.validate_validation_cadence(0)
+
+    def test_invalid_cadence_negative_rejected(self):
+        with self.assertRaises(ValueError):
+            train.validate_validation_cadence(-3)
+
+    def test_invalid_cadence_float_rejected(self):
+        with self.assertRaises(ValueError):
+            train.validate_validation_cadence(3.0)
+
+    def test_invalid_cadence_string_rejected(self):
+        with self.assertRaises(ValueError):
+            train.validate_validation_cadence("3")
+
+    def test_valid_cadence_returned_unchanged(self):
+        self.assertEqual(train.validate_validation_cadence(3), 3)
+
+    def test_should_validate_rejects_invalid_cadence_too(self):
+        with self.assertRaises(ValueError):
+            train.should_validate(1, 30, 0)
+
+
 # ------------------------------------------------------------ versioned checkpoint commit
 class TestCommitEpoch(unittest.TestCase):
     def _commit(self, art, epoch, is_best, canonical_history, previous_best, top1=0.5, top3=0.7):
@@ -563,6 +615,7 @@ class TestResumeProvenance(unittest.TestCase):
             "backbone": "tf_efficientnet_b4", "num_classes": 65,
             "git_commit": "abc123", "numerical_policy": dict(numerics.NUMERICAL_POLICY),
             "run_kind": "full", "limit_batches": None, "wandb_enabled": False,
+            "validation_cadence": 3,
         }
         base.update(overrides)
         return base
@@ -596,6 +649,35 @@ class TestResumeProvenance(unittest.TestCase):
         mismatches = ckpt_mod.provenance_mismatches(current, saved)
         self.assertEqual(len(mismatches), 2)  # run_kind AND limit_batches differ
 
+    def test_validation_cadence_mismatch_on_resume_is_rejected(self):
+        current = self._provenance(validation_cadence=3)
+        saved = self._provenance(validation_cadence=1)
+        mismatches = ckpt_mod.provenance_mismatches(current, saved)
+        self.assertEqual(len(mismatches), 1)
+        self.assertTrue(mismatches[0].startswith("validation_cadence:"))
+        self.assertIn("3", mismatches[0])
+        self.assertIn("1", mismatches[0])
+
+    def test_build_provenance_includes_validation_cadence(self):
+        cfg = {"seed": 42}
+        p = train.build_provenance(manifest_sha256="m", taxonomy_sha256="t",
+                                   val_split_sha256="v", cfg=cfg, backbone="x",
+                                   num_classes=1, git_commit="c",
+                                   numerical_policy=numerics.NUMERICAL_POLICY,
+                                   run_kind="full", limit_batches=None, wandb_enabled=False,
+                                   validation_cadence=3)
+        self.assertEqual(p["validation_cadence"], 3)
+
+    def test_build_provenance_rejects_invalid_validation_cadence(self):
+        cfg = {"seed": 42}
+        with self.assertRaises(ValueError):
+            train.build_provenance(manifest_sha256="m", taxonomy_sha256="t",
+                                   val_split_sha256="v", cfg=cfg, backbone="x",
+                                   num_classes=1, git_commit="c",
+                                   numerical_policy=numerics.NUMERICAL_POLICY,
+                                   run_kind="full", limit_batches=None, wandb_enabled=False,
+                                   validation_cadence=0)
+
     def test_build_provenance_excludes_artifacts_dir_from_config_hash(self):
         cfg_a = {"seed": 42, "artifacts_dir": "artifacts/run_a"}
         cfg_b = {"seed": 42, "artifacts_dir": "artifacts/run_b"}
@@ -603,12 +685,14 @@ class TestResumeProvenance(unittest.TestCase):
                                     val_split_sha256="v", cfg=cfg_a, backbone="x",
                                     num_classes=1, git_commit="c",
                                     numerical_policy=numerics.NUMERICAL_POLICY,
-                                    run_kind="full", limit_batches=None, wandb_enabled=False)
+                                    run_kind="full", limit_batches=None, wandb_enabled=False,
+                                    validation_cadence=1)
         pb = train.build_provenance(manifest_sha256="m", taxonomy_sha256="t",
                                     val_split_sha256="v", cfg=cfg_b, backbone="x",
                                     num_classes=1, git_commit="c",
                                     numerical_policy=numerics.NUMERICAL_POLICY,
-                                    run_kind="full", limit_batches=None, wandb_enabled=False)
+                                    run_kind="full", limit_batches=None, wandb_enabled=False,
+                                    validation_cadence=1)
         self.assertEqual(pa["resolved_config_sha256"], pb["resolved_config_sha256"])
 
     def test_build_provenance_changes_hash_on_hyperparameter_change(self):
@@ -618,12 +702,14 @@ class TestResumeProvenance(unittest.TestCase):
                                     val_split_sha256="v", cfg=cfg_a, backbone="x",
                                     num_classes=1, git_commit="c",
                                     numerical_policy=numerics.NUMERICAL_POLICY,
-                                    run_kind="full", limit_batches=None, wandb_enabled=False)
+                                    run_kind="full", limit_batches=None, wandb_enabled=False,
+                                    validation_cadence=1)
         pb = train.build_provenance(manifest_sha256="m", taxonomy_sha256="t",
                                     val_split_sha256="v", cfg=cfg_b, backbone="x",
                                     num_classes=1, git_commit="c",
                                     numerical_policy=numerics.NUMERICAL_POLICY,
-                                    run_kind="full", limit_batches=None, wandb_enabled=False)
+                                    run_kind="full", limit_batches=None, wandb_enabled=False,
+                                    validation_cadence=1)
         self.assertNotEqual(pa["resolved_config_sha256"], pb["resolved_config_sha256"])
 
 
@@ -834,6 +920,7 @@ def _eval_valid_run_manifest(*, completed: bool = False) -> dict:
     rm = {
         "run_manifest_schema_version": run_manifest_schema.RUN_MANIFEST_SCHEMA_VERSION,
         "status": "completed" if completed else "running", "run_kind": "full",
+        "validation_cadence": 3,
         "git_head": "abc123", "git_dirty": False,
         "invocations": [{"timestamp_utc": "2026-01-01T00:00:00Z", "argv": [],
                          "resume": False, "pause_after_epoch": None}],
@@ -890,6 +977,21 @@ class TestLoadAndValidateRunManifest(unittest.TestCase):
             path.write_text(json.dumps(rm))
             loaded = load_and_validate_run_manifest(path)
             self.assertEqual(loaded["status"], "running")
+
+    def test_schema_v1_completed_manifest_remains_readable_for_evaluation(self):
+        # Schema v1 predates validation_cadence entirely -- no such key at
+        # all, implicitly meaning cadence 1. It must still be READABLE for
+        # evaluation (only train.py's resume gate refuses v1; evaluate.py
+        # never resumes anything).
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "run_manifest.json"
+            rm = _eval_valid_run_manifest(completed=True)
+            rm["run_manifest_schema_version"] = 1
+            del rm["validation_cadence"]
+            path.write_text(json.dumps(rm))
+            loaded = load_and_validate_run_manifest(path)
+            self.assertEqual(loaded["run_manifest_schema_version"], 1)
+            self.assertNotIn("validation_cadence", loaded)
 
 
 class TestVerifyRunManifestMatchesCheckpointProvenance(unittest.TestCase):

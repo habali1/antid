@@ -24,10 +24,27 @@ The schema is staged, matching the actual lifecycle of a real run:
 Every validation failure raises RunManifestValidationError with a specific,
 field-named message -- never a raw KeyError/TypeError from whichever caller
 happened to touch a missing or malformed field first.
+
+Schema versions:
+  1  the historical schema, from before per-epoch validation cadence existed.
+     Implicitly meant "validate every epoch" (cadence 1); carries no
+     `validation_cadence` field at all. Still fully READABLE (e.g. by
+     evaluate.py, for a completed run) -- SUPPORTED_SCHEMA_VERSIONS keeps it
+     valid to read -- but train.py refuses to RESUME a v1 run: this harness
+     version's per-epoch commit shape (nullable validation_ran/metrics on
+     skipped epochs) is not what a v1 run's checkpoints were written under.
+  2  adds the required top-level `validation_cadence` (strict positive int).
+     This is the version new runs write (RUN_MANIFEST_SCHEMA_VERSION); only
+     a v2 run may be resumed.
 """
 from __future__ import annotations
 
-RUN_MANIFEST_SCHEMA_VERSION = 1
+RUN_MANIFEST_SCHEMA_VERSION = 2
+
+# Versions this code can still READ (e.g. for evaluate.py against a
+# completed run). Only RUN_MANIFEST_SCHEMA_VERSION itself may be RESUMED --
+# see train.py's bootstrap_run_manifest.
+SUPPORTED_SCHEMA_VERSIONS = (1, 2)
 
 STATUSES = frozenset({"initialized", "running", "paused_for_smoke", "failed", "completed"})
 
@@ -129,15 +146,26 @@ def validate_run_manifest(rm: dict, *, stage: str = "any") -> None:
 
     _require(_is_strict_int(rm.get("run_manifest_schema_version")),
              "run_manifest_schema_version must be an integer")
-    _require(rm["run_manifest_schema_version"] == RUN_MANIFEST_SCHEMA_VERSION,
-             f"unsupported run_manifest_schema_version {rm['run_manifest_schema_version']!r} "
-             f"(this code understands {RUN_MANIFEST_SCHEMA_VERSION!r})")
+    schema_version = rm["run_manifest_schema_version"]
+    _require(schema_version in SUPPORTED_SCHEMA_VERSIONS,
+             f"unsupported run_manifest_schema_version {schema_version!r} "
+             f"(this code understands {SUPPORTED_SCHEMA_VERSIONS!r})")
 
     status = rm.get("status")
     _require(status in STATUSES, f"status must be one of {sorted(STATUSES)}, got {status!r}")
 
     _require(rm.get("run_kind") in ("full", "smoke"),
              f"run_kind must be 'full' or 'smoke', got {rm.get('run_kind')!r}")
+
+    # Schema v1 predates per-epoch validation cadence and implicitly meant
+    # "validate every epoch" (cadence 1) -- it carries no validation_cadence
+    # field at all, and that absence is not an error for a v1 manifest.
+    # Schema v2+ must carry an explicit, strictly positive integer cadence.
+    if schema_version >= 2:
+        vc = rm.get("validation_cadence")
+        _require(_is_strict_int(vc) and vc > 0,
+                 f"validation_cadence must be a strict positive integer for "
+                 f"run_manifest_schema_version >= 2, got {vc!r}")
     _require(rm.get("git_head") is None or isinstance(rm["git_head"], str),
              "git_head must be a string or null")
     _require(isinstance(rm.get("git_dirty"), bool) or rm.get("git_dirty") is None,

@@ -54,6 +54,9 @@ import torch
 # run_kind/limit_batches/wandb_enabled were added because they are
 # behavior-changing options that must not silently differ across a resume
 # (a smoke run resuming as a full run, or vice versa, must be refused).
+# validation_cadence is likewise behavior-changing: resuming a cadence-1 run
+# under a different cadence (or vice versa) would change which epochs get
+# selection candidacy, so it must be refused, not silently applied.
 PROVENANCE_KEYS = (
     "manifest_sha256",
     "taxonomy_sha256",
@@ -66,6 +69,7 @@ PROVENANCE_KEYS = (
     "run_kind",
     "limit_batches",
     "wandb_enabled",
+    "validation_cadence",
 )
 
 
