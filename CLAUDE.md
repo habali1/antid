@@ -226,3 +226,21 @@ scrapes.
 - `cp` of `ios/`+`android/` is checked in *with permission patches applied*;
   `scripts/bootstrap_native.sh` regenerates them from the RN 0.76.5 template if
   deleted (and you'd lose those patches).
+
+## SecondBrain
+
+Cross-project memory arrives at session start from the SecondBrain vault
+(`C:\dev\brain`).
+
+For substantive work, use `C:\dev\brain\🏰 300-Projects\AntID\` as durable
+project reference when relevant.
+
+Before finishing a substantive session, update
+`C:\dev\brain\🔮 850-Companion\Threads.md` and `Last-Session.md` to reflect
+meaningful changes in current focus, blockers, decisions, or next steps.
+
+Only the `### ` and `**Status:**` lines of active threads are automatically
+injected, so keep the useful current state in those two lines.
+
+The AntID repository and this CLAUDE.md remain authoritative for implementation
+details and project-specific instructions.
