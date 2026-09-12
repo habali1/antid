@@ -589,10 +589,37 @@ def serialize_report(report: dict) -> bytes:
     return (text + "\n").replace("\r\n", "\n").encode("utf-8")
 
 
+def _git_dirty_excluding(ignore_paths: frozenset[str]) -> bool | None:
+    """Like train.get_git_state()'s dirty flag, but a change confined
+    entirely to `ignore_paths` (repo-relative posix strings) does not count
+    as dirty -- lets the not-yet-committed report file itself (which this
+    very generation is about to write, or has already written for --verify)
+    be present without blocking the git-clean gate meant for the SOURCE
+    tree. None means git state could not be determined at all."""
+    import subprocess
+    try:
+        status = subprocess.check_output(
+            ["git", "status", "--porcelain"], cwd=REPO, stderr=subprocess.DEVNULL
+        ).decode()
+    except Exception:
+        return None
+    for line in status.splitlines():
+        if not line.strip():
+            continue
+        path = line[3:].strip()
+        if "->" in path:  # renames: "old -> new"
+            path = path.split("->")[-1].strip()
+        path = path.strip('"').replace("\\", "/")
+        if path not in ignore_paths:
+            return True
+    return False
+
+
 # ----------------------------------------------------------------- generate
 def generate_report(*, run_dir: Path, local_data_dir: Path, manifest_csv: Path,
                     taxonomy_json: Path, database_url: str | None, device: torch.device,
                     require_clean_git: bool = True, assert_frozen_catalog_shape: bool = True,
+                    ignore_git_dirty_paths: frozenset[str] = frozenset(),
                     selection_rule: str = (
                         "highest raw-cosine top-1; tie -> highest top-3; "
                         "tie -> earliest epoch"
@@ -605,14 +632,19 @@ def generate_report(*, run_dir: Path, local_data_dir: Path, manifest_csv: Path,
     require_clean_git: the generator's OWN source tree (this repo) must
     resolve a git HEAD and be clean before producing a report meant to be
     committed -- tests pass False since they don't care about this repo's
-    live git state. assert_frozen_catalog_shape: enforce the real 65-species
-    Northeast catalog's known new_15/legacy_50/all_65 shape -- tests pass
-    False for their small synthetic fixtures.
+    live git state. ignore_git_dirty_paths lets the not-yet-committed report
+    output itself (repo-relative posix path(s)) be present without failing
+    this check -- the requirement is a clean SOURCE tree, not that the
+    report has already been committed before it can be verified.
+    assert_frozen_catalog_shape: enforce the real 65-species Northeast
+    catalog's known new_15/legacy_50/all_65 shape -- tests pass False for
+    their small synthetic fixtures.
     """
     numerics.apply_numerical_policy()
 
-    git_commit, git_dirty = get_git_state()
+    git_commit, _ = get_git_state()
     if require_clean_git:
+        git_dirty = _git_dirty_excluding(ignore_git_dirty_paths)
         require_clean_git_state(git_commit, git_dirty)
 
     assert_new_species_constant_shape(NORTHEAST_NEW_SPECIES_SLUGS)
@@ -800,11 +832,29 @@ def main() -> int:
         ap.error("--manifest-csv/--taxonomy-json could not be inferred from "
                  "run_manifest.json; pass them explicitly.")
 
+    if args.verify and args.existing is None:
+        ap.error("--verify requires --existing.")
+    if not args.verify and args.out is None:
+        ap.error("--out is required unless --verify is given.")
+
+    # The report file this invocation is about to write (or, in --verify
+    # mode, already exists on disk) is not yet committed by design (see
+    # generate_report's own docstring) -- exclude ONLY that path from the
+    # source-tree git-clean gate, never anything else.
+    ignore_path = args.existing if args.verify else args.out
+    ignore_git_dirty_paths = frozenset()
+    if ignore_path is not None:
+        try:
+            ignore_git_dirty_paths = frozenset({ignore_path.resolve().relative_to(REPO).as_posix()})
+        except ValueError:
+            pass
+
     try:
         report = generate_report(
             run_dir=run_dir, local_data_dir=args.local_data_dir,
             manifest_csv=manifest_csv, taxonomy_json=taxonomy_json,
             database_url=database_url, device=device,
+            ignore_git_dirty_paths=ignore_git_dirty_paths,
         )
     except DevReportError as e:
         print(f"[report_dev_metrics] FAILED: {e}")

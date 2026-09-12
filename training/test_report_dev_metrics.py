@@ -440,6 +440,34 @@ class TestGroupDenominatorsAndKnownB4Counts(unittest.TestCase):
             rdm.assert_known_b4_aggregate_counts({"aggregates": aggregates})
 
 
+class TestGitDirtyExcluding(unittest.TestCase):
+    def test_clean_status_is_not_dirty(self):
+        with mock.patch("subprocess.check_output", return_value=b""):
+            self.assertFalse(rdm._git_dirty_excluding(frozenset()))
+
+    def test_dirt_outside_ignore_set_is_dirty(self):
+        status = b" M training/data.py\n"
+        with mock.patch("subprocess.check_output", return_value=status):
+            self.assertTrue(rdm._git_dirty_excluding(frozenset()))
+
+    def test_dirt_confined_to_ignored_path_is_not_dirty(self):
+        status = b"?? training/reports/northeast_v1_b4_dev_report.json\n"
+        ignore = frozenset({"training/reports/northeast_v1_b4_dev_report.json"})
+        with mock.patch("subprocess.check_output", return_value=status):
+            self.assertFalse(rdm._git_dirty_excluding(ignore))
+
+    def test_mixed_dirt_one_outside_ignore_set_is_dirty(self):
+        status = (b"?? training/reports/northeast_v1_b4_dev_report.json\n"
+                 b" M training/data.py\n")
+        ignore = frozenset({"training/reports/northeast_v1_b4_dev_report.json"})
+        with mock.patch("subprocess.check_output", return_value=status):
+            self.assertTrue(rdm._git_dirty_excluding(ignore))
+
+    def test_git_unavailable_returns_none(self):
+        with mock.patch("subprocess.check_output", side_effect=FileNotFoundError):
+            self.assertIsNone(rdm._git_dirty_excluding(frozenset()))
+
+
 class TestSerializeReport(unittest.TestCase):
     def test_deterministic_sorted_lf(self):
         report = {"b": 1, "a": [3, 2, 1]}
