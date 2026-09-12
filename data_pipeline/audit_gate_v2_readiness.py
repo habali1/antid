@@ -125,8 +125,10 @@ CANDIDATE_CSV_FIELDS = [
     "photo_license", "photo_attribution", "lat", "lon", "provenance_source",
     "origin_dataset", "origin_csv_sha256", "origin_row_number", "origin_photo_id",
     "origin_observation_uuid", "origin_sha256", "reuse_eligibility_reason",
-    "rejection_reason",
+    "rejection_reason", "source_taxon_id", "source_taxon_name", "source_taxon_rank",
 ]
+
+SOURCE_TAXON_RANK_NOT_RECORDED = "not_recorded_in_source"
 
 EXCLUSION_SOURCES = {
     "northeast_manifest": "data/northeast_expansion_v1/manifest_all_northeast_v1.csv",
@@ -330,6 +332,8 @@ def extract_reuse_candidate_rows(cal_all_rows: list[dict[str, str]],
             "origin_photo_id": r["photo_id"], "origin_observation_uuid": r["observation_uuid"],
             "origin_sha256": r["sha256"], "reuse_eligibility_reason": "",
             "rejection_reason": "", "hash_verification_status": "unchecked",
+            "source_taxon_id": taxon_id if taxon_id is not None else "",
+            "source_taxon_name": r["species"], "source_taxon_rank": SOURCE_TAXON_RANK_NOT_RECORDED,
         })
     return pools
 
@@ -555,7 +559,9 @@ def _parse_loc(obs: dict) -> tuple[float | None, float | None]:
 
 
 def _photo_row(obs: dict, photo: dict, taxon_id: Any, species: str, slug: str,
-              category: str, intended_dataset: str) -> dict[str, Any]:
+              category: str, intended_dataset: str,
+              source_taxon_id: Any = None, source_taxon_name: str | None = None,
+              source_taxon_rank: str = SOURCE_TAXON_RANK_NOT_RECORDED) -> dict[str, Any]:
     lat, lon = _parse_loc(obs)
     license_code = (photo.get("license_code") or "").strip().lower()
     return {
@@ -564,13 +570,56 @@ def _photo_row(obs: dict, photo: dict, taxon_id: Any, species: str, slug: str,
         "species": species, "slug": slug, "taxon_id": taxon_id,
         "observation_id": obs.get("id"), "observation_uuid": obs.get("uuid"),
         "photo_id": photo.get("id"), "source_url": photo.get("url") or "",
+        "sha256": "",  # unknown at audit time -- no image is ever downloaded here
         "created_at": obs.get("created_at") or "",
         "photo_license": license_code, "photo_attribution": photo.get("attribution") or "",
         "lat": lat, "lon": lon, "provenance_source": "inat_api_gate_v2_readiness",
         "origin_dataset": "", "origin_csv_sha256": "", "origin_row_number": "",
         "origin_photo_id": "", "origin_observation_uuid": "", "origin_sha256": "",
         "reuse_eligibility_reason": "", "rejection_reason": "",
+        "source_taxon_id": source_taxon_id if source_taxon_id is not None else taxon_id,
+        "source_taxon_name": source_taxon_name if source_taxon_name is not None else species,
+        "source_taxon_rank": source_taxon_rank or SOURCE_TAXON_RANK_NOT_RECORDED,
     }
+
+
+def resolve_known_holdout_label(client: "PacedJsonClient", obs_taxon: dict, target_taxon_id: int,
+                                target_species: str, target_slug: str,
+                                ancestry_cache: dict[int, tuple[set[int], str | None]]
+                                ) -> tuple[int, str, str, int, str, str, bool]:
+    """Known_holdout rows must always be LABELED with the canonical target
+    species -- never a subspecies/variety the observation happened to be
+    identified to. A source taxon that differs from the target is only
+    accepted (and canonicalized) after an explicit, cached ancestry lookup
+    proves the canonical target is one of its ancestors -- slug/name-prefix
+    matching is never sufficient proof of ancestry.
+
+    Returns (label_taxon_id, label_species, label_slug, source_taxon_id,
+    source_taxon_name, source_taxon_rank, ok). When ok is False the caller
+    must treat the row as ineligible (unverified ancestry), never silently
+    label it as the canonical species.
+    """
+    source_id = obs_taxon.get("id") or target_taxon_id
+    source_name = obs_taxon.get("name") or target_species
+    if source_id == target_taxon_id:
+        return target_taxon_id, target_species, target_slug, source_id, source_name, "species", True
+    if source_id not in ancestry_cache:
+        try:
+            payload = client.get(f"/taxa/{source_id}")
+        except Exception:
+            ancestry_cache[source_id] = (set(), None)
+        else:
+            result = (payload.get("results") or [None])[0]
+            if result is None:
+                ancestry_cache[source_id] = (set(), None)
+            else:
+                ancestry_cache[source_id] = (set(result.get("ancestor_ids") or []), result.get("rank"))
+    ancestor_ids, rank = ancestry_cache[source_id]
+    ok = target_taxon_id in ancestor_ids
+    label_id = target_taxon_id if ok else source_id
+    label_species = target_species if ok else source_name
+    label_slug = target_slug if ok else slugify(source_name)
+    return label_id, label_species, label_slug, source_id, source_name, rank or SOURCE_TAXON_RANK_NOT_RECORDED, ok
 
 
 def _new_fetch_stats() -> dict[str, Any]:
@@ -612,6 +661,7 @@ def fetch_species_candidates(client: PacedJsonClient, taxon_id: int, species: st
     eligible_count = 0
     page = 1
     api_exhausted = False
+    ancestry_cache: dict[int, tuple[set[int], str | None]] = {}
     while eligible_count < target and page <= max_pages:
         payload = client.get("/observations", {
             "taxon_id": taxon_id, "quality_grade": "research", "photos": "true",
@@ -637,11 +687,26 @@ def fetch_species_candidates(client: PacedJsonClient, taxon_id: int, species: st
                 continue
             stats["unique_candidates_examined"] += 1
             obs_taxon = obs.get("taxon") or {}
-            row_species = obs_taxon.get("name") or species
-            row_slug = slug if category == "known_holdout" else slugify(row_species)
-            row_taxon_id = obs_taxon.get("id") or taxon_id
+            if category == "known_holdout":
+                (row_taxon_id, row_species, row_slug, source_taxon_id, source_taxon_name,
+                 source_taxon_rank, ancestry_ok) = resolve_known_holdout_label(
+                    client, obs_taxon, taxon_id, species, slug, ancestry_cache)
+            else:
+                row_species = obs_taxon.get("name") or species
+                row_slug = slugify(row_species)
+                row_taxon_id = obs_taxon.get("id") or taxon_id
+                source_taxon_id, source_taxon_name, source_taxon_rank = row_taxon_id, row_species, ""
+                ancestry_ok = True
             row = _photo_row(obs, photo, row_taxon_id, row_species, row_slug,
-                             category, intended_dataset)
+                             category, intended_dataset,
+                             source_taxon_id=source_taxon_id, source_taxon_name=source_taxon_name,
+                             source_taxon_rank=source_taxon_rank)
+            if category == "known_holdout" and not ancestry_ok:
+                row["selection_status"] = "ineligible"
+                row["rejection_reason"] = "taxon_ancestry_unverified"
+                stats["rejection_counts"]["taxon_ancestry_unverified"] += 1
+                rows.append(row)
+                continue
             eligible, reason = is_fresh_row_eligible(row)
             if eligible:
                 row["selection_status"] = "candidate_eligible"
@@ -709,7 +774,9 @@ def fetch_diverse_ood_candidates(client: PacedJsonClient, exclusion: ExclusionIn
                 continue
             stats["unique_candidates_examined"] += 1
             row = _photo_row(obs, photo, taxon["id"], taxon["name"], slug,
-                             category, intended_dataset)
+                             category, intended_dataset,
+                             source_taxon_id=taxon["id"], source_taxon_name=taxon["name"],
+                             source_taxon_rank="species")
             eligible, reason = is_fresh_row_eligible(row)
             if not eligible:
                 row["selection_status"] = "ineligible"
@@ -788,6 +855,39 @@ def dedupe_candidate_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         seen.add(identity)
         out.append(r)
     return out
+
+
+def write_candidates_csv(csv_path: Path, rows: list[dict[str, Any]]) -> None:
+    """The one and only writer of candidates.csv -- kept as a standalone,
+    directly-testable function so the schema (CANDIDATE_CSV_FIELDS) and the
+    row-building code (_photo_row / extract_reuse_candidate_rows /
+    resolve_known_holdout_label) can never silently drift apart.
+
+    Fails closed on BOTH directions of schema drift: a row carrying any key
+    outside CANDIDATE_CSV_FIELDS, or missing any key CANDIDATE_CSV_FIELDS
+    requires, is a bug and must raise loudly (never rely on DictWriter's
+    extrasaction="ignore" or restval defaults to silently paper over either
+    case -- that is exactly how source_taxon_* almost went missing from the
+    frozen snapshot)."""
+    allowed = set(CANDIDATE_CSV_FIELDS)
+    for i, row in enumerate(rows):
+        keys = set(row)
+        if keys != allowed:
+            extra = sorted(keys - allowed)
+            missing = sorted(allowed - keys)
+            detail = []
+            if extra:
+                detail.append(f"unexpected field(s) {extra}")
+            if missing:
+                detail.append(f"missing field(s) {missing}")
+            raise AuditError(
+                f"candidates.csv row {i} does not match CANDIDATE_CSV_FIELDS exactly: "
+                f"{'; '.join(detail)}"
+            )
+    with csv_path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=CANDIDATE_CSV_FIELDS, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 # --------------------------------------------------------------------- main
@@ -1137,13 +1237,11 @@ def run_full_audit(repo: Path, out_dir: Path, args, supported: dict[str, dict[st
 
     # ---- output integrity -----------------------------------------------------
     all_rows = dedupe_candidate_rows(all_rows)
+    for r in all_rows:
+        r.pop("hash_verification_status", None)  # transient bookkeeping, not part of the frozen schema
     out_dir.mkdir(parents=True, exist_ok=True)
     csv_path = out_dir / "candidates.csv"
-    with csv_path.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=CANDIDATE_CSV_FIELDS, lineterminator="\n",
-                                extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(all_rows)
+    write_candidates_csv(csv_path, all_rows)
 
     status_counts = Counter(r["selection_status"] for r in all_rows)
     rejection_counts = Counter(r["rejection_reason"] for r in all_rows if r.get("rejection_reason"))

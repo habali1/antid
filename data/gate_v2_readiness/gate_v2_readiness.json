@@ -308,7 +308,7 @@
   "candidates_csv": {
     "path": "data/gate_v2_readiness/candidates.csv",
     "rows": 4012,
-    "sha256": "01c2c37c785d1e1b1a33efefe2709e3927cabb372ff5b0e4755121658a4b0a77"
+    "sha256": "eed811a31c2febb98fb2c8f4f4b958e105c1b7fe7aa80b3f3de1e2ef8152c4f9"
   },
   "domain_labels": [
     "calibration_v2_known",
@@ -370,6 +370,25 @@
     "no_inference_or_evaluation": true,
     "no_model_or_onnx_session_loaded": true,
     "no_threshold_applied": true
+  },
+  "known_holdout_taxonomic_canonicalization": {
+    "affected_known_holdout_rows": 26,
+    "affected_slug": "eciton-burchellii",
+    "candidates_csv_added_columns": [
+      "source_taxon_id",
+      "source_taxon_name",
+      "source_taxon_rank"
+    ],
+    "canonical_taxon_id": 126838,
+    "lineage_evidence": {
+      "path": "data/gate_v2_readiness/known_holdout_taxonomic_lineage_v1.json",
+      "sha256": "71dfc954b1f80e9d5780e306274f2cb0ff562605db567e045a9ff79dbfa0b492"
+    },
+    "policy": "parent_species_collapse_v1",
+    "source_taxon_ids_verified": [
+      313487,
+      735984
+    ]
   },
   "known_species_readiness": [
     {

@@ -1,0 +1,62 @@
+{
+  "canonical_targets": {
+    "126838": {
+      "name": "Eciton burchellii",
+      "rank": "species",
+      "taxon_id": 126838
+    }
+  },
+  "evidence_sha256": "2394e6b88d1caf25b91775e746301dadeb77f12fb9df5b949938bfa7eda61610",
+  "generated_at_utc": "2026-09-12T22:21:19Z",
+  "policy": "parent_species_collapse_v1",
+  "verified_source_taxa": {
+    "313487": {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        428216,
+        126834,
+        126838
+      ],
+      "canonical_target_taxon_id": 126838,
+      "name": "Eciton burchellii foreli",
+      "parent_id": 126838,
+      "rank": "subspecies",
+      "target_in_ancestor_ids": true,
+      "taxon_id": 313487
+    },
+    "735984": {
+      "ancestor_ids": [
+        48460,
+        1,
+        47120,
+        372739,
+        47158,
+        184884,
+        47201,
+        124417,
+        326777,
+        1269340,
+        47336,
+        428216,
+        126834,
+        126838
+      ],
+      "canonical_target_taxon_id": 126838,
+      "name": "Eciton burchellii parvispinum",
+      "parent_id": 126838,
+      "rank": "subspecies",
+      "target_in_ancestor_ids": true,
+      "taxon_id": 735984
+    }
+  }
+}

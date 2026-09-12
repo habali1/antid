@@ -621,5 +621,171 @@ class TestNoThresholdReference(unittest.TestCase):
         self.assertEqual(source.count("0.60"), 1)
 
 
+class _FakeClientWithTaxa(_FakeClient):
+    """Extends _FakeClient with /taxa/{id} responses for
+    resolve_known_holdout_label / ancestry-lookup tests."""
+
+    def __init__(self, pages: list[dict], taxa: dict[int, dict] | None = None):
+        super().__init__(pages)
+        self.taxa = taxa or {}
+        self.taxa_calls: list[int] = []
+
+    def get(self, path, params=None):
+        if path.startswith("/taxa/"):
+            taxon_id = int(path.rsplit("/", 1)[-1])
+            self.taxa_calls.append(taxon_id)
+            result = self.taxa.get(taxon_id)
+            return {"results": [result] if result else []}
+        return super().get(path, params)
+
+
+class TestCandidateCsvWriterSchema(unittest.TestCase):
+    """Regression: CANDIDATE_CSV_FIELDS must include every field
+    _photo_row/resolve_known_holdout_label/extract_reuse_candidate_rows
+    actually populate, or a real audit's DictWriter silently drops (or, with
+    a stricter writer, crashes on) source-taxon provenance."""
+
+    def test_all_row_builder_keys_are_in_the_csv_schema(self):
+        obs = _obs(1, "u1", 1, taxon_id=126838, taxon_name="Eciton burchellii")
+        row = g._photo_row(obs, obs["photos"][0], 126838, "Eciton burchellii", "eciton-burchellii",
+                          "known_holdout", "calibration_v2",
+                          source_taxon_id=735984, source_taxon_name="Eciton burchellii parvispinum",
+                          source_taxon_rank="subspecies")
+        missing = set(row) - set(g.CANDIDATE_CSV_FIELDS)
+        self.assertEqual(missing, set(), f"row keys not in CANDIDATE_CSV_FIELDS: {missing}")
+
+    def test_write_candidates_csv_preserves_canonical_and_source_fields(self):
+        obs = _obs(1, "u1", 1, taxon_id=126838, taxon_name="Eciton burchellii")
+        row = g._photo_row(obs, obs["photos"][0], 126838, "Eciton burchellii", "eciton-burchellii",
+                          "known_holdout", "calibration_v2",
+                          source_taxon_id=735984, source_taxon_name="Eciton burchellii parvispinum",
+                          source_taxon_rank="subspecies")
+        row["selection_status"] = "selected"
+        with tempfile.TemporaryDirectory() as tmp:
+            csv_path = Path(tmp) / "candidates.csv"
+            g.write_candidates_csv(csv_path, [row])
+            with csv_path.open(encoding="utf-8") as fh:
+                written = list(csv.DictReader(fh))
+        self.assertEqual(len(written), 1)
+        out = written[0]
+        self.assertEqual(out["species"], "Eciton burchellii")
+        self.assertEqual(out["slug"], "eciton-burchellii")
+        self.assertEqual(out["taxon_id"], "126838")
+        self.assertEqual(out["source_taxon_id"], "735984")
+        self.assertEqual(out["source_taxon_name"], "Eciton burchellii parvispinum")
+        self.assertEqual(out["source_taxon_rank"], "subspecies")
+
+    def test_unexpected_field_rejected_not_silently_dropped(self):
+        """Regression: extrasaction='ignore' used to silently drop any field
+        not in CANDIDATE_CSV_FIELDS -- exactly how source_taxon_* almost
+        went missing. A future stray field must fail loudly instead."""
+        obs = _obs(1, "u1", 1)
+        row = g._photo_row(obs, obs["photos"][0], 7, "Some species", "some-species",
+                          "known_holdout", "calibration_v2")
+        row["totally_unexpected_field"] = "should never be silently dropped"
+        with tempfile.TemporaryDirectory() as tmp:
+            csv_path = Path(tmp) / "candidates.csv"
+            with self.assertRaisesRegex(g.AuditError, "totally_unexpected_field"):
+                g.write_candidates_csv(csv_path, [row])
+            self.assertFalse(csv_path.exists())
+
+    def test_missing_field_rejected_not_silently_backfilled(self):
+        """Regression: DictWriter's restval default would otherwise
+        silently backfill a missing key (e.g. source_taxon_rank) with an
+        empty string instead of failing -- a row must carry EXACTLY
+        CANDIDATE_CSV_FIELDS, never fewer."""
+        obs = _obs(1, "u1", 1)
+        row = g._photo_row(obs, obs["photos"][0], 7, "Some species", "some-species",
+                          "known_holdout", "calibration_v2")
+        del row["source_taxon_rank"]
+        with tempfile.TemporaryDirectory() as tmp:
+            csv_path = Path(tmp) / "candidates.csv"
+            with self.assertRaisesRegex(g.AuditError, "source_taxon_rank"):
+                g.write_candidates_csv(csv_path, [row])
+            self.assertFalse(csv_path.exists())
+
+    def test_reuse_candidate_rows_carry_source_taxon_fields(self):
+        cal_rows = [{"category": "out_of_scope_ant", "species": "Some species", "slug": "some-species",
+                    "taxon_id": "55", "observation_uuid": "u1", "photo_id": "1", "sha256": "a" * 64,
+                    "created_at": "2026-01-01", "lat": "1.0", "lon": "2.0"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            cal_csv = Path(tmp) / "calibration_v1.csv"
+            _write_csv(cal_csv, list(cal_rows[0].keys()), cal_rows)
+            pools = g.extract_reuse_candidate_rows(cal_rows, supported={}, cal_csv_path=cal_csv)
+        row = pools["out_of_scope_ant"][0]
+        self.assertEqual(row["source_taxon_id"], 55)
+        self.assertEqual(row["source_taxon_name"], "Some species")
+        self.assertEqual(row["source_taxon_rank"], g.SOURCE_TAXON_RANK_NOT_RECORDED)
+        missing = set(row) - set(g.CANDIDATE_CSV_FIELDS) - {"hash_verification_status"}
+        self.assertEqual(missing, set())
+
+
+class TestResolveKnownHoldoutLabel(unittest.TestCase):
+    def test_exact_canonical_taxon_needs_no_lookup(self):
+        client = _FakeClientWithTaxa([])
+        obs_taxon = {"id": 126838, "name": "Eciton burchellii"}
+        result = g.resolve_known_holdout_label(client, obs_taxon, 126838, "Eciton burchellii",
+                                               "eciton-burchellii", {})
+        label_id, label_species, label_slug, source_id, source_name, rank, ok = result
+        self.assertEqual((label_id, label_species, label_slug), (126838, "Eciton burchellii", "eciton-burchellii"))
+        self.assertEqual((source_id, source_name, rank, ok), (126838, "Eciton burchellii", "species", True))
+        self.assertEqual(client.taxa_calls, [])  # no network needed when already canonical
+
+    def test_verified_descendant_is_canonicalized(self):
+        client = _FakeClientWithTaxa([], taxa={
+            735984: {"id": 735984, "name": "Eciton burchellii parvispinum", "rank": "subspecies",
+                    "parent_id": 126838, "ancestor_ids": [1, 2, 126838]},
+        })
+        obs_taxon = {"id": 735984, "name": "Eciton burchellii parvispinum"}
+        result = g.resolve_known_holdout_label(client, obs_taxon, 126838, "Eciton burchellii",
+                                               "eciton-burchellii", {})
+        label_id, label_species, label_slug, source_id, source_name, rank, ok = result
+        self.assertTrue(ok)
+        self.assertEqual((label_id, label_species, label_slug), (126838, "Eciton burchellii", "eciton-burchellii"))
+        self.assertEqual((source_id, source_name, rank), (735984, "Eciton burchellii parvispinum", "subspecies"))
+
+    def test_missing_ancestry_response_becomes_ineligible(self):
+        client = _FakeClientWithTaxa([], taxa={})  # /taxa/999 returns no results
+        obs_taxon = {"id": 999, "name": "Something unrelated"}
+        result = g.resolve_known_holdout_label(client, obs_taxon, 126838, "Eciton burchellii",
+                                               "eciton-burchellii", {})
+        self.assertFalse(result[-1])  # ok=False
+
+    def test_failed_ancestry_lookup_becomes_ineligible(self):
+        class RaisingClient(_FakeClientWithTaxa):
+            def get(self, path, params=None):
+                if path.startswith("/taxa/"):
+                    raise RuntimeError("network failure")
+                return super().get(path, params)
+
+        client = RaisingClient([])
+        obs_taxon = {"id": 999, "name": "Something unrelated"}
+        result = g.resolve_known_holdout_label(client, obs_taxon, 126838, "Eciton burchellii",
+                                               "eciton-burchellii", {})
+        self.assertFalse(result[-1])
+
+    def test_ancestor_not_containing_target_rejected(self):
+        client = _FakeClientWithTaxa([], taxa={
+            999: {"id": 999, "name": "Unrelated species", "rank": "species",
+                 "parent_id": 1, "ancestor_ids": [1, 2, 3]},
+        })
+        obs_taxon = {"id": 999, "name": "Unrelated species"}
+        result = g.resolve_known_holdout_label(client, obs_taxon, 126838, "Eciton burchellii",
+                                               "eciton-burchellii", {})
+        self.assertFalse(result[-1])
+
+    def test_ancestry_lookup_cached_once_per_source_taxon(self):
+        client = _FakeClientWithTaxa([], taxa={
+            735984: {"id": 735984, "name": "Eciton burchellii parvispinum", "rank": "subspecies",
+                    "parent_id": 126838, "ancestor_ids": [1, 2, 126838]},
+        })
+        cache: dict = {}
+        obs_taxon = {"id": 735984, "name": "Eciton burchellii parvispinum"}
+        g.resolve_known_holdout_label(client, obs_taxon, 126838, "Eciton burchellii", "eciton-burchellii", cache)
+        g.resolve_known_holdout_label(client, obs_taxon, 126838, "Eciton burchellii", "eciton-burchellii", cache)
+        g.resolve_known_holdout_label(client, obs_taxon, 126838, "Eciton burchellii", "eciton-burchellii", cache)
+        self.assertEqual(client.taxa_calls, [735984])  # exactly one lookup despite three calls
+
+
 if __name__ == "__main__":
     unittest.main()
