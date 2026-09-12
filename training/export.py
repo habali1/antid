@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""export.py — export the EfficientNet-B4 backbone to ONNX.
+"""export.py — export a trained backbone to ONNX.
 
 Primary use is the importable `export_backbone()` called at the end of
-train.py. A standalone CLI is also provided to (re)export from a saved
-checkpoint:
+train.py; works for any backbone/embedding_dim (resolved from the
+checkpoint's own embedded config), not only the live B4 serving default. A
+standalone CLI is also provided to (re)export from a saved checkpoint:
 
     python export.py --checkpoint artifacts/model.pth --taxonomy artifacts/taxonomy.json
 
-ONNX contract (consumed by api/inference.py):
+ONNX contract (the live B4 serving default; consumed by api/inference.py --
+a non-B4 candidate export is NOT a serving artifact until separately
+validated and approved):
   input  "input"  float32  (batch, 3, H, W)   — batch is dynamic, H=W=image_size
-  output "embedding" float32 (batch, 1792)
+  output "embedding" float32 (batch, embedding_dim) -- 1792 for B4
   opset 17
 """
 from __future__ import annotations

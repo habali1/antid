@@ -1,0 +1,60 @@
+# AntID EfficientNetV2-S candidate configuration -- a SEPARATE config from
+# config.yaml (the live B4 recipe), never a replacement for it. Every
+# training-recipe field below that is not part of V2-S's own native
+# identity/preprocessing is copied byte-for-byte from config.yaml so the
+# B4-vs-V2-S comparison is controlled: same dataset, split, optimizer, LR,
+# weight decay, dropout, augmentations, loss, sampler, training seed,
+# validation cadence, and numerical policy (numerical policy itself is
+# applied uniformly by numerics.py, not read from this file).
+#
+# Confirmed via read-only recon against the installed environment (timm
+# 1.0.29), without downloading anything:
+#   - model name: tf_efficientnetv2_s.in21k_ft_in1k (exact timm identifier)
+#   - embedding_dim: 1280 (backbone.num_features with pretrained=False)
+#   - native input size: 300x300, interpolation: bicubic
+#   - pretrained mean/std: [0.5, 0.5, 0.5]
+#   - pretrained weights were NOT cached locally at recon time (2026-09-11)
+model:
+  backbone: tf_efficientnetv2_s.in21k_ft_in1k   # exact timm identifier confirmed by recon
+  pretrained: true                              # ImageNet-21k -> ImageNet-1k fine-tuned weights
+  embedding_dim: 1280                           # V2-S feature width (before final linear)
+
+lr: 0.0001
+weight_decay: 0.0001
+batch_size: 32
+epochs: 30
+image_size: 300                                 # V2-S native input size (NOT B4's 380)
+dropout: 0.3
+num_workers: 4
+val_fraction: 0.2                               # used only if DB has no explicit split
+seed: 42
+
+# V2-S's own native preprocessing (timm pretrained_cfg for
+# tf_efficientnetv2_s.in21k_ft_in1k) -- deliberately different from B4's
+# ImageNet mean/std/bilinear. This is a model-appropriate preprocessing
+# choice, not a training-recipe change: see AGENTS.md/CLAUDE.md for why B4's
+# own preprocessing contract (api/inference.py) must never be edited to match.
+interpolation: bicubic
+
+augmentation:
+  random_horizontal_flip: true
+  random_rotation_degrees: 15
+  color_jitter:
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.1
+  random_resized_crop_scale: [0.8, 1.0]
+
+# V2-S's own native normalization (mean=std=0.5) -- NOT ImageNet stats. This
+# config is never used for serving; api/inference.py keeps B4's ImageNet
+# mean/std/380 contract untouched.
+normalize:
+  mean: [0.5, 0.5, 0.5]
+  std:  [0.5, 0.5, 0.5]
+
+# Geo index emitted alongside the model -- unchanged from config.yaml.
+geo:
+  cell_size_deg: 1.0
+  min_obs_per_cell: 2
+
+artifacts_dir: artifacts

@@ -27,6 +27,7 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
+from torchvision.transforms import InterpolationMode
 
 # Probe order matters when resolving {photo_id} -> a file: the same id must
 # always resolve to the same extension. IMG_EXTS stays a set for membership tests.
@@ -54,9 +55,38 @@ def _genus_from_species_name(species_name: str) -> str:
 
 
 # ---------------------------------------------------------------- transforms
+_INTERPOLATION_MODES = {
+    "nearest": InterpolationMode.NEAREST,
+    "bilinear": InterpolationMode.BILINEAR,
+    "bicubic": InterpolationMode.BICUBIC,
+    "box": InterpolationMode.BOX,
+    "hamming": InterpolationMode.HAMMING,
+    "lanczos": InterpolationMode.LANCZOS,
+}
+
+
+def resolve_interpolation(cfg: dict) -> InterpolationMode:
+    """An absent "interpolation" config field preserves the historical B4
+    bilinear behavior exactly (torchvision's own Resize default). A value
+    that IS given must be one of the named torchvision InterpolationMode
+    keys below -- fail closed (ValueError) on anything else, e.g. a typo or
+    a raw Pillow integer constant, rather than silently falling back to
+    bilinear for a value the caller actually specified."""
+    value = cfg.get("interpolation")
+    if value is None:
+        return InterpolationMode.BILINEAR
+    if not isinstance(value, str) or value not in _INTERPOLATION_MODES:
+        raise ValueError(
+            f"Unsupported interpolation {value!r}; expected one of "
+            f"{sorted(_INTERPOLATION_MODES)}, or omit the field for bilinear."
+        )
+    return _INTERPOLATION_MODES[value]
+
+
 def build_transforms(cfg: dict, train: bool) -> transforms.Compose:
     size = cfg["image_size"]
     norm = cfg["normalize"]
+    interp = resolve_interpolation(cfg)
     if train:
         aug = cfg["augmentation"]
         cj = aug["color_jitter"]
@@ -65,7 +95,7 @@ def build_transforms(cfg: dict, train: bool) -> transforms.Compose:
             # distorted) — the SAME geometry as the val transform below and
             # api/inference.py. Augmentations apply on top; no crop, so the
             # framing the model sees matches serving exactly.
-            transforms.Resize((size, size)),
+            transforms.Resize((size, size), interpolation=interp),
             transforms.RandomHorizontalFlip() if aug["random_horizontal_flip"]
             else transforms.Lambda(lambda im: im),
             transforms.RandomRotation(aug["random_rotation_degrees"]),
@@ -79,7 +109,7 @@ def build_transforms(cfg: dict, train: bool) -> transforms.Compose:
         ]
     else:
         ops = [
-            transforms.Resize((size, size)),
+            transforms.Resize((size, size), interpolation=interp),
             transforms.ToTensor(),
             transforms.Normalize(norm["mean"], norm["std"]),
         ]

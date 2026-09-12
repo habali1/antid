@@ -1,9 +1,15 @@
-"""AntID model: EfficientNet-B4 backbone with an embedding + linear head.
+"""AntID model: a configurable timm backbone with an embedding + linear head.
 
-The 1792-dim vector *before* the final linear layer is the embedding used for
-prototype/cosine-similarity inference. Training optimizes the linear head with
-cross-entropy so the embedding space separates species; at serve time the head
-is discarded and only the backbone (→ embedding) is exported to ONNX.
+The live serving default is EfficientNet-B4 (embedding_dim=1792); the
+backbone/embedding_dim are constructor parameters precisely so a candidate
+architecture (e.g. EfficientNetV2-S, embedding_dim=1280) can be trained
+through the exact same code path under its own separate config -- see
+config.efficientnetv2_s.yaml. The vector *before* the final linear layer is
+the embedding used for prototype/cosine-similarity inference, dimension
+equal to whichever backbone's own feature width. Training optimizes the
+linear head with cross-entropy so the embedding space separates species; at
+serve time the head is discarded and only the backbone (→ embedding) is
+exported to ONNX.
 """
 from __future__ import annotations
 
@@ -19,7 +25,9 @@ except ImportError as e:  # pragma: no cover - surfaced at runtime on GPU box
 
 
 class AntIDModel(nn.Module):
-    """EfficientNet-B4 → GlobalAvgPool → Dropout → Linear(embedding_dim, num_classes).
+    """`backbone` (any timm model name) → GlobalAvgPool → Dropout →
+    Linear(embedding_dim, num_classes). Default backbone/embedding_dim match
+    the live B4 serving contract; a candidate run passes its own values.
 
     forward() returns logits (for training); embed() returns the L2-normalizable
     pre-head embedding (for prototype computation and ONNX export).
@@ -35,7 +43,8 @@ class AntIDModel(nn.Module):
     ) -> None:
         super().__init__()
         # num_classes=0, global_pool="avg" → backbone outputs a pooled feature
-        # vector of width `num_features` (1792 for B4). No classifier inside timm.
+        # vector of width `num_features` (backbone-dependent: 1792 for B4,
+        # 1280 for EfficientNetV2-S). No classifier inside timm.
         self.backbone = timm.create_model(
             backbone,
             pretrained=pretrained,
@@ -44,7 +53,8 @@ class AntIDModel(nn.Module):
         )
         feat_dim = self.backbone.num_features
         if feat_dim != embedding_dim:
-            # B4 is 1792; guard against a backbone swap silently breaking shapes.
+            # Guard against a backbone/config mismatch silently breaking
+            # downstream shapes (prototypes.npy rows, ONNX output width).
             raise ValueError(
                 f"{backbone} has {feat_dim}-dim features but config expects "
                 f"{embedding_dim}. Update config.model.embedding_dim."
@@ -54,7 +64,8 @@ class AntIDModel(nn.Module):
         self.classifier = nn.Linear(feat_dim, num_classes)
 
     def embed(self, x: torch.Tensor) -> torch.Tensor:
-        """Return the pooled 1792-dim embedding (pre-dropout, pre-head)."""
+        """Return the pooled embedding (pre-dropout, pre-head); dimension is
+        self.embedding_dim (backbone-dependent)."""
         return self.backbone(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

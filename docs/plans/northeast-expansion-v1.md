@@ -5,7 +5,16 @@ implemented and verified; Milestone 2A metadata audit complete; the 15-species
 train/development/final-test photo download is complete and frozen
 (`northeast_expansion_v1`, `northeast_final_test_v1`); the resulting 65-species
 training catalog is merged into a versioned manifest and taxonomy (see
-`TODO.md`); no training has started. Prepared 2026-09-05.
+`TODO.md`). **Update 2026-09-11:** the expanded B4 baseline (Milestone 3's
+first step) is complete — `northeast_v1_b4_dev_v2`, selected human epoch 27,
+val top-1 0.6803/top-3 0.8286 on the pinned development split, with a
+committed, hash-bound, reproducible development report
+(`training/reports/northeast_v1_b4_dev_report.json`); see `TODO.md`'s
+"Phase 4B" entry for the full result, the one-prediction epoch-6/epoch-27
+margin, and development-only genus metrics. The EfficientNetV2-S candidate
+config is prepared (`training/config.efficientnetv2_s.yaml`) and a bounded
+smoke is next, per Milestone 3 below. No frozen evaluation set has been
+touched.
 
 ## Decision and boundaries
 
@@ -323,6 +332,23 @@ Once membership and collection budget are approved:
 
 ### 3. Establish the expanded B4 baseline, then compare EfficientNetV2-S
 
+**Progress (2026-09-11): the expanded B4 baseline is complete.**
+`northeast_v1_b4_dev_v2` finished all 30 epochs from the intended pretrained
+initialization (never the old, split-contaminated checkpoint); selected
+human epoch 27 (val top-1 0.6803/top-3 0.8286 on the pinned 2,596-image
+development split; see `TODO.md`'s "Phase 4B" entry for the full,
+hash-verified result, its committed `training/reports/
+northeast_v1_b4_dev_report.json`, and development-only genus metrics). The
+EfficientNetV2-S candidate's own preprocessing was inspected directly from
+the installed `timm` environment (300×300, mean/std 0.5, bicubic — its own
+native pretrained config, not inferred from the model name) and recorded in
+`training/config.efficientnetv2_s.yaml`; `training/config.yaml`'s shipped B4
+preprocessing was not changed. A bounded EfficientNetV2-S smoke (pause/
+resume, in its own ignored artifact directory) is next; a fresh 30-epoch
+run follows only after that smoke and its review pass, per the frozen
+budget decision (no 12-epoch screen; a shorter run is never resumed as the
+30-epoch run).
+
 - Start the controlled comparison from the intended pretrained initialization,
   not the old fine-tuned checkpoint if its training images now occur in a newly
   assigned development split. The old lost split must not contaminate a new baseline.
@@ -533,3 +559,11 @@ diagnostic visibility, label plausibility, license/attribution completeness,
 and lookalike risk under the approved personal/non-commercial pool, using the
 now-frozen data. Stop again before training or evaluating against the
 65-species catalog.
+
+**Update 2026-09-11:** the expanded B4 baseline (Milestone 3's first step)
+has since completed and been reported on the pinned development split (see
+Milestone 3 above and `TODO.md`'s "Phase 4B" entry). The current next
+bounded terminal task is a bounded EfficientNetV2-S smoke, in its own
+ignored artifact directory, followed by one fresh 30-epoch V2-S run only if
+that smoke and its review pass — still no touching of any frozen evaluation
+set, and no full run before the smoke is reviewed.

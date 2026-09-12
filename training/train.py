@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""train.py — fine-tune EfficientNet-B4 for AntID and emit serving artifacts.
+"""train.py — fine-tune an AntID candidate backbone and emit serving
+artifacts. The live default is EfficientNet-B4 (config.yaml); a candidate
+architecture (e.g. EfficientNetV2-S, config.efficientnetv2_s.yaml) runs
+through this exact same harness under its own separate --config, never by
+editing config.yaml.
 
 Phase 4A hardening (Northeast 65-species development harness), corrected
 after a dedicated review pass: explicit, fail-closed, hash-and-image-byte-
@@ -15,12 +19,14 @@ that performs every safety check -- including full image-byte hash
 verification -- without initializing a model or downloading anything.
 
 None of this changes the training recipe itself (same optimizer,
-augmentations, epoch budget, architecture) -- see docs/plans/
+augmentations, epoch budget) across a backbone swap -- only the config's
+model/image_size/normalize/interpolation fields differ; see docs/plans/
 northeast-expansion-v1.md and TODO.md for the full protocol.
 
 Outputs (into artifacts/, only after a successful run):
   model.pth         best-epoch model weights + config + provenance
-  prototypes.npy    (num_classes, 1792) mean train embedding per species,
+  prototypes.npy    (num_classes, embedding_dim) mean train embedding per
+                    species (1792 for B4, 1280 for EfficientNetV2-S),
                     recomputed from the restored best-epoch model
   taxonomy.json     class_idx → {species_name, common_name, taxon_id, slug, genus}
   val_split.json    pinned train+val membership (sorted keys), written BEFORE

@@ -446,6 +446,79 @@ below. Do not describe a design other than the one in this section.
   on the table but **none is authorized yet**. The corrected `_v2` smoke
   run's timing will be reported separately before that decision is made.
 
+## Phase 4B: B4 development report and EfficientNetV2-S preparation
+
+- **B4 candidate result, completed and selected.**
+  `training/artifacts/northeast_v1_b4_dev_v2` finished all 30 configured
+  epochs (`run_manifest.status == "completed"`, git commit `c622ce9`).
+  Selected checkpoint under the frozen rule (highest val raw-cosine top-1,
+  tie → highest top-3, tie → earliest epoch): **internal epoch 26 / human
+  epoch 27**, val top-1 `0.6802773497688752` (1,766/2,596), val top-3
+  `0.8285824345146379` (2,151/2,596), on the pinned 2,596-image development
+  split only (65 species). By group: new 15 species n=600 top-1=397/600
+  (0.6617), top-3=483/600 (0.805); legacy 50 species n=1,996
+  top-1=1,369/1,996 (0.6859), top-3=1,668/1,996 (0.8357). **This is
+  pinned development-split analysis; not benchmark or final-test evidence** —
+  `benchmark_v1`/`calibration_v1`/`unknown_test_v1`/`northeast_final_test_v1`
+  were not touched.
+- **One-prediction margin, human epoch 6 vs. 27.** Human epoch 6 (internal
+  epoch 5) scored val top-1 `0.6798921417565486` (1,765/2,596), top-3
+  `0.8416795069337443` — actually higher top-3 than the selected epoch.
+  Epoch 27 won the frozen selection rule (which ranks by top-1 first) by
+  exactly **one** top-1 prediction (1,766 vs. 1,765). This is a mechanical
+  tie-break outcome, **not evidence of a meaningful statistical
+  improvement** between the two checkpoints.
+- **Genus-oriented metrics are development-split analysis only**, computed
+  from the same raw top-3 predictions used above (never geo re-ranked,
+  never gate-filtered): genus_top1 (does the top-1 predicted species share
+  the true genus), genus_top3_any (any of the top-3 shares it),
+  wrong_species_but_correct_genus_top1 (conditional on a top-1 species
+  miss), top3_unanimous_true_genus (all three top-3 predictions share the
+  true genus). Reported overall, new-15-vs-legacy-50, per genus, and per
+  species, each with numerator/denominator — see
+  `training/reports/northeast_v1_b4_dev_report.json`
+  (`training/report_dev_metrics.py`, `training/test_report_dev_metrics.py`).
+  **Never cite these as benchmark, calibration, or final-test evidence, and
+  never as a basis for a new confidence/abstention threshold.**
+- **V2-S candidate config prepared** (`training/config.efficientnetv2_s.yaml`,
+  `training/config.yaml` untouched): `tf_efficientnetv2_s.in21k_ft_in1k`
+  (exact timm identifier confirmed by recon), embedding_dim 1280, native
+  300×300 input, bicubic interpolation, mean/std `[0.5,0.5,0.5]` — V2-S's
+  own pretrained preprocessing, deliberately different from B4's ImageNet
+  contract. Every other recipe field (dataset, pinned split, optimizer, LR,
+  weight decay, dropout, augmentations, loss, sampler, seed 42, validation
+  cadence, numerical policy) is copied byte-for-byte from `config.yaml` and
+  covered by `training/test_efficientnetv2s_config.py`, which also proves
+  both configs resolve the identical 13,581-row manifest, 10,985/2,596
+  split, and val_split.json sha256
+  (`1039518efb33e43f2f97c66e11c1e24947c4a379fc54d6394ac5984c79d5ac7e`).
+  `training/data.py` gained an optional `interpolation` config field
+  (`resolve_interpolation`, torchvision named `InterpolationMode`, fail-closed
+  on an unsupported value); an absent field preserves B4's historical
+  bilinear behavior exactly (proven equal to torchvision's own Resize
+  default, not just asserted).
+- **V2-S pretrained weights were not cached locally as of the 2026-09-11
+  recon** (only `tf_efficientnet_b4.ns_jft_in1k` was present in the HF hub
+  cache) — the bounded smoke run is the first point at which downloading
+  `tf_efficientnetv2_s.in21k_ft_in1k`'s official weights is authorized.
+- **Next: a bounded V2-S smoke** (2 epochs, `--limit-batches`, pause/resume,
+  its own ignored `northeast_v1_v2s_smoke_resume` artifact directory —
+  never the eventual full-run directory). If the smoke and its review pass,
+  **one fresh 30-epoch V2-S run** follows, in a fresh directory. There is
+  **no 12-epoch screening run**, and a shorter run is never resumed as a
+  30-epoch run by changing `--epochs`.
+- **No frozen evaluation set may be touched during candidate selection.**
+  Development model selection (B4 or V2-S) uses only the pinned 2,596-image
+  val split; `benchmark_v1`/`calibration_v1`/`unknown_test_v1`/
+  `northeast_final_test_v1` and the live 50-species `training/artifacts/`
+  remain untouched throughout this phase.
+- **A single-seed B4-vs-V2-S comparison is exploratory, not causal proof of
+  architectural superiority.** Per the roadmap's own predeclared standard,
+  at least two matched seeds per architecture are needed for a comparative
+  claim; with local capacity permitting only one run each, any observed
+  difference must be labeled exploratory and never attributed to the
+  backbone choice alone.
+
 ## Policy maintenance: verified closeout and boundaries
 
 - Training/API `policy_schema.py` copies are byte-identical; the existing
