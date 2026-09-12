@@ -1,0 +1,2747 @@
+{
+  "aggregates": {
+    "all_65": {
+      "n": 2596,
+      "top1": 0.6802773497688752,
+      "top1_correct": 1766,
+      "top3": 0.8285824345146379,
+      "top3_correct": 2151
+    },
+    "legacy_50": {
+      "n": 1996,
+      "top1": 0.685871743486974,
+      "top1_correct": 1369,
+      "top3": 0.8356713426853707,
+      "top3_correct": 1668
+    },
+    "new_15": {
+      "n": 600,
+      "top1": 0.6616666666666666,
+      "top1_correct": 397,
+      "top3": 0.805,
+      "top3_correct": 483
+    }
+  },
+  "dataset": {
+    "species_count": 65,
+    "train_n": 10985,
+    "val_n": 2596
+  },
+  "generator": {
+    "git_commit": "4957fa65c2e1e780aaf7f46c3a63c34f6e97d9c9",
+    "name": "report_dev_metrics.py",
+    "sha256": "fc63cd47cc02b6f187d27fe20f2f50da7f918d63a973a6ccba6d44f128f024b2",
+    "version": "1.0.0"
+  },
+  "genus_metrics": {
+    "new_15_vs_legacy_50": {
+      "legacy_50": {
+        "genus_top1": {
+          "count": 1406,
+          "rate": 0.7044088176352705,
+          "total": 1996
+        },
+        "genus_top3_any": {
+          "count": 1687,
+          "rate": 0.8451903807615231,
+          "total": 1996
+        },
+        "n": 1996,
+        "top3_unanimous_true_genus": {
+          "count": 29,
+          "rate": 0.014529058116232466,
+          "total": 1996
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 37,
+          "rate": 0.05901116427432217,
+          "total": 627
+        }
+      },
+      "new_15": {
+        "genus_top1": {
+          "count": 448,
+          "rate": 0.7466666666666667,
+          "total": 600
+        },
+        "genus_top3_any": {
+          "count": 523,
+          "rate": 0.8716666666666667,
+          "total": 600
+        },
+        "n": 600,
+        "top3_unanimous_true_genus": {
+          "count": 94,
+          "rate": 0.15666666666666668,
+          "total": 600
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 51,
+          "rate": 0.2512315270935961,
+          "total": 203
+        }
+      }
+    },
+    "overall": {
+      "genus_top1": {
+        "count": 1854,
+        "rate": 0.714175654853621,
+        "total": 2596
+      },
+      "genus_top3_any": {
+        "count": 2210,
+        "rate": 0.8513097072419107,
+        "total": 2596
+      },
+      "n": 2596,
+      "top3_unanimous_true_genus": {
+        "count": 123,
+        "rate": 0.047380585516178735,
+        "total": 2596
+      },
+      "wrong_species_but_correct_genus_top1": {
+        "count": 88,
+        "rate": 0.10602409638554217,
+        "total": 830
+      }
+    },
+    "per_genus": {
+      "Anoplolepis": {
+        "genus_top1": {
+          "count": 53,
+          "rate": 0.6625,
+          "total": 80
+        },
+        "genus_top3_any": {
+          "count": 68,
+          "rate": 0.85,
+          "total": 80
+        },
+        "n": 80,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 80
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 27
+        }
+      },
+      "Aphaenogaster": {
+        "genus_top1": {
+          "count": 27,
+          "rate": 0.675,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 13
+        }
+      },
+      "Atta": {
+        "genus_top1": {
+          "count": 68,
+          "rate": 0.85,
+          "total": 80
+        },
+        "genus_top3_any": {
+          "count": 75,
+          "rate": 0.9375,
+          "total": 80
+        },
+        "n": 80,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 80
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 15,
+          "rate": 0.5555555555555556,
+          "total": 27
+        }
+      },
+      "Brachymyrmex": {
+        "genus_top1": {
+          "count": 22,
+          "rate": 0.55,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 18
+        }
+      },
+      "Camponotus": {
+        "genus_top1": {
+          "count": 221,
+          "rate": 0.7892857142857143,
+          "total": 280
+        },
+        "genus_top3_any": {
+          "count": 255,
+          "rate": 0.9107142857142857,
+          "total": 280
+        },
+        "n": 280,
+        "top3_unanimous_true_genus": {
+          "count": 78,
+          "rate": 0.2785714285714286,
+          "total": 280
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 21,
+          "rate": 0.2625,
+          "total": 80
+        }
+      },
+      "Cephalotes": {
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "Colobopsis": {
+        "genus_top1": {
+          "count": 20,
+          "rate": 0.5,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 20
+        }
+      },
+      "Crematogaster": {
+        "genus_top1": {
+          "count": 58,
+          "rate": 0.725,
+          "total": 80
+        },
+        "genus_top3_any": {
+          "count": 65,
+          "rate": 0.8125,
+          "total": 80
+        },
+        "n": 80,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 80
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 22
+        }
+      },
+      "Dolichoderus": {
+        "genus_top1": {
+          "count": 79,
+          "rate": 0.6638655462184874,
+          "total": 119
+        },
+        "genus_top3_any": {
+          "count": 101,
+          "rate": 0.8487394957983193,
+          "total": 119
+        },
+        "n": 119,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 119
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 5,
+          "rate": 0.1111111111111111,
+          "total": 45
+        }
+      },
+      "Dorymyrmex": {
+        "genus_top1": {
+          "count": 26,
+          "rate": 0.6842105263157895,
+          "total": 38
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8421052631578947,
+          "total": 38
+        },
+        "n": 38,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 38
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 12
+        }
+      },
+      "Eciton": {
+        "genus_top1": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 8
+        }
+      },
+      "Ectatomma": {
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "Formica": {
+        "genus_top1": {
+          "count": 69,
+          "rate": 0.8625,
+          "total": 80
+        },
+        "genus_top3_any": {
+          "count": 74,
+          "rate": 0.925,
+          "total": 80
+        },
+        "n": 80,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 80
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 3,
+          "rate": 0.21428571428571427,
+          "total": 14
+        }
+      },
+      "Iridomyrmex": {
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      },
+      "Lasius": {
+        "genus_top1": {
+          "count": 209,
+          "rate": 0.7464285714285714,
+          "total": 280
+        },
+        "genus_top3_any": {
+          "count": 255,
+          "rate": 0.9107142857142857,
+          "total": 280
+        },
+        "n": 280,
+        "top3_unanimous_true_genus": {
+          "count": 45,
+          "rate": 0.16071428571428573,
+          "total": 280
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 36,
+          "rate": 0.3364485981308411,
+          "total": 107
+        }
+      },
+      "Leptomyrmex": {
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "Linepithema": {
+        "genus_top1": {
+          "count": 16,
+          "rate": 0.4,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 23,
+          "rate": 0.575,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 24
+        }
+      },
+      "Liometopum": {
+        "genus_top1": {
+          "count": 22,
+          "rate": 0.55,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 18
+        }
+      },
+      "Megaponera": {
+        "genus_top1": {
+          "count": 28,
+          "rate": 0.717948717948718,
+          "total": 39
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.8717948717948718,
+          "total": 39
+        },
+        "n": 39,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 39
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 11
+        }
+      },
+      "Messor": {
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      },
+      "Myrmecia": {
+        "genus_top1": {
+          "count": 66,
+          "rate": 0.825,
+          "total": 80
+        },
+        "genus_top3_any": {
+          "count": 71,
+          "rate": 0.8875,
+          "total": 80
+        },
+        "n": 80,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 80
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.06666666666666667,
+          "total": 15
+        }
+      },
+      "Myrmica": {
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "Nylanderia": {
+        "genus_top1": {
+          "count": 15,
+          "rate": 0.375,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 20,
+          "rate": 0.5,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 25
+        }
+      },
+      "Odontomachus": {
+        "genus_top1": {
+          "count": 58,
+          "rate": 0.725,
+          "total": 80
+        },
+        "genus_top3_any": {
+          "count": 70,
+          "rate": 0.875,
+          "total": 80
+        },
+        "n": 80,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 80
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.043478260869565216,
+          "total": 23
+        }
+      },
+      "Odontoponera": {
+        "genus_top1": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 11
+        }
+      },
+      "Oecophylla": {
+        "genus_top1": {
+          "count": 25,
+          "rate": 0.625,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 15
+        }
+      },
+      "Paltothyreus": {
+        "genus_top1": {
+          "count": 26,
+          "rate": 0.65,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 14
+        }
+      },
+      "Paraponera": {
+        "genus_top1": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 10
+        }
+      },
+      "Paratrechina": {
+        "genus_top1": {
+          "count": 27,
+          "rate": 0.675,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 13
+        }
+      },
+      "Pheidole": {
+        "genus_top1": {
+          "count": 22,
+          "rate": 0.55,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 28,
+          "rate": 0.7,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 18
+        }
+      },
+      "Pogonomyrmex": {
+        "genus_top1": {
+          "count": 70,
+          "rate": 0.875,
+          "total": 80
+        },
+        "genus_top3_any": {
+          "count": 76,
+          "rate": 0.95,
+          "total": 80
+        },
+        "n": 80,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 80
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 5,
+          "rate": 0.3333333333333333,
+          "total": 15
+        }
+      },
+      "Polyrhachis": {
+        "genus_top1": {
+          "count": 56,
+          "rate": 0.7,
+          "total": 80
+        },
+        "genus_top3_any": {
+          "count": 67,
+          "rate": 0.8375,
+          "total": 80
+        },
+        "n": 80,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 80
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.04,
+          "total": 25
+        }
+      },
+      "Ponera": {
+        "genus_top1": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 11
+        }
+      },
+      "Prenolepis": {
+        "genus_top1": {
+          "count": 13,
+          "rate": 0.325,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 24,
+          "rate": 0.6,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 27
+        }
+      },
+      "Pristomyrmex": {
+        "genus_top1": {
+          "count": 26,
+          "rate": 0.65,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 14
+        }
+      },
+      "Pseudomyrmex": {
+        "genus_top1": {
+          "count": 25,
+          "rate": 0.625,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 15
+        }
+      },
+      "Rhytidoponera": {
+        "genus_top1": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 7
+        }
+      },
+      "Solenopsis": {
+        "genus_top1": {
+          "count": 25,
+          "rate": 0.625,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 15
+        }
+      },
+      "Tapinoma": {
+        "genus_top1": {
+          "count": 15,
+          "rate": 0.375,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 25
+        }
+      },
+      "Temnothorax": {
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "Tetramorium": {
+        "genus_top1": {
+          "count": 21,
+          "rate": 0.525,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 19
+        }
+      },
+      "Tetraponera": {
+        "genus_top1": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 10
+        }
+      },
+      "Veromessor": {
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      }
+    },
+    "per_species": {
+      "anoplolepis-custodiens": {
+        "genus": "Anoplolepis",
+        "genus_top1": {
+          "count": 26,
+          "rate": 0.65,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 14
+        }
+      },
+      "anoplolepis-gracilipes": {
+        "genus": "Anoplolepis",
+        "genus_top1": {
+          "count": 27,
+          "rate": 0.675,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 13
+        }
+      },
+      "aphaenogaster-rudis": {
+        "genus": "Aphaenogaster",
+        "genus_top1": {
+          "count": 27,
+          "rate": 0.675,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 13
+        }
+      },
+      "atta-mexicana": {
+        "genus": "Atta",
+        "genus_top1": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 38,
+          "rate": 0.95,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 3,
+          "rate": 0.375,
+          "total": 8
+        }
+      },
+      "atta-texana": {
+        "genus": "Atta",
+        "genus_top1": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 12,
+          "rate": 0.631578947368421,
+          "total": 19
+        }
+      },
+      "brachymyrmex-patagonicus": {
+        "genus": "Brachymyrmex",
+        "genus_top1": {
+          "count": 22,
+          "rate": 0.55,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 18
+        }
+      },
+      "camponotus-americanus": {
+        "genus": "Camponotus",
+        "genus_top1": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 38,
+          "rate": 0.95,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 22,
+          "rate": 0.55,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 4,
+          "rate": 0.5714285714285714,
+          "total": 7
+        }
+      },
+      "camponotus-castaneus": {
+        "genus": "Camponotus",
+        "genus_top1": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 2,
+          "rate": 0.05,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.1111111111111111,
+          "total": 9
+        }
+      },
+      "camponotus-chromaiodes": {
+        "genus": "Camponotus",
+        "genus_top1": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 38,
+          "rate": 0.95,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 15,
+          "rate": 0.375,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 4,
+          "rate": 0.5,
+          "total": 8
+        }
+      },
+      "camponotus-nearcticus": {
+        "genus": "Camponotus",
+        "genus_top1": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 10,
+          "rate": 0.25,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 6,
+          "rate": 0.375,
+          "total": 16
+        }
+      },
+      "camponotus-novaeboracensis": {
+        "genus": "Camponotus",
+        "genus_top1": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 38,
+          "rate": 0.95,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 13,
+          "rate": 0.325,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 3,
+          "rate": 0.2727272727272727,
+          "total": 11
+        }
+      },
+      "camponotus-pennsylvanicus": {
+        "genus": "Camponotus",
+        "genus_top1": {
+          "count": 25,
+          "rate": 0.625,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 10,
+          "rate": 0.25,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 2,
+          "rate": 0.11764705882352941,
+          "total": 17
+        }
+      },
+      "camponotus-subbarbatus": {
+        "genus": "Camponotus",
+        "genus_top1": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 6,
+          "rate": 0.15,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.08333333333333333,
+          "total": 12
+        }
+      },
+      "cephalotes-atratus": {
+        "genus": "Cephalotes",
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "colobopsis-truncata": {
+        "genus": "Colobopsis",
+        "genus_top1": {
+          "count": 20,
+          "rate": 0.5,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 20
+        }
+      },
+      "crematogaster-peringueyi": {
+        "genus": "Crematogaster",
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      },
+      "crematogaster-scutellaris": {
+        "genus": "Crematogaster",
+        "genus_top1": {
+          "count": 27,
+          "rate": 0.675,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 13
+        }
+      },
+      "dolichoderus-bispinosus": {
+        "genus": "Dolichoderus",
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      },
+      "dolichoderus-quadripunctatus": {
+        "genus": "Dolichoderus",
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 38,
+          "rate": 0.95,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.1,
+          "total": 10
+        }
+      },
+      "dolichoderus-thoracicus": {
+        "genus": "Dolichoderus",
+        "genus_top1": {
+          "count": 17,
+          "rate": 0.4358974358974359,
+          "total": 39
+        },
+        "genus_top3_any": {
+          "count": 29,
+          "rate": 0.7435897435897436,
+          "total": 39
+        },
+        "n": 39,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 39
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 4,
+          "rate": 0.15384615384615385,
+          "total": 26
+        }
+      },
+      "dorymyrmex-bureni": {
+        "genus": "Dorymyrmex",
+        "genus_top1": {
+          "count": 26,
+          "rate": 0.6842105263157895,
+          "total": 38
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8421052631578947,
+          "total": 38
+        },
+        "n": 38,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 38
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 12
+        }
+      },
+      "eciton-burchellii": {
+        "genus": "Eciton",
+        "genus_top1": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 8
+        }
+      },
+      "ectatomma-tuberculatum": {
+        "genus": "Ectatomma",
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "formica-exsectoides": {
+        "genus": "Formica",
+        "genus_top1": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 38,
+          "rate": 0.95,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 2,
+          "rate": 0.3333333333333333,
+          "total": 6
+        }
+      },
+      "formica-rufa": {
+        "genus": "Formica",
+        "genus_top1": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.125,
+          "total": 8
+        }
+      },
+      "iridomyrmex-purpureus": {
+        "genus": "Iridomyrmex",
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      },
+      "lasius-americanus": {
+        "genus": "Lasius",
+        "genus_top1": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 8,
+          "rate": 0.2,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 7,
+          "rate": 0.4117647058823529,
+          "total": 17
+        }
+      },
+      "lasius-aphidicola": {
+        "genus": "Lasius",
+        "genus_top1": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 39,
+          "rate": 0.975,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 17,
+          "rate": 0.425,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 7,
+          "rate": 0.5833333333333334,
+          "total": 12
+        }
+      },
+      "lasius-claviger": {
+        "genus": "Lasius",
+        "genus_top1": {
+          "count": 28,
+          "rate": 0.7,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 3,
+          "rate": 0.075,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 7,
+          "rate": 0.3684210526315789,
+          "total": 19
+        }
+      },
+      "lasius-emarginatus": {
+        "genus": "Lasius",
+        "genus_top1": {
+          "count": 23,
+          "rate": 0.575,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 2,
+          "rate": 0.05,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 3,
+          "rate": 0.15,
+          "total": 20
+        }
+      },
+      "lasius-fuliginosus": {
+        "genus": "Lasius",
+        "genus_top1": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 39,
+          "rate": 0.975,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 2,
+          "rate": 0.05,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.09090909090909091,
+          "total": 11
+        }
+      },
+      "lasius-interjectus": {
+        "genus": "Lasius",
+        "genus_top1": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 3,
+          "rate": 0.075,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 6,
+          "rate": 0.46153846153846156,
+          "total": 13
+        }
+      },
+      "lasius-neoniger": {
+        "genus": "Lasius",
+        "genus_top1": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 10,
+          "rate": 0.25,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 5,
+          "rate": 0.3333333333333333,
+          "total": 15
+        }
+      },
+      "leptomyrmex-erythrocephalus": {
+        "genus": "Leptomyrmex",
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "linepithema-humile": {
+        "genus": "Linepithema",
+        "genus_top1": {
+          "count": 16,
+          "rate": 0.4,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 23,
+          "rate": 0.575,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 24
+        }
+      },
+      "liometopum-occidentale": {
+        "genus": "Liometopum",
+        "genus_top1": {
+          "count": 22,
+          "rate": 0.55,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 18
+        }
+      },
+      "megaponera-analis": {
+        "genus": "Megaponera",
+        "genus_top1": {
+          "count": 28,
+          "rate": 0.717948717948718,
+          "total": 39
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.8717948717948718,
+          "total": 39
+        },
+        "n": 39,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 39
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 11
+        }
+      },
+      "messor-barbarus": {
+        "genus": "Messor",
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      },
+      "myrmecia-pilosula": {
+        "genus": "Myrmecia",
+        "genus_top1": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 5
+        }
+      },
+      "myrmecia-pyriformis": {
+        "genus": "Myrmecia",
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.1,
+          "total": 10
+        }
+      },
+      "myrmica-rubra": {
+        "genus": "Myrmica",
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "nylanderia-flavipes": {
+        "genus": "Nylanderia",
+        "genus_top1": {
+          "count": 15,
+          "rate": 0.375,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 20,
+          "rate": 0.5,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 25
+        }
+      },
+      "odontomachus-erythrocephalus": {
+        "genus": "Odontomachus",
+        "genus_top1": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 38,
+          "rate": 0.95,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.1111111111111111,
+          "total": 9
+        }
+      },
+      "odontomachus-simillimus": {
+        "genus": "Odontomachus",
+        "genus_top1": {
+          "count": 26,
+          "rate": 0.65,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 14
+        }
+      },
+      "odontoponera-denticulata": {
+        "genus": "Odontoponera",
+        "genus_top1": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 11
+        }
+      },
+      "oecophylla-smaragdina": {
+        "genus": "Oecophylla",
+        "genus_top1": {
+          "count": 25,
+          "rate": 0.625,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 15
+        }
+      },
+      "paltothyreus-tarsatus": {
+        "genus": "Paltothyreus",
+        "genus_top1": {
+          "count": 26,
+          "rate": 0.65,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 14
+        }
+      },
+      "paraponera-clavata": {
+        "genus": "Paraponera",
+        "genus_top1": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 10
+        }
+      },
+      "paratrechina-longicornis": {
+        "genus": "Paratrechina",
+        "genus_top1": {
+          "count": 27,
+          "rate": 0.675,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 13
+        }
+      },
+      "pheidole-pallidula": {
+        "genus": "Pheidole",
+        "genus_top1": {
+          "count": 22,
+          "rate": 0.55,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 28,
+          "rate": 0.7,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 18
+        }
+      },
+      "pogonomyrmex-barbatus": {
+        "genus": "Pogonomyrmex",
+        "genus_top1": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 39,
+          "rate": 0.975,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 3,
+          "rate": 0.42857142857142855,
+          "total": 7
+        }
+      },
+      "pogonomyrmex-rugosus": {
+        "genus": "Pogonomyrmex",
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 37,
+          "rate": 0.925,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 2,
+          "rate": 0.25,
+          "total": 8
+        }
+      },
+      "polyrhachis-dives": {
+        "genus": "Polyrhachis",
+        "genus_top1": {
+          "count": 25,
+          "rate": 0.625,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 1,
+          "rate": 0.0625,
+          "total": 16
+        }
+      },
+      "polyrhachis-schistacea": {
+        "genus": "Polyrhachis",
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      },
+      "ponera-pennsylvanica": {
+        "genus": "Ponera",
+        "genus_top1": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 11
+        }
+      },
+      "prenolepis-imparis": {
+        "genus": "Prenolepis",
+        "genus_top1": {
+          "count": 13,
+          "rate": 0.325,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 24,
+          "rate": 0.6,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 27
+        }
+      },
+      "pristomyrmex-punctatus": {
+        "genus": "Pristomyrmex",
+        "genus_top1": {
+          "count": 26,
+          "rate": 0.65,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 14
+        }
+      },
+      "pseudomyrmex-gracilis": {
+        "genus": "Pseudomyrmex",
+        "genus_top1": {
+          "count": 25,
+          "rate": 0.625,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 15
+        }
+      },
+      "rhytidoponera-metallica": {
+        "genus": "Rhytidoponera",
+        "genus_top1": {
+          "count": 33,
+          "rate": 0.825,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 36,
+          "rate": 0.9,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 7
+        }
+      },
+      "solenopsis-invicta": {
+        "genus": "Solenopsis",
+        "genus_top1": {
+          "count": 25,
+          "rate": 0.625,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 15
+        }
+      },
+      "tapinoma-sessile": {
+        "genus": "Tapinoma",
+        "genus_top1": {
+          "count": 15,
+          "rate": 0.375,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 29,
+          "rate": 0.725,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 25
+        }
+      },
+      "temnothorax-curvispinosus": {
+        "genus": "Temnothorax",
+        "genus_top1": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 6
+        }
+      },
+      "tetramorium-immigrans": {
+        "genus": "Tetramorium",
+        "genus_top1": {
+          "count": 21,
+          "rate": 0.525,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 32,
+          "rate": 0.8,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 19
+        }
+      },
+      "tetraponera-rufonigra": {
+        "genus": "Tetraponera",
+        "genus_top1": {
+          "count": 30,
+          "rate": 0.75,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 35,
+          "rate": 0.875,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 10
+        }
+      },
+      "veromessor-pergandei": {
+        "genus": "Veromessor",
+        "genus_top1": {
+          "count": 31,
+          "rate": 0.775,
+          "total": 40
+        },
+        "genus_top3_any": {
+          "count": 34,
+          "rate": 0.85,
+          "total": 40
+        },
+        "n": 40,
+        "top3_unanimous_true_genus": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 40
+        },
+        "wrong_species_but_correct_genus_top1": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 9
+        }
+      }
+    }
+  },
+  "label": "pinned development-split analysis; not benchmark or final-test evidence.",
+  "report_schema_version": 1,
+  "report_type": "pinned_development_split_analysis",
+  "reproduction": {
+    "matches_evaluate_topk_accuracy": true,
+    "matches_run_manifest_best_metrics": true,
+    "matches_shipped_eval_json": true,
+    "top1": 0.6802773497688752,
+    "top1_correct": 1766,
+    "top1_n": 2596,
+    "top3": 0.8285824345146379,
+    "top3_correct": 2151,
+    "top3_n": 2596
+  },
+  "selection": {
+    "rule": "highest raw-cosine top-1; tie -> highest top-3; tie -> earliest epoch",
+    "selected_human_epoch": 27,
+    "selected_internal_epoch": 26
+  },
+  "selection_nuance": {
+    "margin_top1_predictions": 1,
+    "note": "The selected epoch won mechanically under the frozen selection rule (highest top1, tie -> highest top3, tie -> earliest epoch); a margin this small is not evidence of a meaningful statistical improvement.",
+    "runner_up": {
+      "human_epoch": 6,
+      "internal_epoch": 5,
+      "top1": 0.6798921417565486,
+      "top1_correct_derived": 1765,
+      "top1_correct_source": "derived from history.jsonl's recorded val_top1 -- not independently reproduced (no checkpoint remains for this superseded epoch)",
+      "top1_n": 2596,
+      "top3": 0.8416795069337443
+    },
+    "selected": {
+      "human_epoch": 27,
+      "internal_epoch": 26,
+      "top1": 0.6802773497688752,
+      "top1_correct": 1766,
+      "top1_correct_source": "live re-inference by this report",
+      "top1_n": 2596,
+      "top3": 0.8285824345146379
+    }
+  },
+  "source": {
+    "checkpoint": {
+      "backbone": "tf_efficientnet_b4",
+      "embedding_dim": 1792,
+      "image_size": 380,
+      "interpolation_effective": "bilinear",
+      "normalize": {
+        "mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "std": [
+          0.229,
+          0.224,
+          0.225
+        ]
+      },
+      "numerical_policy": {
+        "amp": false,
+        "cuda_matmul_allow_tf32": false,
+        "cudnn_allow_tf32": false,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": true,
+        "float32_matmul_precision": "highest"
+      },
+      "resolved_config_sha256": "cd97cffa07da0681058cd1d53ab4e478c1e9de65fe5b3380d290d84c84907197"
+    },
+    "final_artifact_hashes": {
+      "backbone.onnx": "fc22d26ae5c73d20613dafcef02e75291c8779ec8a1296ebc9a72f0e7d7f826b",
+      "eval.json": "02e28f3f3d246d0c6f83643bf75b72f2925c5d48517446c47504693380cf433a",
+      "geo_index.json": "1772c97baa58aebeb46f2110885530a0cfa8599c45b18fe999cb362750989ee7",
+      "model.pth": "523e6aa8e7db16be8f88285a71db0a4800e2629d3c906eb7f7135adf51a5061c",
+      "prototypes.npy": "0e52a7f350996a48f4129e1924e9b0af79517e4c3273dd9ecc7e851121d43825",
+      "taxonomy.json": "c8672287d59b5b9d3fb9aec5fd85a008ad30441f2ce3159713a3752b37a04767",
+      "val_split.json": "1039518efb33e43f2f97c66e11c1e24947c4a379fc54d6394ac5984c79d5ac7e"
+    },
+    "manifest_sha256": "b4f39115c80f955755987c0959dc7ed019620f1f143c64b62523f12bc8894000",
+    "run_dir": "training/artifacts/northeast_v1_b4_dev_v2",
+    "run_manifest_sha256": "6f8bfe3141a9870c37f6810da6b9a5459cf701242f9cbb3d32a8b01c2f0f265b",
+    "taxonomy_sha256": "5e9671fddaa1fa46dcb76a4a94787533f67c5dfb54e90841ff60432a17aec27e",
+    "training_commit": "c622ce910108fce8f128bd4f9a4fb8d3a3022412",
+    "val_split_sha256": "1039518efb33e43f2f97c66e11c1e24947c4a379fc54d6394ac5984c79d5ac7e"
+  }
+}
