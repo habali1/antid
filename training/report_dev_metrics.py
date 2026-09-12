@@ -595,24 +595,21 @@ def _git_dirty_excluding(ignore_paths: frozenset[str]) -> bool | None:
     as dirty -- lets the not-yet-committed report file itself (which this
     very generation is about to write, or has already written for --verify)
     be present without blocking the git-clean gate meant for the SOURCE
-    tree. None means git state could not be determined at all."""
+    tree. Uses git's own pathspec exclusion (":(exclude)<path>") rather than
+    parsing porcelain output, so a brand-new, still-untracked report file
+    whose parent directory doesn't exist elsewhere in the tree is excluded
+    correctly instead of showing up collapsed to its containing directory.
+    None means git state could not be determined at all."""
     import subprocess
+    pathspec = [".", *(f":(exclude){p}" for p in sorted(ignore_paths))]
     try:
         status = subprocess.check_output(
-            ["git", "status", "--porcelain"], cwd=REPO, stderr=subprocess.DEVNULL
+            ["git", "status", "--porcelain", "--", *pathspec],
+            cwd=REPO, stderr=subprocess.DEVNULL,
         ).decode()
     except Exception:
         return None
-    for line in status.splitlines():
-        if not line.strip():
-            continue
-        path = line[3:].strip()
-        if "->" in path:  # renames: "old -> new"
-            path = path.split("->")[-1].strip()
-        path = path.strip('"').replace("\\", "/")
-        if path not in ignore_paths:
-            return True
-    return False
+    return bool(status.strip())
 
 
 # ----------------------------------------------------------------- generate

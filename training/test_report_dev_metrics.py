@@ -441,27 +441,31 @@ class TestGroupDenominatorsAndKnownB4Counts(unittest.TestCase):
 
 
 class TestGitDirtyExcluding(unittest.TestCase):
-    def test_clean_status_is_not_dirty(self):
-        with mock.patch("subprocess.check_output", return_value=b""):
-            self.assertFalse(rdm._git_dirty_excluding(frozenset()))
+    """Filtering itself is git's own pathspec exclusion (verified manually:
+    `git status --porcelain -- . ":(exclude)<path>"` correctly drops an
+    otherwise-untracked file even when its containing directory is entirely
+    new) -- these tests only check that _git_dirty_excluding builds that
+    exact command and interprets its output correctly."""
 
-    def test_dirt_outside_ignore_set_is_dirty(self):
-        status = b" M training/data.py\n"
-        with mock.patch("subprocess.check_output", return_value=status):
+    def test_empty_output_is_not_dirty(self):
+        with mock.patch("subprocess.check_output", return_value=b"") as mocked:
+            self.assertFalse(rdm._git_dirty_excluding(frozenset()))
+            mocked.assert_called_once_with(
+                ["git", "status", "--porcelain", "--", "."],
+                cwd=rdm.REPO, stderr=mock.ANY,
+            )
+
+    def test_nonempty_output_is_dirty(self):
+        with mock.patch("subprocess.check_output", return_value=b" M training/data.py\n"):
             self.assertTrue(rdm._git_dirty_excluding(frozenset()))
 
-    def test_dirt_confined_to_ignored_path_is_not_dirty(self):
-        status = b"?? training/reports/northeast_v1_b4_dev_report.json\n"
+    def test_ignore_paths_become_exclude_pathspecs(self):
         ignore = frozenset({"training/reports/northeast_v1_b4_dev_report.json"})
-        with mock.patch("subprocess.check_output", return_value=status):
-            self.assertFalse(rdm._git_dirty_excluding(ignore))
-
-    def test_mixed_dirt_one_outside_ignore_set_is_dirty(self):
-        status = (b"?? training/reports/northeast_v1_b4_dev_report.json\n"
-                 b" M training/data.py\n")
-        ignore = frozenset({"training/reports/northeast_v1_b4_dev_report.json"})
-        with mock.patch("subprocess.check_output", return_value=status):
-            self.assertTrue(rdm._git_dirty_excluding(ignore))
+        with mock.patch("subprocess.check_output", return_value=b"") as mocked:
+            rdm._git_dirty_excluding(ignore)
+            args = mocked.call_args[0][0]
+            self.assertIn(
+                ":(exclude)training/reports/northeast_v1_b4_dev_report.json", args)
 
     def test_git_unavailable_returns_none(self):
         with mock.patch("subprocess.check_output", side_effect=FileNotFoundError):
