@@ -11,10 +11,18 @@ val top-1 0.6803/top-3 0.8286 on the pinned development split, with a
 committed, hash-bound, reproducible development report
 (`training/reports/northeast_v1_b4_dev_report.json`); see `TODO.md`'s
 "Phase 4B" entry for the full result, the one-prediction epoch-6/epoch-27
-margin, and development-only genus metrics. The EfficientNetV2-S candidate
-config is prepared (`training/config.efficientnetv2_s.yaml`) and a bounded
-smoke is next, per Milestone 3 below. No frozen evaluation set has been
-touched.
+margin, and development-only genus metrics. **Update 2026-09-12:** the
+EfficientNetV2-S candidate's own fresh 30-epoch run is also complete
+(`northeast_v1_v2s_dev`, selected human epoch 6, val top-1 0.6660/top-3
+0.8278, report `training/reports/northeast_v1_v2s_dev_report.json`,
+`--verify`-confirmed byte-identical). On the identical pinned development
+split, **B4 remains the selected serving candidate** under the frozen
+selection rule (higher all-65 and legacy-50 top-1/top-3, higher on every
+genus metric; V2-S's new-15 top-3 is higher, a mixed signal); V2-S trained
+far faster in wall-clock terms in this one run. This is a single-seed
+comparison — exploratory, not causal proof of architectural superiority.
+See `TODO.md`'s "Phase 4B" entry for the full comparison table. No frozen
+evaluation set has been touched; no serving artifact was modified.
 
 ## Decision and boundaries
 
@@ -343,11 +351,24 @@ EfficientNetV2-S candidate's own preprocessing was inspected directly from
 the installed `timm` environment (300×300, mean/std 0.5, bicubic — its own
 native pretrained config, not inferred from the model name) and recorded in
 `training/config.efficientnetv2_s.yaml`; `training/config.yaml`'s shipped B4
-preprocessing was not changed. A bounded EfficientNetV2-S smoke (pause/
-resume, in its own ignored artifact directory) is next; a fresh 30-epoch
-run follows only after that smoke and its review pass, per the frozen
-budget decision (no 12-epoch screen; a shorter run is never resumed as the
-30-epoch run).
+preprocessing was not changed.
+
+**Progress (2026-09-12): the EfficientNetV2-S comparison run is also
+complete.** After a bounded pause/resume smoke passed review,
+`northeast_v1_v2s_dev` ran the fresh 30-epoch V2-S candidate (no 12-epoch
+screen; the smoke was never resumed as this run). Selected human epoch 6,
+val top-1 0.6660/top-3 0.8278 on the identical pinned 2,596-image
+development split, same manifest/taxonomy/val_split bindings as B4;
+report `training/reports/northeast_v1_v2s_dev_report.json`,
+`--verify`-confirmed byte-identical. **Under the frozen development
+selection rule, B4 remains the selected serving candidate**: B4 leads on
+all-65 and legacy-50 top-1/top-3 and on every genus metric; V2-S's new-15
+top-3 is higher than B4's, a mixed signal; V2-S trained far faster in
+wall-clock terms in this one run. See `TODO.md`'s "Phase 4B" entry for the
+full comparison table. **This is a single-seed comparison — exploratory,
+not causal proof of architectural superiority**, per this section's own
+predeclared matched-seeds standard below. No frozen evaluation set was
+touched and no serving artifact was modified as part of this comparison.
 
 - Start the controlled comparison from the intended pretrained initialization,
   not the old fine-tuned checkpoint if its training images now occur in a newly

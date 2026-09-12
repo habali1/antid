@@ -518,6 +518,50 @@ below. Do not describe a design other than the one in this section.
   claim; with local capacity permitting only one run each, any observed
   difference must be labeled exploratory and never attributed to the
   backbone choice alone.
+- **V2-S candidate result (completed, development-split only).**
+  `training/artifacts/northeast_v1_v2s_dev` finished all 30 configured
+  epochs (`run_manifest.status == "completed"`, git commit `ae2486f`, same
+  manifest/taxonomy/val_split hashes as B4). Selected under the identical
+  frozen rule: **internal epoch 5 / human epoch 6**, val top-1
+  `0.6660246533127889` (1,729/2,596), val top-3 `0.8278120184899846`
+  (2,149/2,596). Runner-up: human epoch 15 (1,706/2,596 top-1, derived from
+  `history.jsonl`) — a 23-prediction margin, mechanically larger than B4's
+  1-prediction margin, but still a single seed. By group: new 15 species
+  394/600 top-1 (0.6567), 491/600 top-3 (0.8183); legacy 50 species
+  1,335/1,996 top-1 (0.6688), 1,658/1,996 top-3 (0.8307). Report:
+  `training/reports/northeast_v1_v2s_dev_report.json`, generated and
+  `--verify`-confirmed byte-identical the same way as B4's.
+- **B4 vs. V2-S on the identical pinned 2,596-image development split
+  (same manifest/taxonomy/val_split bindings; same numerical policy —
+  full FP32, TF32 disabled, cuDNN deterministic, no AMP, both sides):**
+
+  | metric | B4 (northeast_v1_b4_dev_v2) | V2-S (northeast_v1_v2s_dev) |
+  | --- | --- | --- |
+  | selected epoch (internal/human) | 26 / 27 | 5 / 6 |
+  | all-65 top-1 | 1,766/2,596 (0.6803) | 1,729/2,596 (0.6660) |
+  | all-65 top-3 | 2,151/2,596 (0.8286) | 2,149/2,596 (0.8278) |
+  | new-15 top-1 | 397/600 (0.6617) | 394/600 (0.6567) |
+  | new-15 top-3 | 483/600 (0.8050) | 491/600 (0.8183) |
+  | legacy-50 top-1 | 1,369/1,996 (0.6859) | 1,335/1,996 (0.6688) |
+  | legacy-50 top-3 | 1,668/1,996 (0.8357) | 1,658/1,996 (0.8307) |
+  | genus_top1 (overall) | 1,854/2,596 (0.7142) | 1,809/2,596 (0.6968) |
+  | genus_top3_any (overall) | 2,210/2,596 (0.8513) | 2,200/2,596 (0.8475) |
+  | top3_unanimous_true_genus | 123/2,596 (0.0474) | 120/2,596 (0.0462) |
+  | wrong-species-but-correct-genus top1 | 88/830 (0.1060) | 80/867 (0.0923) |
+  | training+prototype+val wall-clock (30 epochs) | ~219,011 s (~60.8 h) | ~4,838 s (~1.34 h) |
+
+  B4 leads on all-65 and legacy-50 top-1/top-3 and on every genus metric;
+  V2-S's new-15 top-3 (0.8183) is higher than B4's (0.8050) -- a mixed,
+  metric-dependent signal, not a uniform win for either side. V2-S trained
+  **far** faster in wall-clock terms on this machine in this one run
+  (~45x); this is a real, measured observation, not a controlled
+  throughput benchmark (no isolation from other machine activity).
+  **Under the frozen development selection rule, B4 remains the selected
+  serving candidate** -- this is a single-seed comparison on development
+  data only, exploratory, and not causal proof of architectural
+  superiority; no frozen evaluation set was touched, no serving artifact
+  was modified, and no retraining, recalibration, or parity run followed
+  from it.
 
 ## Policy maintenance: verified closeout and boundaries
 
