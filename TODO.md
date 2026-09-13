@@ -667,17 +667,60 @@ than overwrite the frozen `v1` reports listed above.
   `training/test_gate_v2_calibration.py` (165 synthetic/offline tests,
   including an end-to-end run against a from-scratch tiny ONNX model) --
   no code has been run against a real calibration_v2 image yet.
-- **No calibration_v2 scores exist.** `data/calibration_v2/calibration_v2_scores.json`
-  and `data/calibration_v2/calibration_v2_selection.json` do not exist.
-- **unknown_test_v2 remains completely untouched by inference** -- no image
-  from it has ever been opened.
 - **The 65-species candidate's parity prerequisite is satisfied** by the
   already-committed `training/reports/northeast_v1_b4_dev_v2_parity.json`
   (0/260 top-1 and top-3-set disagreements, 5/5 ONNX repeats bit-identical,
   100% CPUExecutionProvider node placement) -- no new parity run is required
   before scoring calibration_v2.
-- **Next gate: code review of the Phase 5C1 preparation (this section),
-  then a separately authorized execution turn** that actually runs
-  `score_calibration_v2.py --score` against real calibration_v2 images and
-  `select_gate_v2_threshold.py` against the resulting scores. No commit of
-  that real output happens before its own review.
+
+## Gate v2: Phase 5C2 calibration result (candidate selected; independent unknown_test_v2 validation pending)
+
+Real calibration_v2 scoring and mechanical threshold selection have been run
+**once**, against the frozen contract (`content_sha256:
+991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77`) at commit
+`2fc9261f6c8ca704a2fd220b3b6dc5ff4415f482`, and the results are committed as
+data:
+
+- `data/calibration_v2/calibration_v2_scores.json` --
+  byte sha256 `4fec18a938ef22e06d6073016d1692512e8fb1e4e41ec645d9aeb33afbebe46b`,
+  `content_sha256 35c7bf36042470dde8fc922106c6528fcb6a06e3bac454c4d196880796e778f4`.
+- `data/calibration_v2/calibration_v2_selection.json` --
+  byte sha256 `00e56d2e64941086ee1d1c663890cb95d3daa4dcce1e729ef972879376f1489b`,
+  `content_sha256 82bc754dbf46643862504916f4c273922e9ac3cefc45bfa28e5eb4a15dfdc5b5`.
+
+**Status: candidate selected; independent unknown_test_v2 validation
+pending.** This is calibration evidence only -- it has NOT been validated
+against the single-use, independent `unknown_test_v2` set, and it is NOT a
+serving policy (no `inference_policy.json` exists or was generated from it).
+
+- **Selected threshold: 0.61** (grid integer 61 of 201), compared with the
+  contract's frozen `strict_less_than` rule -- a raw max-cosine of exactly
+  0.61 is **accepted**, never rejected (equality accepted, not rejected).
+- **No-abstention baseline** (all 650 known_holdout rows, no gate): top-1
+  **59.85%** (389/650), top-3 **77.23%** (502/650).
+- **Accepted-known coverage: 66.46%** (432/650 accepted, 218 rejected).
+- **Accepted-known accuracy:** top-1 **78.70%** (340/432), top-3 **91.44%**.
+- **Improvement over baseline: +18.86 percentage points** top-1 (78.70% -
+  59.85%), comfortably clearing the contract's 5.0pp usefulness floor.
+- **Rejection quality:** correct-prediction rejection rate **12.60%**
+  (49/389 correct predictions rejected) vs. incorrect-prediction rejection
+  rate **64.75%** (169/261 incorrect predictions rejected) -- ratio
+  **5.14x**, i.e. the gate rejects incorrect predictions roughly 5x more
+  often than correct ones.
+- **Diagnostic-only OOD false-acceptance rate at 0.61:** `out_of_scope_ant`
+  **50.33%**, `non_ant_insect` **17.33%**, `unrelated` **7.33%**. These
+  numbers are diagnostic only, computed AFTER threshold selection, and per
+  the frozen contract's `ood_never_affects_selection: true` policy, they
+  played **no role whatsoever** in choosing 0.61 -- the selector only ever
+  reads known_holdout accuracy/coverage. Given how permissive the
+  out_of_scope_ant false-acceptance rate is at this threshold, this
+  confirms (as documented in the top-level project instructions) that this
+  remains a **selective confidence gate, not an unknown-species detector**.
+- **unknown_test_v2 remains completely unopened by inference.** Scoring
+  touched only `data/calibration_v2/` images; no unknown_test_v2 image has
+  ever been read, decoded, or passed through the model. Its single
+  permitted evaluation (per the contract's `single_use_rule`) remains
+  available and has not been used.
+- **Next gate:** review of this calibration result, then a separately
+  authorized turn for the single, independent `unknown_test_v2` evaluation
+  -- not run, implemented, or scheduled in this turn.

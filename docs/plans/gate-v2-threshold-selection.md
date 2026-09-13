@@ -89,7 +89,7 @@ matching the instruction that it must not be used.
    (`normal_results`, matching v1's existing `equal_threshold_action`); one
    global threshold; no per-species or per-class behavior.
 
-## What this phase does not do
+## What Phase 5C1 (this document's original scope) does not do
 
 - No calibration_v2 image is scored in this phase (5C1 is code preparation
   only).
@@ -97,3 +97,55 @@ matching the instruction that it must not be used.
   reviewed, and frozen.
 - No live `inference_policy.json` or serving artifact is modified.
 - No commit or push happens in this phase.
+
+## Phase 5C2 calibration result -- candidate selected; independent unknown_test_v2 validation pending
+
+Phase 5C2 ran the prepared scorer and selector, exactly once each, against
+the frozen contract above (`content_sha256:
+991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77`) at commit
+`2fc9261f6c8ca704a2fd220b3b6dc5ff4415f482`. This section records that result
+as calibration evidence. **It is not a serving policy** -- no
+`inference_policy.json` was generated -- **and it has not been validated
+against `unknown_test_v2`**, which remains unopened by inference and whose
+single permitted evaluation has not been used.
+
+Artifacts (both re-validated through the shared strict validator and the
+selector's own mechanical recomputation before this record was written):
+
+- `data/calibration_v2/calibration_v2_scores.json` --
+  byte sha256 `4fec18a938ef22e06d6073016d1692512e8fb1e4e41ec645d9aeb33afbebe46b`,
+  `content_sha256 35c7bf36042470dde8fc922106c6528fcb6a06e3bac454c4d196880796e778f4`.
+- `data/calibration_v2/calibration_v2_selection.json` --
+  byte sha256 `00e56d2e64941086ee1d1c663890cb95d3daa4dcce1e729ef972879376f1489b`,
+  `content_sha256 82bc754dbf46643862504916f4c273922e9ac3cefc45bfa28e5eb4a15dfdc5b5`.
+
+Result: **`status: candidate_selected`**, threshold **0.61** (grid integer
+61), under the frozen `strict_less_than` decision shape -- a raw max-cosine
+of exactly 0.61 is accepted, never rejected (equality accepted).
+
+| Metric | Value |
+|---|---|
+| Baseline (no-abstention) top-1 / top-3 | 59.85% / 77.23% |
+| Accepted-known coverage | 66.46% (432/650) |
+| Accepted-known top-1 / top-3 accuracy | 78.70% / 91.44% |
+| Improvement over baseline (top-1) | +18.86 pp |
+| Correct-prediction rejection rate | 12.60% (49/389) |
+| Incorrect-prediction rejection rate | 64.75% (169/261) |
+| Incorrect:correct rejection ratio | 5.14x |
+| Diagnostic OOD false-acceptance rate at 0.61 | out_of_scope_ant 50.33%, non_ant_insect 17.33%, unrelated 7.33% |
+
+**The diagnostic OOD false-acceptance and AUC numbers above did not affect
+threshold selection in any way.** Per this contract's frozen
+`ood_never_affects_selection: true` policy, the selector's grid search reads
+only known_holdout accuracy/coverage; OOD rows are scored and reported purely
+for post-hoc diagnostic visibility. The permissive out_of_scope_ant
+false-acceptance rate (50.33%) at the selected threshold is itself evidence
+for, not against, the project's existing framing: **this is a selective
+confidence gate, not an unknown-species detector** (consistent with v1's
+own ~45.5% out-of-scope pass rate cited in the top-level project docs).
+
+**unknown_test_v2 remains completely unopened by inference.** Only
+`data/calibration_v2/` images were read during scoring. The next gate is a
+review of this result, followed by a separately authorized turn for the
+single, independent `unknown_test_v2` evaluation this contract's
+`single_use_rule` reserves -- not run, implemented, or scheduled here.
