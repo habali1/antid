@@ -361,3 +361,61 @@ changed since its generation commit. That candidate policy
 byte sha256 `9e9d0ea4447555170bec40902fd2f19582d44102c8047d516bedb969d3e93171`)
 was deliberately left untouched by this correction; regenerating it under
 the corrected, committed code is a separately authorized, one-write phase.
+
+## Phase 5E2 regeneration -- candidate policy regenerated and frozen as evidence
+
+The stale Phase 5E2 candidate above was reverified via `--check` at HEAD
+`918422c1237d7847b8e963502416abeff1cd0eae` and failed exactly as the
+correction predicts (generator source changed since its recorded
+generation commit `c20d68f...`), writing zero bytes. It was archived
+byte-for-byte -- never deleted -- to
+`training/artifacts/northeast_v1_b4_dev_v2/inference_policy.phase5e2-c20d68f.json`
+(byte sha256 `9e9d0ea4447555170bec40902fd2f19582d44102c8047d516bedb969d3e93171`,
+unchanged). **This archived file is a local recovery copy only** -- it
+lives under the gitignored `training/artifacts/` tree and is never
+committed.
+
+A single authorized `--write` regenerated the candidate at the corrected
+code's HEAD:
+
+| Field | Value |
+| --- | --- |
+| byte sha256 | `9feeae83013ecf72266084421fc74bbfe21757de528ad7ed258c01dcffc9422d` |
+| size | 6683 bytes |
+| content_sha256 | `35aef7446b47df4c521a612a3d73db44a35e85b1bd0577dac2aa4330bf55b7b5` |
+| generation.generated_at | `2026-09-13T16:34:07Z` |
+| generation.generator_version | `1.0.0` |
+| content.provenance.git_head (generation commit) | `918422c1237d7847b8e963502416abeff1cd0eae` |
+| policy_schema_version | 2 |
+| threshold | 0.61 |
+| validation_status | `validation_passed` |
+
+Independently reverified through both `policy_schema.py` copies, the real
+`api/inference_policy.load_inference_policy()` (active, reason `active`,
+threshold 0.61, strict raw/unrounded/pre-geo comparison with equality at
+0.61 accepted, `CPUExecutionProvider` exclusive), exact candidate artifact
+hashes, exact frozen `validation_evidence`, every provenance source hash
+matched against both the historical commit and the current working tree,
+and `workspace_git_dirty: true` preserved as the unchanged historical
+parity fact. `--check` passed both before and after the evidence-freeze
+commit below.
+
+**This is frozen candidate evidence, not a deployment.** The live
+50-species V1 gate (threshold 0.60) remains the only active serving
+policy; all six live serving artifacts are untouched. The candidate model
+artifacts under `training/artifacts/northeast_v1_b4_dev_v2/` remain local,
+immutable, and hash-bound by the candidate policy -- none were copied,
+promoted, or modified.
+
+This candidate's recorded generation commit **intentionally remains
+`918422c...`**, even after the evidence-freeze commit (which necessarily
+lands at a later commit) adds `inference_policy.json` to the repository:
+the corrected `--check` validates that recorded commit historically
+(format, real commit object, ancestor of current HEAD, source hashes
+matching both that commit's actual history and the current working tree)
+and explicitly permits unrelated descendant commits, rather than requiring
+the recorded commit to equal whatever HEAD currently is -- this is exactly
+the lifecycle behavior the correction above exists to provide.
+
+**Next gate:** an isolated API smoke test of the candidate policy -- not
+promotion, not deployment.

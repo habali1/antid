@@ -1,0 +1,123 @@
+{
+  "content": {
+    "artifact_hashes": {
+      "backbone.onnx": "fc22d26ae5c73d20613dafcef02e75291c8779ec8a1296ebc9a72f0e7d7f826b",
+      "prototypes.npy": "0e52a7f350996a48f4129e1924e9b0af79517e4c3273dd9ecc7e851121d43825",
+      "taxonomy.json": "c8672287d59b5b9d3fb9aec5fd85a008ad30441f2ce3159713a3752b37a04767"
+    },
+    "decision": {
+      "equal_threshold_action": "normal_results",
+      "low_confidence_if": {
+        "comparison": "strict_less_than",
+        "signal": "raw_pre_geo_max_cosine",
+        "threshold": 0.61
+      },
+      "non_finite_action": "request_error",
+      "normal_results_if": {
+        "comparison": "greater_than_or_equal",
+        "threshold": 0.61
+      }
+    },
+    "gate_framing": "independently validated selective confidence/abstention gate; NOT an unknown-species detector",
+    "not_in_scope": "No per-species exceptions. No geo dependency.",
+    "not_validated_for": [
+      "CUDA or any non-CPU execution provider",
+      "retrained or re-exported artifacts (any artifact_hashes change invalidates this policy)",
+      "unknown-species detection (this is a selective confidence/abstention gate, not an out-of-catalog detector)",
+      "per-species thresholds (a single global threshold only)",
+      "population-level claims from the 260-image parity sample or the 65 x 6-row per-species independent-evaluation table",
+      "post-geo or rounded similarity scores (gate applies to raw, unrounded, pre-geo max cosine)"
+    ],
+    "parity_report": {
+      "byte_sha256": "bec08235a48e9583f2b40556c9c8d860c41904729bcded9d6f91c37716c8297e",
+      "generation_metadata_workspace_git_dirty": true,
+      "max_cosine_abs_divergence": 1.9669532775878906e-06,
+      "n_images": 260,
+      "note": "Parity evidence generation recorded workspace_git_dirty=True -- carried through here verbatim, never concealed or reinterpreted. Parity is validated and bound, never rerun or rewritten by this generator.",
+      "path": "training/reports/northeast_v1_b4_dev_v2_parity.json",
+      "top1_disagreements": 0,
+      "top3_set_disagreements": 0
+    },
+    "preprocessing": {
+      "contract": {
+        "channel_layout": "RGB -> CHW, batched to NCHW",
+        "dtype": "float32",
+        "interpolation": "Pillow bilinear",
+        "normalize_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalize_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
+        "resize": "squish to fixed 380x380 (both dims set, no crop)",
+        "rgb_conversion": "img.convert('RGB')",
+        "scale_divisor": 255.0
+      },
+      "executable_check": {
+        "all_finite": true,
+        "antialias_note": "Both paths receive PIL Images and use Pillow bilinear resampling for the resize; torchvision's antialias option only affects its separate tensor-input code path and has no effect here -- confirmed empirically by max_abs_diff=0.0.",
+        "covers": "resize geometry/interpolation, /255 scaling, normalization, channel order, layout",
+        "dtype": "float32",
+        "max_abs_diff": 0.0,
+        "method": "in-memory synthetic PIL image (non-square 517x241, seeded random RGBA pixels) run through training's build_transforms(train=False) [incl. .convert('RGB')] and api.AntIdentifier.preprocess() independently at generation time, no model inference",
+        "shape": [
+          3,
+          380,
+          380
+        ]
+      }
+    },
+    "provenance": {
+      "git_head": "918422c1237d7847b8e963502416abeff1cd0eae",
+      "note": "Diagnostic provenance only -- the API loader never reads or checks this block, so an edit to any of these files after this policy was generated does not retroactively deactivate an already-active gate. It DOES mean this policy's recorded provenance is stale relative to the current tree and the policy should be regenerated (via --write) before deployment. This applies equally to api/inference.py, whose only RUNTIME binding is the separate preprocessing.contract/executable_check fields above, not this hash.",
+      "source_hash_algorithm": "sha256 of canonical-LF-normalized (CRLF->LF) file bytes",
+      "source_hashes": {
+        "api_inference": "73bb6e19c4b743e70021c66025fda054e33b48da24b2e9a36e940bfb61f3d8cf",
+        "api_inference_policy": "1bebd2eecb754368c8312f02d9045ba5655ed778c07719f7650e0b1f414fa04f",
+        "api_policy_schema": "0918a306908ff6d65a87fa576da5a025b37abc66fbf616fb8d42a02396ea5627",
+        "generate_inference_policy_v2": "91ff4520c7bafeb74e45fefbb71414050eb942a1e261c2860602653ee34af2a2",
+        "training_data": "b152d178d900c7992ca3223206469ae6be02448b72205f464277d27cce92bd4b",
+        "training_policy_schema": "0918a306908ff6d65a87fa576da5a025b37abc66fbf616fb8d42a02396ea5627"
+      }
+    },
+    "provider_policy": {
+      "exclusive": true,
+      "providers": [
+        "CPUExecutionProvider"
+      ]
+    },
+    "rule": {
+      "evaluated": "raw pre-geo max cosine similarity, strict <, before any rounding",
+      "operator_normalized": {
+        "comparison": "strict_less_than"
+      },
+      "operator_verbatim": "max_sim < value",
+      "signal": "raw max cosine similarity before geo re-ranking",
+      "value": 0.61
+    },
+    "validation_evidence": {
+      "calibration_v2_scores_byte_sha256": "4fec18a938ef22e06d6073016d1692512e8fb1e4e41ec645d9aeb33afbebe46b",
+      "calibration_v2_scores_content_sha256": "35c7bf36042470dde8fc922106c6528fcb6a06e3bac454c4d196880796e778f4",
+      "calibration_v2_selection_byte_sha256": "00e56d2e64941086ee1d1c663890cb95d3daa4dcce1e729ef972879376f1489b",
+      "calibration_v2_selection_content_sha256": "82bc754dbf46643862504916f4c273922e9ac3cefc45bfa28e5eb4a15dfdc5b5",
+      "diagnostic_out_of_scope_ant_far": 0.51,
+      "gate_v2_evaluation_contract_content_sha256": "49bb0c4ee5749513b62e7bdfa7f50a7619fe16e2afc75a47d60bda25b4bdb10c",
+      "gate_v2_selection_contract_content_sha256": "991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77",
+      "parity_report_byte_sha256": "bec08235a48e9583f2b40556c9c8d860c41904729bcded9d6f91c37716c8297e",
+      "unknown_test_v2_eval_byte_sha256": "b695e44ecd902b3763b6f202695e0495308a9f10d43400c47a46253c6029447e",
+      "unknown_test_v2_eval_content_sha256": "e7c1d565c7ecd0999e00c65cc238296cf78525fc8efd00da8af91b3a0dbf7616",
+      "unknown_test_v2_evaluation_attempt_byte_sha256": "fd790252ffbe4b20a6f52c26fb902e0cd7fbfedbd88b5613da048992b1a062bf",
+      "validation_status": "validation_passed"
+    }
+  },
+  "content_sha256": "35aef7446b47df4c521a612a3d73db44a35e85b1bd0577dac2aa4330bf55b7b5",
+  "generation": {
+    "generated_at": "2026-09-13T16:34:07Z",
+    "generator_version": "1.0.0"
+  },
+  "policy_schema_version": 2
+}
