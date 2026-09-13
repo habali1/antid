@@ -166,7 +166,7 @@ class TestValidateNeverRaises(unittest.TestCase):
         bool_version = json.loads(json.dumps(base))
         bool_version["policy_schema_version"] = True
         errs = schema.validate(bool_version)
-        self.assertTrue(any("policy_schema_version must be the exact int" in e for e in errs), errs)
+        self.assertTrue(any("policy_schema_version must be exactly one of" in e for e in errs), errs)
         # and it must fail even paired with a bogus hash -- never silently accepted
         # because the version check short-circuited past the hash check
         bool_version["content_sha256"] = "0" * 64
@@ -176,7 +176,7 @@ class TestValidateNeverRaises(unittest.TestCase):
         float_version = json.loads(json.dumps(base))
         float_version["policy_schema_version"] = 1.0
         errs = schema.validate(float_version)
-        self.assertTrue(any("policy_schema_version must be the exact int" in e for e in errs), errs)
+        self.assertTrue(any("policy_schema_version must be exactly one of" in e for e in errs), errs)
 
         # string/null versions must also fail
         for bad in ("1", None):

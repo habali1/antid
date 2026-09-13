@@ -15,9 +15,92 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 
-SCHEMA_VERSION = 1
-FROZEN_THRESHOLD = 0.6
+SCHEMA_VERSION = 1  # unchanged: the V1 generator/loader default. Never repurposed for V2.
+FROZEN_THRESHOLD = 0.6  # unchanged: schema v1's frozen threshold. Never repurposed for V2.
+
+# ---- schema v2 (Gate v2, independently validated) -------------------------
+# Added ALONGSIDE v1, never replacing it: SCHEMA_VERSION/FROZEN_THRESHOLD
+# above keep their original names and values so the existing V1 generator
+# (training/inference_policy_generator.py) and the V1 loader path need zero
+# changes to keep emitting/accepting exactly schema v1 at exactly 0.60.
+SCHEMA_VERSION_V2 = 2
+FROZEN_THRESHOLD_V2 = 0.61
+SUPPORTED_SCHEMA_VERSIONS = {SCHEMA_VERSION, SCHEMA_VERSION_V2}
+# Each supported version selects its own permitted threshold value AND its
+# own should_abstain() self-check probes (offset from that version's exact
+# threshold) -- a policy can never mix a v1 schema_version with the v2
+# threshold or vice versa; validate()/loader both check this exactly.
+SCHEMA_VERSION_TO_THRESHOLD = {SCHEMA_VERSION: FROZEN_THRESHOLD, SCHEMA_VERSION_V2: FROZEN_THRESHOLD_V2}
+SCHEMA_VERSION_TO_PROBES = {
+    SCHEMA_VERSION: ((0.5999, True), (0.6000, False), (0.6001, False)),
+    SCHEMA_VERSION_V2: ((0.6099, True), (0.6100, False), (0.6101, False)),
+}
+# Schema v2 additionally requires this block: independently-validated Gate
+# v2 provenance (exact byte/content hashes of the calibration selection,
+# the independent unknown_test_v2 evaluation, and the parity report bound
+# to the same candidate artifacts), plus the two informational facts that
+# must be carried verbatim. validate() requires this EXACT key set (missing
+# or extra keys both fail) and type/value-checks every entry -- see
+# _validate_v2_validation_evidence(). A v2 policy with this block missing,
+# altered, or structurally incomplete is rejected even after content_sha256
+# is freshly recomputed over the altered content, because content_sha256
+# only proves the content wasn't tampered with AFTER being frozen; it says
+# nothing about whether the frozen content was ever valid in the first
+# place -- that is what this block's own field-level checks establish.
+REQUIRED_V2_VALIDATION_EVIDENCE_KEYS = {
+    "gate_v2_selection_contract_content_sha256",
+    "calibration_v2_scores_byte_sha256", "calibration_v2_scores_content_sha256",
+    "calibration_v2_selection_byte_sha256", "calibration_v2_selection_content_sha256",
+    "gate_v2_evaluation_contract_content_sha256",
+    "unknown_test_v2_evaluation_attempt_byte_sha256",
+    "unknown_test_v2_eval_byte_sha256", "unknown_test_v2_eval_content_sha256",
+    "parity_report_byte_sha256",
+    "validation_status", "diagnostic_out_of_scope_ant_far",
+}
+REQUIRED_V2_VALIDATION_EVIDENCE_HASH_KEYS = REQUIRED_V2_VALIDATION_EVIDENCE_KEYS - {
+    "validation_status", "diagnostic_out_of_scope_ant_far",
+}
+EXPECTED_V2_VALIDATION_STATUS = "validation_passed"
+
+# Schema v2's envelope, checked EXACTLY (missing and extra keys both
+# rejected) -- v1's envelope is intentionally left unconstrained beyond its
+# existing checks, so this never changes v1 behavior. `V2_GENERATOR_VERSION`
+# is the ONE frozen generator-version string; generate_inference_policy_v2.py
+# imports it rather than defining its own copy, so there is nothing for the
+# generator and this schema to silently drift apart on.
+V2_GENERATOR_VERSION = "1.0.0"
+REQUIRED_V2_TOP_KEYS = {"policy_schema_version", "content", "content_sha256", "generation"}
+REQUIRED_V2_GENERATION_KEYS = {"generated_at", "generator_version"}
+V2_GENERATED_AT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+
+# The EXACT frozen values schema-v2's validation_evidence block must carry --
+# not merely well-formed hashes/status/FAR, but THESE specific ones, bound
+# to the ONE candidate (northeast_v1_b4_dev_v2) this schema-v2 policy exists
+# for. A policy carrying a different, individually well-formed 64-hex-char
+# hash in any of these fields (e.g. swapped in from some other evidence
+# artifact) is rejected here even though format/type checks alone would
+# have accepted it. Derived by re-running generate_inference_policy_v2.py's
+# --preflight + build_policy() against the real, frozen repo evidence
+# (read-only; never a write) -- see docs/plans/gate-v2-threshold-
+# selection.md Phase 5E1 for provenance.
+EXPECTED_V2_VALIDATION_EVIDENCE = {
+    "gate_v2_selection_contract_content_sha256": "991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77",
+    "calibration_v2_scores_byte_sha256": "4fec18a938ef22e06d6073016d1692512e8fb1e4e41ec645d9aeb33afbebe46b",
+    "calibration_v2_scores_content_sha256": "35c7bf36042470dde8fc922106c6528fcb6a06e3bac454c4d196880796e778f4",
+    "calibration_v2_selection_byte_sha256": "00e56d2e64941086ee1d1c663890cb95d3daa4dcce1e729ef972879376f1489b",
+    "calibration_v2_selection_content_sha256": "82bc754dbf46643862504916f4c273922e9ac3cefc45bfa28e5eb4a15dfdc5b5",
+    "gate_v2_evaluation_contract_content_sha256": "49bb0c4ee5749513b62e7bdfa7f50a7619fe16e2afc75a47d60bda25b4bdb10c",
+    "unknown_test_v2_evaluation_attempt_byte_sha256": "fd790252ffbe4b20a6f52c26fb902e0cd7fbfedbd88b5613da048992b1a062bf",
+    "unknown_test_v2_eval_byte_sha256": "b695e44ecd902b3763b6f202695e0495308a9f10d43400c47a46253c6029447e",
+    "unknown_test_v2_eval_content_sha256": "e7c1d565c7ecd0999e00c65cc238296cf78525fc8efd00da8af91b3a0dbf7616",
+    "parity_report_byte_sha256": "bec08235a48e9583f2b40556c9c8d860c41904729bcded9d6f91c37716c8297e",
+    "validation_status": "validation_passed",
+    "diagnostic_out_of_scope_ant_far": 0.51,
+}
+assert set(EXPECTED_V2_VALIDATION_EVIDENCE) == REQUIRED_V2_VALIDATION_EVIDENCE_KEYS
+
 ALLOWED_OPERATOR = "max_sim < value"
 ALLOWED_OPERATOR_NORMALIZED = {"comparison": "strict_less_than"}
 ALLOWED_RULE_SIGNAL = "raw max cosine similarity before geo re-ranking"
@@ -94,6 +177,49 @@ def _obj(x) -> dict:
     return x if isinstance(x, dict) else {}
 
 
+def _validate_v2_validation_evidence(content: dict) -> list[str]:
+    """Schema-v2-only: content.validation_evidence must carry the EXACT key
+    set (never more, never fewer) and every hash field must be a well-formed
+    sha256 hex string; validation_status must be exactly 'validation_passed'
+    and diagnostic_out_of_scope_ant_far a finite number. This module never
+    touches a file, so it cannot re-verify these hashes against the actual
+    evidence artifacts on disk -- that is the generator's job at
+    --preflight/--write time. What this DOES guarantee is that a v2 policy
+    can never be accepted with this evidence missing, incomplete, or of the
+    wrong shape/type, regardless of how content_sha256 was recomputed."""
+    errors: list[str] = []
+    ve = content.get("validation_evidence")
+    if not isinstance(ve, dict):
+        errors.append("content.validation_evidence is not a JSON object")
+        return errors
+    missing = REQUIRED_V2_VALIDATION_EVIDENCE_KEYS - set(ve)
+    if missing:
+        errors.append(f"content.validation_evidence missing key(s): {sorted(missing)}")
+    extra = set(ve) - REQUIRED_V2_VALIDATION_EVIDENCE_KEYS
+    if extra:
+        errors.append(f"content.validation_evidence has unexpected key(s): {sorted(extra)}")
+    for key in REQUIRED_V2_VALIDATION_EVIDENCE_HASH_KEYS & set(ve):
+        if not is_sha256_hex(ve.get(key)):
+            errors.append(f"content.validation_evidence.{key} is not a 64-char lowercase hex string")
+    if "validation_status" in ve and ve["validation_status"] != EXPECTED_V2_VALIDATION_STATUS:
+        errors.append(f"content.validation_evidence.validation_status must be exactly "
+                      f"{EXPECTED_V2_VALIDATION_STATUS!r}, got {ve['validation_status']!r}")
+    if "diagnostic_out_of_scope_ant_far" in ve:
+        far = ve["diagnostic_out_of_scope_ant_far"]
+        if not isinstance(far, (int, float)) or isinstance(far, bool) or not math.isfinite(far):
+            errors.append(f"content.validation_evidence.diagnostic_out_of_scope_ant_far must be a "
+                          f"finite number, got {far!r}")
+
+    # Exact-value freeze: every field present must equal the ONE frozen
+    # value bound to this candidate's evidence, not merely be well-formed.
+    # A rehashed policy that swaps in a different (but individually valid)
+    # hash/status/FAR is rejected here regardless of content_sha256.
+    for key, expected in EXPECTED_V2_VALIDATION_EVIDENCE.items():
+        if key in ve and ve[key] != expected:
+            errors.append(f"content.validation_evidence.{key} must be exactly {expected!r}, got {ve[key]!r}")
+    return errors
+
+
 def validate(policy) -> list[str]:
     """Structural + semantic validation of the fields a loader actually
     reads: schema version, decision block, artifact_hashes,
@@ -107,18 +233,38 @@ def validate(policy) -> list[str]:
             return ["policy is not a JSON object"]
 
         # Strict type check FIRST: `True == 1` and `1.0 == 1` in Python, so a
-        # bare `sv != SCHEMA_VERSION` comparison would silently accept
-        # policy_schema_version=True or =1.0 -- `type(sv) is int` rejects
-        # both before the value comparison ever runs.
+        # bare `sv not in SUPPORTED_SCHEMA_VERSIONS` comparison would
+        # silently accept policy_schema_version=True or =1.0 --
+        # `type(sv) is int` rejects both, and a bool/float/str/None/an
+        # unsupported integer (e.g. 3) are all rejected the same way, before
+        # any version-specific check ever runs.
         sv = policy.get("policy_schema_version")
-        sv_valid = type(sv) is int and sv == SCHEMA_VERSION
+        sv_valid = type(sv) is int and sv in SUPPORTED_SCHEMA_VERSIONS
         if not sv_valid:
-            errors.append(f"policy_schema_version must be the exact int {SCHEMA_VERSION}; "
+            errors.append(f"policy_schema_version must be exactly one of {sorted(SUPPORTED_SCHEMA_VERSIONS)}; "
                           f"got {sv!r} (type {type(sv).__name__})")
 
         content = _obj(policy.get("content"))
         if not isinstance(policy.get("content"), dict):
             errors.append("content is not a JSON object")
+
+        # Schema v2 additionally requires the validation_evidence block.
+        # Gated on sv_valid and sv == SCHEMA_VERSION_V2 specifically: an
+        # invalid version is already reported above, and a v1 policy must
+        # never be asked for a block it doesn't have.
+        if sv_valid and sv == SCHEMA_VERSION_V2:
+            errors.extend(_validate_v2_validation_evidence(content))
+            # ---- schema-v2 envelope: exact top-level/generation key sets,
+            # a strict generated_at timestamp form, and the ONE frozen
+            # generator_version -- v1's envelope is untouched by this block.
+            top_keys = set(policy.keys())
+            if top_keys != REQUIRED_V2_TOP_KEYS:
+                missing_top = REQUIRED_V2_TOP_KEYS - top_keys
+                extra_top = top_keys - REQUIRED_V2_TOP_KEYS
+                if missing_top:
+                    errors.append(f"policy missing top-level key(s): {sorted(missing_top)}")
+                if extra_top:
+                    errors.append(f"policy has unexpected top-level key(s): {sorted(extra_top)}")
 
         gen = policy.get("generation")
         if not isinstance(gen, dict):
@@ -130,6 +276,23 @@ def validate(policy) -> list[str]:
                 errors.append("generation.generator_version missing or not a string")
             if "hostname" in gen:
                 errors.append("generation must not record hostname")
+
+            if sv_valid and sv == SCHEMA_VERSION_V2:
+                gen_keys = set(gen.keys())
+                if gen_keys != REQUIRED_V2_GENERATION_KEYS:
+                    missing_gen = REQUIRED_V2_GENERATION_KEYS - gen_keys
+                    extra_gen = gen_keys - REQUIRED_V2_GENERATION_KEYS
+                    if missing_gen:
+                        errors.append(f"generation missing key(s): {sorted(missing_gen)}")
+                    if extra_gen:
+                        errors.append(f"generation has unexpected key(s): {sorted(extra_gen)}")
+                generated_at = gen.get("generated_at")
+                if isinstance(generated_at, str) and not V2_GENERATED_AT_RE.match(generated_at):
+                    errors.append(f"generation.generated_at must match the strict UTC form "
+                                  f"'YYYY-MM-DDTHH:MM:SSZ', got {generated_at!r}")
+                if gen.get("generator_version") != V2_GENERATOR_VERSION:
+                    errors.append(f"generation.generator_version must be exactly "
+                                  f"{V2_GENERATOR_VERSION!r}, got {gen.get('generator_version')!r}")
 
         # content_sha256 is only meaningful once the version itself is valid --
         # an invalid version is a validation error on its own (appended above)
@@ -153,8 +316,8 @@ def validate(policy) -> list[str]:
         else:
             enc_errors = decision_encodings_agree(decision)
             errors.extend(f"decision: {e}" for e in enc_errors)
-            if not enc_errors:
-                for probe, expected in ((0.5999, True), (0.6000, False), (0.6001, False)):
+            if not enc_errors and sv_valid:
+                for probe, expected in SCHEMA_VERSION_TO_PROBES[sv]:
                     try:
                         got = should_abstain(probe, decision)
                     except (KeyError, ValueError, TypeError) as e:
@@ -178,13 +341,15 @@ def validate(policy) -> list[str]:
                               f"got {rule.get('signal')!r}")
 
             rule_value = rule.get("value")
-            if (not isinstance(rule_value, (int, float)) or isinstance(rule_value, bool)
-                    or not math.isfinite(rule_value)):
+            rule_value_is_number = (isinstance(rule_value, (int, float))
+                                    and not isinstance(rule_value, bool)
+                                    and math.isfinite(rule_value))
+            if not rule_value_is_number:
                 errors.append(f"rule.value is not a finite non-bool number: {rule_value!r}")
-            elif rule_value != FROZEN_THRESHOLD:
-                errors.append(f"rule.value must be the frozen threshold {FROZEN_THRESHOLD!r}; "
-                              f"got {rule_value!r}")
-            elif isinstance(decision, dict):
+            elif sv_valid and rule_value != SCHEMA_VERSION_TO_THRESHOLD[sv]:
+                errors.append(f"rule.value must be the frozen threshold for schema v{sv} "
+                              f"({SCHEMA_VERSION_TO_THRESHOLD[sv]!r}); got {rule_value!r}")
+            if rule_value_is_number and isinstance(decision, dict):
                 lo = _obj(decision.get("low_confidence_if"))
                 hi = _obj(decision.get("normal_results_if"))
                 if rule_value != lo.get("threshold"):

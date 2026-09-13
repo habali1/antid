@@ -66,7 +66,7 @@ def _sha256(path: Path) -> str:
 def _content_hash_status(policy: dict) -> str | None:
     """Return a stable failure reason, or None when the content hash matches."""
     version = policy.get("policy_schema_version")
-    if type(version) is not int or version != schema.SCHEMA_VERSION:
+    if type(version) is not int or version not in schema.SUPPORTED_SCHEMA_VERSIONS:
         return "invalid_schema"
     content = policy.get("content")
     if not isinstance(content, dict):
@@ -83,7 +83,13 @@ def _content_hash_status(policy: dict) -> str | None:
     return None
 
 
-def _rule_is_supported(content: dict) -> bool:
+def _rule_is_supported(content: dict, schema_version: int) -> bool:
+    """`schema_version` must already be a validated member of
+    schema.SUPPORTED_SCHEMA_VERSIONS (checked by _content_hash_status
+    before this is called) -- the expected threshold is looked up FROM that
+    exact version, so a v1 policy carrying 0.61 (or a v2 policy carrying
+    0.60) is rejected here as unsupported_rule, never silently accepted
+    because the schema/content-hash checks passed."""
     rule = content.get("rule")
     decision = content.get("decision")
     if not isinstance(rule, dict) or not isinstance(decision, dict):
@@ -98,7 +104,8 @@ def _rule_is_supported(content: dict) -> bool:
     if (not isinstance(value, (int, float)) or isinstance(value, bool)
             or not math.isfinite(value)):
         return False
-    if value != schema.FROZEN_THRESHOLD:
+    expected_value = schema.SCHEMA_VERSION_TO_THRESHOLD.get(schema_version)
+    if expected_value is None or value != expected_value:
         return False
     if value != low_threshold or value != high_threshold:
         return False
@@ -148,7 +155,7 @@ def load_inference_policy(
         return _inactive(hash_reason)
 
     content = policy["content"]
-    if not _rule_is_supported(content):
+    if not _rule_is_supported(content, policy["policy_schema_version"]):
         return _inactive("unsupported_rule")
 
     if content.get("provider_policy") != {

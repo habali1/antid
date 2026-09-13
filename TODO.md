@@ -919,3 +919,95 @@ candidate.
 - **Next gate:** a separately authorized decision/turn to actually
   generate and review a v2 `inference_policy.json` (or defer/decline) --
   not done in this turn.
+
+## Gate v2: Phase 5E1 -- policy schema v2 / generator prepared, NOT run to a write
+
+The independent validation above (`unknown_test_v2_eval.json`,
+`validation_status: validation_passed`) stays frozen and byte-unchanged.
+This phase added only schema/generator machinery:
+
+- `policy_schema.py` (byte-identical in `training/` and `api/`) gained
+  schema v2 alongside the untouched v1 default: `SCHEMA_VERSION_V2 = 2`,
+  `FROZEN_THRESHOLD_V2 = 0.61`; `SCHEMA_VERSION = 1` / `FROZEN_THRESHOLD =
+  0.6` are unmodified. A v2 policy additionally requires a
+  `validation_evidence` block, and `EXPECTED_V2_VALIDATION_EVIDENCE`
+  freezes the EXACT hash/status/FAR value of every field (not merely its
+  format) -- `validate()` requires exact equality, so a rehashed policy
+  that swaps in a different, individually well-formed hash or a different
+  in-range FAR is rejected, not only one with the block missing/malformed.
+- `api/inference_policy.py`'s loader now selects the permitted threshold
+  from the policy's own `policy_schema_version` before comparing, so a v1
+  policy carrying 0.61 or a v2 policy carrying 0.60 both fail closed as
+  `unsupported_rule`.
+- New, separate generator `training/generate_inference_policy_v2.py`
+  reads the frozen Gate v2 evidence chain through the already-committed
+  shared validators, recomputes and cross-checks the calibration
+  selection, requires the independent evaluation's passed status, binds
+  the candidate's three artifact hashes plus the parity report's byte
+  hash (`bec08235...`), and requires a real ONNX Runtime session on
+  `CPUExecutionProvider` exclusively. It loads the evaluation contract
+  EARLY and, immediately after reading `calibration_v2_selection.json`,
+  checks its actual byte hash against
+  `evaluation_contract.content.selection_binding.byte_sha256` BEFORE
+  touching status/result/diagnostics; every required selection field
+  (`schema_version`, `content_sha256`, `generation`,
+  `content.status/result/diagnostics`) is then checked via `.get()` --
+  never direct indexing -- so each is a controlled `GeneratorV2Error`
+  when missing/malformed, never a traceback (self-consistency and
+  recomputation checks are retained afterward as defense in depth). The
+  scores/selection cross-check against `scores_binding` and
+  controlled-JSON-parse handling apply throughout. The two
+  `policy_schema.py` copies must be byte-identical, checked via raw
+  `read_bytes()` equality (catches CRLF-vs-LF-only divergence, which
+  canonical-LF-normalized hashing would miss); canonical-LF hashes are
+  retained separately for the diagnostic-only `content.provenance`
+  recording of six source files. `--write` requires a clean tracked
+  tree, records git HEAD + provenance, pre-validates the built policy
+  through the REAL API loader in an isolated temp directory BEFORE any
+  publication, and only then publishes atomically. `--check` reruns the
+  complete preflight, rebuilds the expected deterministic content, and
+  requires the stored top-level key set, schema version, content, and
+  `content_sha256` to match EXACTLY, plus separately the stored
+  `generation` key set and `generator_version` -- only `generated_at` may
+  differ -- before a final loader check. Schema v2's envelope is now
+  checked exactly (v1 unconstrained, unchanged): top-level keys exactly
+  `policy_schema_version, content, content_sha256, generation`;
+  `generation` exactly `generated_at, generator_version`; `generated_at`
+  a strict `YYYY-MM-DDTHH:MM:SSZ`; `generator_version` equal to the ONE
+  frozen `policy_schema.V2_GENERATOR_VERSION`. The original V1 generator
+  (`training/inference_policy_generator.py`) is untouched and still reads
+  only the unrenamed v1 constant names, so it cannot accidentally emit
+  schema v2.
+- New test files: `training/test_policy_schema_v2.py` (35 tests --
+  v1/v2 coexistence, cross-version rejection, schema-version type
+  strictness, exact-value `validation_evidence` mutation tests including
+  hash-swap and FAR-change cases, schema-v2 envelope mutation tests
+  (extra/missing top-level and generation keys, changed
+  generator_version, malformed timestamps), each with a freshly
+  recomputed `content_sha256`), `training/test_generate_policy_v2.py`
+  (44 tests -- generator failure paths incl. malformed-JSON controlled
+  failures, scores/selection binding mismatches, every missing required
+  selection field, clean-tree gating, provenance recording, raw-byte
+  schema-copy-divergence refusal including a CRLF/LF-only case,
+  isolated-loader pre-validation with nothing left behind on failure,
+  `--check` reconstruct-and-reject-every-mutation tests including
+  generation/top-level-key mutations that never touch content_sha256,
+  atomic-exclusive publish, write/check round-trip). `api/test_inference_
+  policy.py` gained `TestSchemaV2Loading` (valid v2 loads active at 0.61;
+  v1+0.61 and v2+0.60 both `unsupported_rule`; missing
+  `validation_evidence` is `invalid_schema`) and
+  `TestLiveV1PolicyStillLoadsAgainstRealArtifacts` (the real live v1
+  policy still loads active at 0.60 against the real serving artifacts,
+  read-only).
+- **Only `--preflight` was run against real evidence**, against
+  `training/artifacts/northeast_v1_b4_dev_v2`: `"ok": true`, every
+  evidence hash bound correctly, git HEAD and all six provenance source
+  hashes recorded, both `policy_schema.py` copies confirmed
+  byte-identical (raw bytes), zero files written anywhere. No v2
+  `inference_policy.json` was generated, no artifact was copied or
+  promoted, and **the live 50-species v1 gate (threshold 0.60) remains the
+  only active gate**. `northeast_final_test_v1` was not accessed.
+  `--write`/`--check` were exercised only against synthetic fixtures.
+- **Next gate:** a separately authorized `--write` run against the
+  candidate directory, review of its output, then a separate atomic
+  promotion step -- neither done in this phase.

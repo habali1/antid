@@ -709,7 +709,8 @@ def build_tiny_eval_fixture(testcase: unittest.TestCase, tmp: Path) -> dict:
         "diagnostics": result["diagnostics"],
     }
     selection_doc = {"schema_version": gc.SELECTION_SCHEMA_VERSION, "content": selection_content,
-                     "content_sha256": gc.compute_content_sha256(selection_content)}
+                     "content_sha256": gc.compute_content_sha256(selection_content),
+                     "generation": {"selector_source_sha256": impl_hashes.get("select_gate_v2_threshold", "0" * 64)}}
     selection_path = repo / "data/calibration_v2/calibration_v2_selection.json"
     _write_json(selection_path, selection_doc)
 

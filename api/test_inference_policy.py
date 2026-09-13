@@ -210,5 +210,130 @@ class TestInferencePolicyLoader(unittest.TestCase):
         self.assertEqual(self.load().reason, "io_error")
 
 
+class TestSchemaV2Loading(unittest.TestCase):
+    """B3/B4: schema v2 loads active only at 0.61 against matching
+    artifacts; a schema/threshold cross-pairing (v1+0.61, v2+0.60) is
+    rejected as unsupported_rule, never silently accepted."""
+
+    def setUp(self):
+        self._temp = tempfile.TemporaryDirectory()
+        self.artifacts = Path(self._temp.name)
+        for name, data in ARTIFACT_BYTES.items():
+            (self.artifacts / name).write_bytes(data)
+
+    def tearDown(self):
+        self._temp.cleanup()
+
+    def write_policy(self, policy: dict, *, recompute_hash: bool = False) -> None:
+        if recompute_hash:
+            policy["content_sha256"] = schema.compute_content_sha256(
+                policy["policy_schema_version"], policy["content"])
+        (self.artifacts / inference_policy.POLICY_FILENAME).write_text(
+            json.dumps(policy), encoding="utf-8")
+
+    def load(self, *, providers=None, contract=None) -> inference_policy.PolicyState:
+        return inference_policy.load_inference_policy(
+            self.artifacts,
+            ["CPUExecutionProvider"] if providers is None else providers,
+            PREPROCESSING_CONTRACT if contract is None else contract,
+        )
+
+    def _content(self, threshold: float, *, with_validation_evidence: bool) -> dict:
+        hashes = {name: hashlib.sha256(data).hexdigest() for name, data in ARTIFACT_BYTES.items()}
+        content = {
+            "rule": {
+                "operator_verbatim": "max_sim < value",
+                "operator_normalized": {"comparison": "strict_less_than"},
+                "signal": "raw max cosine similarity before geo re-ranking",
+                "value": threshold,
+            },
+            "decision": {
+                "low_confidence_if": {
+                    "signal": "raw_pre_geo_max_cosine",
+                    "comparison": "strict_less_than",
+                    "threshold": threshold,
+                },
+                "normal_results_if": {"comparison": "greater_than_or_equal", "threshold": threshold},
+                "equal_threshold_action": "normal_results",
+                "non_finite_action": "request_error",
+            },
+            "artifact_hashes": hashes,
+            "provider_policy": {"providers": ["CPUExecutionProvider"], "exclusive": True},
+            "preprocessing": {"contract": json.loads(json.dumps(PREPROCESSING_CONTRACT))},
+        }
+        if with_validation_evidence:
+            content["validation_evidence"] = dict(schema.EXPECTED_V2_VALIDATION_EVIDENCE)
+        return content
+
+    def _policy(self, version: int, threshold: float, *, with_validation_evidence: bool) -> dict:
+        content = self._content(threshold, with_validation_evidence=with_validation_evidence)
+        # v2's envelope requires generator_version == schema.V2_GENERATOR_VERSION
+        # exactly; v1's generation is unconstrained beyond generated_at/
+        # generator_version being strings, so "test" stays fine there.
+        generator_version = schema.V2_GENERATOR_VERSION if version == schema.SCHEMA_VERSION_V2 else "test"
+        return {
+            "policy_schema_version": version,
+            "content": content,
+            "content_sha256": schema.compute_content_sha256(version, content),
+            "generation": {"generated_at": "2026-01-01T00:00:00Z", "generator_version": generator_version},
+        }
+
+    def test_valid_schema_v2_policy_loads_active_at_061(self):
+        policy = self._policy(schema.SCHEMA_VERSION_V2, schema.FROZEN_THRESHOLD_V2, with_validation_evidence=True)
+        self.write_policy(policy)
+        state = self.load()
+        self.assertTrue(state.active)
+        self.assertEqual(state.reason, "active")
+        self.assertEqual(state.threshold, 0.61)
+        self.assertTrue(state.classify(0.6099))
+        self.assertFalse(state.classify(0.6100))
+        self.assertFalse(state.classify(0.6101))
+
+    def test_v2_policy_artifact_hash_mismatch_disables_gate(self):
+        policy = self._policy(schema.SCHEMA_VERSION_V2, schema.FROZEN_THRESHOLD_V2, with_validation_evidence=True)
+        self.write_policy(policy)
+        original = (self.artifacts / "backbone.onnx").read_bytes()
+        (self.artifacts / "backbone.onnx").write_bytes(original + b"tampered")
+        self.assertEqual(self.load().reason, "artifact_hash_mismatch")
+
+    def test_v1_schema_with_061_threshold_is_unsupported_rule(self):
+        policy = self._policy(schema.SCHEMA_VERSION, 0.61, with_validation_evidence=False)
+        self.write_policy(policy)
+        state = self.load()
+        self.assertFalse(state.active)
+        self.assertEqual(state.reason, "unsupported_rule")
+
+    def test_v2_schema_with_060_threshold_is_unsupported_rule(self):
+        policy = self._policy(schema.SCHEMA_VERSION_V2, 0.60, with_validation_evidence=True)
+        self.write_policy(policy)
+        state = self.load()
+        self.assertFalse(state.active)
+        self.assertEqual(state.reason, "unsupported_rule")
+
+    def test_v2_policy_missing_validation_evidence_is_invalid_schema(self):
+        policy = self._policy(schema.SCHEMA_VERSION_V2, schema.FROZEN_THRESHOLD_V2, with_validation_evidence=False)
+        self.write_policy(policy)
+        state = self.load()
+        self.assertFalse(state.active)
+        self.assertEqual(state.reason, "invalid_schema")
+
+
+class TestLiveV1PolicyStillLoadsAgainstRealArtifacts(unittest.TestCase):
+    """B1: the real, currently-live schema-v1 policy still loads active
+    against the real 50-species serving artifacts, at threshold 0.6. This
+    test only reads training/artifacts -- it never writes there."""
+
+    def test_live_policy_loads_active_at_060(self):
+        live_dir = Path(__file__).resolve().parent.parent / "training" / "artifacts"
+        policy_path = live_dir / inference_policy.POLICY_FILENAME
+        if not policy_path.exists():
+            self.skipTest("live inference_policy.json not present in this checkout")
+        state = inference_policy.load_inference_policy(
+            live_dir, ["CPUExecutionProvider"], PREPROCESSING_CONTRACT)
+        self.assertTrue(state.active)
+        self.assertEqual(state.reason, "active")
+        self.assertEqual(state.threshold, 0.6)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

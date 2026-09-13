@@ -208,3 +208,103 @@ candidate_selected`); this independent validation is represented solely by
 the separate evaluation artifact. **Gate v2 is independently validated but
 not yet deployed** -- no v2 `inference_policy.json` has been generated and
 no serving artifact has changed.
+
+## Phase 5E1 -- policy schema v2 and a separate V2 generator (prepared, not run)
+
+Independent validation above stays frozen and unmodified. This phase adds
+only the machinery a future promotion will use: `policy_schema.py` (kept
+byte-identical between `training/` and `api/`) now supports schema v2
+alongside the unmodified v1 default -- `SCHEMA_VERSION`/`FROZEN_THRESHOLD`
+(1 / 0.60) are untouched; `SCHEMA_VERSION_V2`/`FROZEN_THRESHOLD_V2` (2 /
+0.61) were added alongside, never replacing them. A schema-v2 policy
+additionally requires a `validation_evidence` block, and
+`policy_schema.EXPECTED_V2_VALIDATION_EVIDENCE` freezes the EXACT byte/
+content hashes of the calibration selection, the independent
+`unknown_test_v2` evaluation, and the parity report, plus the exact
+`validation_status`/diagnostic FAR values -- not merely their format.
+`policy_schema.validate()` checks every field for exact equality against
+that frozen mapping, wired in for schema v2 only, so a rehashed 0.61
+policy that swaps in a different, individually well-formed hash (or a
+different in-range FAR) in any evidence field is rejected, not only one
+with the block missing or malformed. The API loader
+(`api/inference_policy.py`) is now version-aware: it selects the permitted
+threshold from the policy's own `policy_schema_version` before comparing,
+so a v1 policy carrying 0.61 or a v2 policy carrying 0.60 both fail closed
+as `unsupported_rule` -- neither is silently accepted.
+
+A new, separate generator, `training/generate_inference_policy_v2.py`,
+reads the frozen Gate v2 evidence chain through the already-committed
+shared validators (never duplicating their logic), mechanically
+recomputes the calibration selection and requires exact agreement with the
+frozen selection artifact, requires the independent evaluation's
+`validation_status == "validation_passed"`, binds the current candidate's
+three artifact hashes and the parity report's byte hash, and constructs a
+real ONNX Runtime session on `CPUExecutionProvider` exclusively. It loads
+the frozen evaluation contract EARLY and, immediately after reading
+`calibration_v2_selection.json`, compares its actual byte hash against
+`evaluation_contract.content.selection_binding.byte_sha256` BEFORE
+touching status/result/diagnostics -- a byte-tampered selection file is
+caught by identity alone, before any of its claimed content is trusted
+enough to index into. Every required selection field (`schema_version`,
+`content_sha256`, `generation`, `content.status`, `content.result`,
+`content.diagnostics`) is then checked via `.get()` -- never direct
+indexing that could raise `KeyError` -- so a missing or malformed field
+produces a controlled `GeneratorV2Error`, never a traceback; the
+self-consistency `content_sha256` recompute and status/result/diagnostics
+recomputation checks are retained afterward as defense in depth. The same
+scores/selection byte+content cross-check (against `scores_binding`) and
+controlled-JSON-parse handling apply throughout the preflight path.
+
+The **required synchronization gate** between `training/policy_schema.py`
+and `api/policy_schema.py` compares raw `read_bytes()` -- not a hash, and
+deliberately not canonical-LF-normalized -- so a divergence that is only
+CRLF-vs-LF is still caught; canonical-LF hashes are retained separately
+for the `content.provenance` recording of six implementation files (this
+generator, both `policy_schema.py` copies, `api/inference_policy.py`,
+`api/inference.py`, `training/data.py`), which stays diagnostic-only (the
+API loader never reads it). The original V1 generator
+(`training/inference_policy_generator.py`) is untouched and still reads
+only the unrenamed `SCHEMA_VERSION`/`FROZEN_THRESHOLD` names, so it cannot
+accidentally emit schema v2.
+
+Schema v2's envelope is now checked exactly (v1's is unconstrained by
+this, unchanged): the top-level keys must be exactly
+`policy_schema_version, content, content_sha256, generation`; `generation`
+must be exactly `generated_at, generator_version`; `generated_at` must
+match the strict `YYYY-MM-DDTHH:MM:SSZ` form; and `generator_version` must
+equal `policy_schema.V2_GENERATOR_VERSION`, the ONE frozen version string
+the generator imports rather than redefining. `--write` now: (1) requires
+a clean tracked tree (write-time only -- `--preflight`/`--check` remain
+usable on a dirty tree, consistent with faithfully recording the parity
+report's own `workspace_git_dirty` flag); (2) records the generating git
+HEAD and source provenance as above; (3) pre-validates the built candidate
+policy through the REAL API loader in a temporary, isolated artifact
+directory (hard-linked artifact files) BEFORE any publication -- every
+mismatch fails there, leaving the real candidate directory untouched and
+no temp files behind; only then does the atomic-exclusive final publish
+happen, followed by a last readback + schema + loader check against the
+real published file. `--check` now reruns the COMPLETE read-only
+preflight, rebuilds the expected deterministic policy content from it, and
+requires the stored top-level key set, schema version, content, and
+`content_sha256` to match EXACTLY, and separately requires the stored
+`generation` key set and `generator_version` to match exactly too --
+**only `generated_at`'s timestamp value is permitted to differ** -- before
+verifying through the API loader. An extra top-level or `generation` key
+is rejected even when it leaves `content_sha256` untouched (that hash only
+ever covers `{policy_schema_version, content}`), and a stored candidate
+with an altered `gate_framing`, a parity fact, `not_validated_for`, or any
+single evidence hash is rejected even if its `content_sha256` was freshly
+recomputed over the altered content.
+
+**Only `--preflight` has been run in this phase** -- against
+`training/artifacts/northeast_v1_b4_dev_v2`, producing `"ok": true` with
+every evidence hash binding correctly, git HEAD and all six provenance
+source hashes recorded, both `policy_schema.py` copies confirmed
+byte-identical (raw bytes), and zero files written anywhere. No
+`inference_policy.json` has been generated, no artifact has been copied or
+promoted, and the live 50-species v1 gate (threshold 0.60) remains the
+only active gate. `--write`/`--check` were exercised only against
+synthetic fixtures in this phase's test suite, never against real
+evidence. Promotion (an actual `--write` run, review of its output, and
+atomic publication to the live serving directory) is a separate,
+not-yet-started phase.
