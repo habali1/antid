@@ -724,3 +724,121 @@ serving policy (no `inference_policy.json` exists or was generated from it).
 - **Next gate:** review of this calibration result, then a separately
   authorized turn for the single, independent `unknown_test_v2` evaluation
   -- not run, implemented, or scheduled in this turn.
+
+## Gate v2: Phase 5D1 -- unknown_test_v2 evaluator prepared, NOT run
+
+The single-use, independent evaluator that will mechanically apply the
+frozen 0.61 candidate to `unknown_test_v2` is prepared and frozen, but has
+**not been executed** -- `data/unknown_test_v2/unknown_test_v2_evaluation_attempt.json`
+(the one-shot attempt marker) and `data/unknown_test_v2/unknown_test_v2_eval.json`
+(the result) both remain absent, and no unknown_test_v2 image has been opened.
+
+- `training/gate_v2_evaluation_contract.py` defines the frozen evaluation
+  contract's schema/constants (mirroring `gate_v2_contract.py`'s pattern):
+  the selection contract's content hash, calibration_v2 scores/selection
+  byte+content hashes, the selected threshold (61 / 0.61, strict `<`,
+  equality accepted), all four candidate artifact hashes, the
+  unknown_test_v2 CSV/JSON hashes and exact quotas (790 total; 390
+  known_holdout, 65 species x 6; 200/100/100 OOD), a row identity-order
+  hash over unknown_test_v2.csv (metadata-only, no image access), and the
+  three precommitted pass/fail criteria. `validate_evaluation_contract`
+  checks every field for EXACT equality and rejects unexpected top-level or
+  content keys (including inside the `generation` block).
+- `training/freeze_gate_v2_evaluation_contract.py` (`--check`/`--write`,
+  same discipline as the selection contract's freeze script) produced
+  `training/gate_v2_evaluation_contract.json`
+  (`content_sha256: 49bb0c4ee5749513b62e7bdfa7f50a7619fe16e2afc75a47d60bda25b4bdb10c`).
+- `training/eval_unknown_test_v2.py` is the one-shot evaluator: `--preflight`
+  (metadata-only -- verifies the evaluation contract, implementation-source
+  hashes, a clean git tree, the frozen selection contract, and MECHANICALLY
+  RECOMPUTES the calibration_v2 selection from the frozen scores, requiring
+  exact equality with the stored result, before ever touching
+  unknown_test_v2 metadata; never opens an image, never creates an ONNX
+  session, never imports PIL, never writes any file) and `--evaluate`
+  (repeats every preflight check; THEN, in order, verifies the explicit
+  `--artifacts-dir`, imports every required runtime module, loads and
+  validates taxonomy/prototypes, constructs the ONNX session and confirms
+  `session.get_providers() == ["CPUExecutionProvider"]` -- all before the
+  attempt marker exists, so a session-construction or taxonomy/prototype
+  load failure never consumes the single-use budget -- and only then
+  atomically creates and fsyncs the immutable attempt marker immediately
+  before opening the first unknown_test_v2 image; a crash after that point
+  leaves the marker in place and writes no partial output; there is no
+  automatic retry). There is no `--threshold`, `--operator`, `--out`, or
+  sweep/search mode, and (following a Codex correction) no
+  `--contract`/`--selection-contract`/`--scores`/`--selection`/
+  `--unknown-test-csv`/`--unknown-test-json` override either -- every input
+  path is derived from `--repo` alone, so a byte-identical copy of any input
+  file placed in another directory can never redirect image resolution.
+  The precommitted validation rule (coverage >= 65%, accepted top-1
+  accuracy improves on baseline by >= 5pp, and incorrect predictions are
+  rejected at a strictly higher rate than correct ones as a health check,
+  not a performance floor) is computed by `gate_v2_evaluation_contract.
+  compute_validation()` -- the ONE shared function the evaluator calls to
+  write the result and `validate_eval_content()` calls again, independently,
+  to fully RECOMPUTE the entire stored `validation` block (status, all
+  three criteria, every metric, per-species entries, diagnostic OOD FAR/AUC)
+  from `records` and require exact equality; the stored block is never
+  trusted on its own, so altering any of it and rehashing `content_sha256`
+  fresh is still rejected. OOD categories are diagnostic-only and never
+  affect the pass/fail status. The attempt marker itself is now validated
+  for exact agreement with the contract (implementation-source hashes,
+  scores/selection bindings, every candidate/dataset binding, a strict UTC
+  timestamp) both before it is written and again immediately after, from
+  the bytes actually persisted to disk; loading a finished evaluation output
+  additionally re-locates and re-validates that marker and requires its
+  actual byte sha256 to equal the output's own recorded
+  `attempt_marker_sha256` -- a merely well-formed 64-hex-character value is
+  not sufficient. Reuses (and binds as implementation sources)
+  `score_calibration_v2.py`'s image-decode/ONNX-session helpers and
+  `select_gate_v2_threshold.py`'s pure per-species/AUC/rejection-metric
+  helpers rather than reimplementing them -- the OLD v1
+  `eval_unknown_test.py` (PyTorch-based) is not reused.
+- `training/test_gate_v2_evaluation.py` (83 synthetic/offline tests) covers
+  contract-mutation rejection, exact threshold-boundary arithmetic (0.609999
+  rejected / 0.610000 and 0.610001 accepted), the health-check direction,
+  OOD-cannot-affect-status, malformed-JSON totality, mutation tests against
+  a REAL evaluation output proving every metric/criterion/status change is
+  rejected after a fresh content_sha256 recompute, attempt-marker mutation
+  tests (altered timestamp, altered bindings, tampered implementation-source
+  hash), a redirected-input-path regression (a byte-identical
+  `unknown_test_v2.csv` copy beside an unrelated/empty image tree does not
+  affect which images are read), and an end-to-end one-shot mechanism run
+  (real tiny ONNX model + real tiny images) proving: a session-construction
+  failure and a taxonomy/prototype-load failure each leave no marker and no
+  result; the marker exists (asserted *inside* the first `Image.open`
+  callback, not merely afterward) before any image is opened; a second
+  invocation is rejected; a simulated post-marker failure leaves the marker
+  in place with no partial output; and the final output refuses overwrite.
+- **Final mechanical correction pass** (two remaining issues found by
+  review): (1) `numpy` was previously imported lazily inside the per-row
+  scoring loop -- i.e. AFTER the attempt marker already existed. Every
+  required runtime import (`numpy`, `PIL`, `inference`, `onnxruntime`) now
+  happens before `load_candidate_session_and_prototypes()` and before the
+  marker is created, proven by a source-order regression test (every
+  image-free init token precedes `_create_attempt_marker(`; every
+  image-touching call -- `resolve_one_image`, `.read_bytes()`,
+  `Image.open(` -- follows it). (2) Final-result publication no longer uses
+  `os.replace()`, which silently overwrites an existing destination --
+  `publish_eval_output()` writes a unique temp file in the destination
+  directory, fsyncs it, then publishes via `os.link()` (which itself fails
+  with `FileExistsError` if the destination exists, so exclusivity is
+  structural, not a prior check racing the write) and always removes the
+  temp file afterward. Covered directly (not merely via the marker-based
+  second-invocation test, which stops earlier): a pre-existing destination
+  with sentinel bytes is left byte-for-byte untouched and no temp file
+  remains after a refused publish; a successful publish writes the complete
+  bytes once and leaves no temp file.
+- Real `--preflight` was run once against the actual repository (frozen
+  metadata and candidate artifacts only, tracked tree verified clean via a
+  non-destructive `git stash`/`git stash pop` around the two pending
+  `TODO.md`/plan-doc edits, confirmed not left behind afterward): confirmed
+  790 unknown_test_v2 rows, 65 known species, the mechanically recomputed
+  selection exactly matches the committed `calibration_v2_selection.json`,
+  threshold 61/0.61 strict-less-than with equality accepted, all four
+  candidate artifact hashes verified, and CPUExecutionProvider available.
+  No unknown_test_v2 image was opened; both approved output paths remain
+  absent.
+- **Next gate:** review of this preparation, then a separately authorized
+  turn to run `eval_unknown_test_v2.py --evaluate` for the one, single
+  permitted unknown_test_v2 evaluation -- not run in this turn.

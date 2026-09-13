@@ -1,0 +1,141 @@
+{
+  "content": {
+    "approved_outputs": {
+      "unknown_test_v2_eval": "data/unknown_test_v2/unknown_test_v2_eval.json",
+      "unknown_test_v2_evaluation_attempt": "data/unknown_test_v2/unknown_test_v2_evaluation_attempt.json"
+    },
+    "bindings": {
+      "backbone_onnx": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/backbone.onnx",
+        "sha256": "fc22d26ae5c73d20613dafcef02e75291c8779ec8a1296ebc9a72f0e7d7f826b"
+      },
+      "candidate_run_manifest": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/run_manifest.json",
+        "sha256": "6f8bfe3141a9870c37f6810da6b9a5459cf701242f9cbb3d32a8b01c2f0f265b"
+      },
+      "prototypes_npy": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/prototypes.npy",
+        "sha256": "0e52a7f350996a48f4129e1924e9b0af79517e4c3273dd9ecc7e851121d43825"
+      },
+      "taxonomy_json": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/taxonomy.json",
+        "sha256": "c8672287d59b5b9d3fb9aec5fd85a008ad30441f2ce3159713a3752b37a04767"
+      },
+      "unknown_test_v2_csv": {
+        "path": "data/unknown_test_v2/unknown_test_v2.csv",
+        "sha256": "d706cb6dbda7a672594fc425ce5c8f8f0f6f868662c3d52c5f9c88083163b09f"
+      },
+      "unknown_test_v2_json": {
+        "path": "data/unknown_test_v2/unknown_test_v2.json",
+        "sha256": "eea1cbb3118dfc05f42f477ef58d6ccbc5458df1e8a5496845a146d161a89e6d"
+      }
+    },
+    "closed_sources": [
+      "northeast_final_test_v1"
+    ],
+    "dataset_quota": {
+      "known_holdout": 390,
+      "known_holdout_per_species": 6,
+      "non_ant_insect": 100,
+      "out_of_scope_ant": 200,
+      "species_count": 65,
+      "total": 790,
+      "unrelated": 100
+    },
+    "decision_shape": {
+      "comparison": "strict_less_than",
+      "equal_threshold_action": "normal_results",
+      "per_species_or_per_class": false,
+      "scope": "single_global_threshold"
+    },
+    "gate_framing": "selective_confidence_gate_not_unknown_species_detector",
+    "implementation_sources": {
+      "api_inference": {
+        "path": "api/inference.py",
+        "sha256": "73bb6e19c4b743e70021c66025fda054e33b48da24b2e9a36e940bfb61f3d8cf"
+      },
+      "eval_unknown_test_v2": {
+        "path": "training/eval_unknown_test_v2.py",
+        "sha256": "1eeadfa6d0695e1f408bdaf1db8b1eef0b61e04c646724bf1230a1d990cb25d7"
+      },
+      "gate_v2_contract": {
+        "path": "training/gate_v2_contract.py",
+        "sha256": "1ef20d0d292065f027dd2c0b941445c24eb804a5b67f57eb579a577d091f836f"
+      },
+      "gate_v2_evaluation_contract": {
+        "path": "training/gate_v2_evaluation_contract.py",
+        "sha256": "577770a7f11c28651c0313321e698e11434f2a1a3e58d3bf0010d3cb2d9023d3"
+      },
+      "score_calibration_v2": {
+        "path": "training/score_calibration_v2.py",
+        "sha256": "1ae110356984d29b528621edc95c1243d6499861ae8df8b8376c27e229dde6b8"
+      },
+      "select_gate_v2_threshold": {
+        "path": "training/select_gate_v2_threshold.py",
+        "sha256": "ae76d6fdeaffb7795ab59d380b059fbc41ee1ad3d312be59b4db858db3ac8b60"
+      }
+    },
+    "notes": "Single-use, independent evaluation of the ALREADY-SELECTED and reviewed Phase 5C2 calibration_v2 candidate threshold (0.61) against unknown_test_v2. This contract never re-selects, sweeps, or searches a threshold -- it applies the one frozen candidate exactly once and reports precommitted pass/fail criteria.",
+    "policy_name": "gate_v2_unknown_test_v2_evaluation_v1",
+    "runtime": {
+      "geo_reranking": "never_applied",
+      "inference_policy_json": "never_consulted_by_scorer_or_selector",
+      "provider_policy": {
+        "exclusive": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ]
+      },
+      "rounding": "none_before_storage",
+      "signal": "raw_pre_geo_max_cosine"
+    },
+    "scores_binding": {
+      "byte_sha256": "4fec18a938ef22e06d6073016d1692512e8fb1e4e41ec645d9aeb33afbebe46b",
+      "content_sha256": "35c7bf36042470dde8fc922106c6528fcb6a06e3bac454c4d196880796e778f4"
+    },
+    "selection_binding": {
+      "byte_sha256": "00e56d2e64941086ee1d1c663890cb95d3daa4dcce1e729ef972879376f1489b",
+      "content_sha256": "82bc754dbf46643862504916f4c273922e9ac3cefc45bfa28e5eb4a15dfdc5b5"
+    },
+    "selection_contract": {
+      "content_sha256": "991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77"
+    },
+    "single_use_rule": {
+      "authorization_required_before_evaluation": "this frozen evaluation contract plus the reviewed Phase 5C2 calibration_v2 candidate threshold",
+      "retuning_after_evaluation": "forbidden",
+      "unknown_test_v2": "exactly_one_evaluation_ever"
+    },
+    "threshold": {
+      "comparison": "strict_less_than",
+      "equal_threshold_action": "normal_results",
+      "required_status": "candidate_selected",
+      "source": "data/calibration_v2/calibration_v2_selection.json",
+      "threshold": 0.61,
+      "threshold_integer": 61
+    },
+    "unknown_test_v2_row_identity_order_sha256": "7df8345831775460e942ed9314ea94ba1f2c01d6cfac255149209c764665a8c0",
+    "validation_criteria": {
+      "coverage_floor_denominator": 100,
+      "coverage_floor_numerator": 65,
+      "coverage_rule": "100 * accepted_known >= 65 * total_known (exact integer comparison), at the single frozen threshold -- never swept or re-searched",
+      "diagnostic_only_categories": [
+        "out_of_scope_ant",
+        "non_ant_insect",
+        "unrelated"
+      ],
+      "health_check_rule": "incorrect_prediction_rejection_rate must be STRICTLY GREATER than correct_prediction_rejection_rate (exact integer cross multiplication); this confirms only that the gate is not operating backwards -- passing it does not itself establish strong gate performance",
+      "ood_never_affects_validation_status": true,
+      "pass_requires_all_three": true,
+      "usefulness_floor_denominator": 100,
+      "usefulness_floor_numerator": 5,
+      "usefulness_rule": "accepted_accuracy must improve on baseline_accuracy by at least 5/100, checked by exact integer cross multiplication; equality at exactly 5.0 percentage points passes (>=, not >)"
+    }
+  },
+  "content_sha256": "49bb0c4ee5749513b62e7bdfa7f50a7619fe16e2afc75a47d60bda25b4bdb10c",
+  "generation": {
+    "generator": "training/freeze_gate_v2_evaluation_contract.py",
+    "note": "generation metadata is NOT part of content and NOT covered by content_sha256"
+  },
+  "schema_version": 1,
+  "status": "frozen_before_unknown_test_v2_evaluation"
+}

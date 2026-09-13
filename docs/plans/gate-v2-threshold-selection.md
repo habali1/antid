@@ -149,3 +149,32 @@ own ~45.5% out-of-scope pass rate cited in the top-level project docs).
 review of this result, followed by a separately authorized turn for the
 single, independent `unknown_test_v2` evaluation this contract's
 `single_use_rule` reserves -- not run, implemented, or scheduled here.
+
+## Phase 5D1 -- the unknown_test_v2 evaluator (prepared, not run)
+
+The single-use evaluator that will mechanically apply the 0.61 threshold
+above to `unknown_test_v2` is code-prepared and frozen, but has NOT been
+run: `training/gate_v2_evaluation_contract.py` /
+`training/gate_v2_evaluation_contract.json`
+(`content_sha256: 49bb0c4ee5749513b62e7bdfa7f50a7619fe16e2afc75a47d60bda25b4bdb10c`)
+bind the selection contract above, both calibration_v2 artifact hashes, the
+frozen threshold, all four candidate artifact hashes, and the unknown_test_v2
+CSV/JSON hashes and quotas. `training/eval_unknown_test_v2.py` loads the
+threshold from `calibration_v2_selection.json` only -- there is no
+`--threshold`/`--operator`/`--out` override, sweep mode, or any input-path
+override flag (every path derives from `--repo` alone) -- and applies it
+exactly once: every fallible, image-free step (artifact-directory
+verification, ONNX session construction, taxonomy/prototype loading) runs
+BEFORE the atomic, exclusive-creation attempt marker is created immediately
+before the first unknown_test_v2 image is opened (including the numpy
+import, moved out of the per-row loop in a final correction pass so it can
+no longer land after the marker), so a session/load failure never consumes
+the single-use budget. Final publication of the result uses `os.link()`,
+not `os.replace()`, so overwrite is refused at the actual write boundary,
+not only by an earlier existence check. The evaluation output's
+`validation` block is fully recomputed from records at load/verify time
+(not merely checked for internal consistency), and the attempt marker
+itself is verified for exact contract agreement, both at creation and
+again whenever an evaluation output is loaded. See `TODO.md`'s "Gate v2:
+Phase 5D1" section for full detail. No unknown_test_v2 image has been
+opened; the attempt marker and evaluation output remain absent.
