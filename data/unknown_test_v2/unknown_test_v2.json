@@ -1,0 +1,131 @@
+{
+  "achieved_counts": {
+    "known_holdout": 390,
+    "non_ant_insect": 100,
+    "out_of_scope_ant": 200,
+    "unrelated": 100
+  },
+  "byte_accounting": {
+    "accepted_image_bytes": 307263996,
+    "accepted_image_bytes_this_dataset": 307263996,
+    "cache_accept_count": 0,
+    "cache_size_bytes": 616035281,
+    "calibration_v1_reuse_count": 0,
+    "network_response_count": 792,
+    "network_transferred_bytes": 307688250
+  },
+  "cache_dir": "C:\\dev\\antid\\data\\gate_v2_cache",
+  "candidates_csv": {
+    "path": "data/gate_v2_readiness/candidates.csv",
+    "rows": 4012,
+    "sha256": "eed811a31c2febb98fb2c8f4f4b958e105c1b7fe7aa80b3f3de1e2ef8152c4f9"
+  },
+  "collisions": [
+    {
+      "category": "known_holdout",
+      "dataset": "unknown_test_v2",
+      "detail": "",
+      "image_source": "network",
+      "observation_uuid": "639c3243-b2d5-4a84-8a57-ed146b6af6da",
+      "outcome": "rejected",
+      "photo_id": "24638402",
+      "reason": "cross_v2_hash_collision",
+      "role": "selected",
+      "sha256": "d5f9e0140917be34645eefb2e4f0dcc5c5c2325acdbea71788fc1a35c3398da9",
+      "species": "dolichoderus-thoracicus",
+      "transferred_bytes": 407970
+    }
+  ],
+  "dataset": "unknown_test_v2",
+  "domain_labels": [
+    "calibration_v2_known",
+    "calibration_v2_ood",
+    "calibration_v2_non_ant_insect",
+    "calibration_v2_unrelated",
+    "unknown_test_v2_known",
+    "unknown_test_v2_ood",
+    "unknown_test_v2_non_ant_insect",
+    "unknown_test_v2_unrelated"
+  ],
+  "downloader_git_revision": "d2e0368a7c5df977aad56b330c357c3ddd6bbb23",
+  "exclusion_sources": {
+    "benchmark_v1": {
+      "path": "data/benchmark_v1/benchmark_v1.csv",
+      "rows": 1591,
+      "sha256": "61b3439850da9100b4ae8393f4f9cd90d45b4d5b381f20eaa1ea63d8fb1ec38c",
+      "unique_sha256": 1591
+    },
+    "calibration_v1": {
+      "path": "data/calibration_v1/calibration_v1.csv",
+      "rows": 1005,
+      "sha256": "83a80351f8ac65e89ea6124ac7de6d2cb6a3c68efc1f33eb3ecc2eca8c5f63c0",
+      "unique_sha256": 1005
+    },
+    "northeast_final_test_v1": {
+      "path": "data/northeast_final_test_v1/northeast_final_test_v1.csv",
+      "rows": 450,
+      "sha256": "0c230bb51f8f2d074a796fce4b1d35a50595a0843d8955291a9829fc4f56f992",
+      "unique_sha256": 450
+    },
+    "northeast_manifest": {
+      "path": "data/northeast_expansion_v1/manifest_all_northeast_v1.csv",
+      "rows": 13581,
+      "sha256": "b4f39115c80f955755987c0959dc7ed019620f1f143c64b62523f12bc8894000",
+      "unique_sha256": 13581
+    },
+    "unknown_test_v1": {
+      "path": "data/unknown_test_v1/unknown_test_v1.csv",
+      "rows": 573,
+      "sha256": "b010af9a66db79fd6b40cd808d666f5f6dd5ebe376321c139707d05dd1849b07",
+      "unique_sha256": 573
+    }
+  },
+  "fresh_count": 790,
+  "generated_at_utc": "2026-09-13T00:00:56Z",
+  "license_distribution": {
+    "cc-by": 233,
+    "cc-by-nc": 377,
+    "cc-by-nc-sa": 116,
+    "cc-by-sa": 40,
+    "cc0": 24
+  },
+  "license_scope": "personal, non-commercial phase only",
+  "manifest": {
+    "path": "data/unknown_test_v2/unknown_test_v2.csv",
+    "rows": 790,
+    "sha256": "d706cb6dbda7a672594fc425ce5c8f8f0f6f868662c3d52c5f9c88083163b09f"
+  },
+  "master_seed": 20260905,
+  "quotas": {
+    "unknown_test_v2/known_holdout": 6,
+    "unknown_test_v2/non_ant_insect": 100,
+    "unknown_test_v2/out_of_scope_ant": 200,
+    "unknown_test_v2/unrelated": 100
+  },
+  "readiness_json": {
+    "path": "data/gate_v2_readiness/gate_v2_readiness.json",
+    "sha256": "0dce0ae0503ad9ab1d7a5c8285e3848b556c684ba7b412d0281bb3bbad2d1e1d"
+  },
+  "rejection_breakdown": {
+    "cross_v2_hash_collision": 1,
+    "under_200px": 1
+  },
+  "restore_command": "python scrape_gate_v2.py --restore unknown_test_v2",
+  "reused_count": 0,
+  "shortfalls_during_this_run": [],
+  "source_counts": {
+    "network": 790
+  },
+  "taxonomy": {
+    "canonicalized_source_rows": 26,
+    "known_holdout_rows_taxonomically_checked": 2392,
+    "lineage_evidence": {
+      "path": "data/gate_v2_readiness/known_holdout_taxonomic_lineage_v1.json",
+      "sha256": "71dfc954b1f80e9d5780e306274f2cb0ff562605db567e045a9ff79dbfa0b492"
+    },
+    "path": "data/northeast_expansion_v1/northeast_taxonomy_v1.json",
+    "selected_or_reserve_known_holdout_rows": 1559,
+    "sha256": "5e9671fddaa1fa46dcb76a4a94787533f67c5dfb54e90841ff60432a17aec27e",
+    "species_count": 65
+  }
+}
