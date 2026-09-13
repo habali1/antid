@@ -176,5 +176,35 @@ not only by an earlier existence check. The evaluation output's
 (not merely checked for internal consistency), and the attempt marker
 itself is verified for exact contract agreement, both at creation and
 again whenever an evaluation output is loaded. See `TODO.md`'s "Gate v2:
-Phase 5D1" section for full detail. No unknown_test_v2 image has been
-opened; the attempt marker and evaluation output remain absent.
+Phase 5D1" section for full detail.
+
+## Phase 5D2/5D3 -- unknown_test_v2 consumed exactly once; Gate v2 independently validated
+
+`unknown_test_v2` has been evaluated -- **exactly once**, as the frozen
+`single_use_rule` requires -- and must never be evaluated again. Result:
+**`validation_status: validation_passed`**, all three precommitted criteria
+passed, under the frozen decision shape (raw unrounded pre-geo max cosine
+**< 0.61**, equality at exactly 0.61 accepted). The threshold was **not
+adjusted** in response to this result.
+
+- Baseline (n=390): top-1 61.03% (238/390), top-3 78.72% (307/390).
+- After the gate: accepted 256/390 = 65.64% coverage; accepted top-1
+  79.6875%, top-3 91.40625%; **+18.66 percentage points** top-1 improvement.
+- Correct-prediction rejection rate 14.29% vs. incorrect-prediction
+  rejection rate 65.79% (ratio 4.61x) -- health check passes.
+- Diagnostic-only OOD false-acceptance rate at 0.61: `out_of_scope_ant`
+  51%, `non_ant_insect` 11%, `unrelated` 19% -- these numbers played **no
+  role** in `validation_status` and the permissive out_of_scope_ant rate
+  reconfirms this remains a **selective confidence gate, not an
+  unknown-species detector**.
+- Per-species rows (65 species, n=6 each) are descriptive at this sample
+  size, not stable population-level per-species estimates.
+
+Full detail, exact hashes/sizes for the frozen `unknown_test_v2_evaluation_attempt.json` and `unknown_test_v2_eval.json` evidence artifacts, and the
+complete per-species table are recorded in `TODO.md`'s "Gate v2: Phase
+5D2/5D3" section -- this document only summarizes the outcome.
+`calibration_v2_selection.json` remains immutable (`status:
+candidate_selected`); this independent validation is represented solely by
+the separate evaluation artifact. **Gate v2 is independently validated but
+not yet deployed** -- no v2 `inference_policy.json` has been generated and
+no serving artifact has changed.

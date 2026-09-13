@@ -1,0 +1,53 @@
+{
+  "content": {
+    "bindings": {
+      "backbone_onnx": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/backbone.onnx",
+        "sha256": "fc22d26ae5c73d20613dafcef02e75291c8779ec8a1296ebc9a72f0e7d7f826b"
+      },
+      "candidate_run_manifest": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/run_manifest.json",
+        "sha256": "6f8bfe3141a9870c37f6810da6b9a5459cf701242f9cbb3d32a8b01c2f0f265b"
+      },
+      "prototypes_npy": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/prototypes.npy",
+        "sha256": "0e52a7f350996a48f4129e1924e9b0af79517e4c3273dd9ecc7e851121d43825"
+      },
+      "taxonomy_json": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/taxonomy.json",
+        "sha256": "c8672287d59b5b9d3fb9aec5fd85a008ad30441f2ce3159713a3752b37a04767"
+      },
+      "unknown_test_v2_csv": {
+        "path": "data/unknown_test_v2/unknown_test_v2.csv",
+        "sha256": "d706cb6dbda7a672594fc425ce5c8f8f0f6f868662c3d52c5f9c88083163b09f"
+      },
+      "unknown_test_v2_json": {
+        "path": "data/unknown_test_v2/unknown_test_v2.json",
+        "sha256": "eea1cbb3118dfc05f42f477ef58d6ccbc5458df1e8a5496845a146d161a89e6d"
+      }
+    },
+    "created_at_utc": "2026-09-13T05:16:13Z",
+    "evaluation_contract_content_sha256": "49bb0c4ee5749513b62e7bdfa7f50a7619fe16e2afc75a47d60bda25b4bdb10c",
+    "git_head": "ecd9cd4d23e4e55519a94247aff689ae868d1c8f",
+    "implementation_source_hashes": {
+      "api_inference": "73bb6e19c4b743e70021c66025fda054e33b48da24b2e9a36e940bfb61f3d8cf",
+      "eval_unknown_test_v2": "1eeadfa6d0695e1f408bdaf1db8b1eef0b61e04c646724bf1230a1d990cb25d7",
+      "gate_v2_contract": "1ef20d0d292065f027dd2c0b941445c24eb804a5b67f57eb579a577d091f836f",
+      "gate_v2_evaluation_contract": "577770a7f11c28651c0313321e698e11434f2a1a3e58d3bf0010d3cb2d9023d3",
+      "score_calibration_v2": "1ae110356984d29b528621edc95c1243d6499861ae8df8b8376c27e229dde6b8",
+      "select_gate_v2_threshold": "ae76d6fdeaffb7795ab59d380b059fbc41ee1ad3d312be59b4db858db3ac8b60"
+    },
+    "scores_binding": {
+      "byte_sha256": "4fec18a938ef22e06d6073016d1692512e8fb1e4e41ec645d9aeb33afbebe46b",
+      "content_sha256": "35c7bf36042470dde8fc922106c6528fcb6a06e3bac454c4d196880796e778f4"
+    },
+    "selection_binding": {
+      "byte_sha256": "00e56d2e64941086ee1d1c663890cb95d3daa4dcce1e729ef972879376f1489b",
+      "content_sha256": "82bc754dbf46643862504916f4c273922e9ac3cefc45bfa28e5eb4a15dfdc5b5"
+    },
+    "threshold": 0.61,
+    "threshold_integer": 61
+  },
+  "content_sha256": "e822f5481bbcc4e3bdf0c2b09d5b9c613e5ae547fa3f4721172db4ee6facfbd8",
+  "schema_version": 1
+}

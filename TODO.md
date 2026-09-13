@@ -842,3 +842,80 @@ frozen 0.61 candidate to `unknown_test_v2` is prepared and frozen, but has
 - **Next gate:** review of this preparation, then a separately authorized
   turn to run `eval_unknown_test_v2.py --evaluate` for the one, single
   permitted unknown_test_v2 evaluation -- not run in this turn.
+
+## Gate v2: Phase 5D2/5D3 -- unknown_test_v2 consumed exactly once; independently VALIDATED
+
+`unknown_test_v2` has now been evaluated -- **exactly once, as the frozen
+`single_use_rule` requires** -- via `eval_unknown_test_v2.py --evaluate`
+against the frozen evaluation contract
+(`content_sha256: 49bb0c4ee5749513b62e7bdfa7f50a7619fe16e2afc75a47d60bda25b4bdb10c`)
+at commit `ecd9cd4d23e4e55519a94247aff689ae868d1c8f`. **unknown_test_v2 must
+never be evaluated again** -- the attempt marker below makes any further
+`--evaluate` invocation refuse by construction.
+
+Frozen evidence artifacts:
+
+- `data/unknown_test_v2/unknown_test_v2_evaluation_attempt.json` (the
+  one-shot attempt marker) -- byte sha256
+  `fd790252ffbe4b20a6f52c26fb902e0cd7fbfedbd88b5613da048992b1a062bf`,
+  2,645 bytes.
+- `data/unknown_test_v2/unknown_test_v2_eval.json` (the result) -- byte
+  sha256 `b695e44ecd902b3763b6f202695e0495308a9f10d43400c47a46253c6029447e`,
+  718,760 bytes, `content_sha256
+  e7c1d565c7ecd0999e00c65cc238296cf78525fc8efd00da8af91b3a0dbf7616`.
+  Re-loaded and fully re-verified (including the marker's actual byte hash
+  against the value the result itself records) via
+  `gate_v2_evaluation_contract.load_and_verify_eval_file` before this
+  record was written.
+
+**Result: `validation_status: validation_passed`.** All three precommitted
+criteria passed. The frozen threshold, raw unrounded pre-geo max cosine
+**< 0.61** (equality at exactly 0.61 is accepted, never rejected), was
+**not adjusted** after seeing this result and never will be for this
+candidate.
+
+- **Known_holdout baseline** (n=390, no gate): top-1 **238/390 = 61.03%**
+  (`0.6102564102564103`), top-3 **307/390 = 78.72%**
+  (`0.7871794871794872`).
+- **After the gate:** accepted **256**, rejected **134**, coverage
+  **256/390 = 65.64%** (`0.6564102564102564`) -- clears the 65% floor.
+- **Accepted accuracy:** top-1 **79.6875%**, top-3 **91.40625%**.
+- **Top-1 improvement over baseline: +18.661858974359 percentage points**
+  -- comfortably clears the 5.0pp usefulness floor.
+- **Rejection behavior:** correct-prediction rejection rate
+  **34/238 = 14.29%** (`0.14285714285714285`) vs. incorrect-prediction
+  rejection rate **100/152 = 65.79%** (`0.6578947368421053`) -- incorrect
+  predictions rejected **4.605263157894737x** more often than correct ones
+  (health check passes; this only confirms the gate is not operating
+  backwards, it is not itself a performance floor).
+- **Diagnostic-only OOD false-acceptance rate at 0.61** (never used in any
+  criterion): `out_of_scope_ant` **0.51** (n=200), `non_ant_insect`
+  **0.11** (n=100), `unrelated` **0.19** (n=100).
+- **Diagnostic-only known-vs-OOD AUC:** `out_of_scope_ant`
+  **0.6516410256410257**, `non_ant_insect` **0.8430512820512821**,
+  `unrelated` **0.8107692307692308**.
+- Full per-species breakdown (65 species, **n=6 rows each** -- descriptive
+  at this sample size, not a stable population-level per-species estimate)
+  is preserved verbatim in `unknown_test_v2_eval.json`'s
+  `content.validation.metrics.per_species_known`.
+
+**Interpretation, stated explicitly:**
+
+- OOD metrics above are **diagnostic only** and did not affect, and cannot
+  affect, `validation_status` -- the criteria read only known_holdout
+  accuracy/coverage, exactly as the frozen contract specifies.
+- The permissive **51% out_of_scope_ant false-acceptance rate**
+  reconfirms, on independent data, the project's existing framing: this
+  remains a **selective confidence gate, not an unknown-species
+  detector**.
+- `calibration_v2_selection.json` **remains immutable**, still recording
+  `status: candidate_selected` from Phase 5C2 -- this independent
+  validation is represented entirely by the separate
+  `unknown_test_v2_eval.json` evidence artifact above, never by editing
+  the selection artifact.
+- **Gate v2 is independently validated but NOT YET DEPLOYED.** No v2
+  `inference_policy.json` has been generated; the live serving
+  `inference_policy.json` and all serving artifacts are untouched.
+- **Next gate:** a separately authorized decision/turn to actually
+  generate and review a v2 `inference_policy.json` (or defer/decline) --
+  not done in this turn.
