@@ -1,0 +1,154 @@
+{
+  "content": {
+    "approved_outputs": {
+      "calibration_v2_scores": "data/calibration_v2/calibration_v2_scores.json",
+      "calibration_v2_selection": "data/calibration_v2/calibration_v2_selection.json"
+    },
+    "bindings": {
+      "backbone_onnx": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/backbone.onnx",
+        "sha256": "fc22d26ae5c73d20613dafcef02e75291c8779ec8a1296ebc9a72f0e7d7f826b"
+      },
+      "calibration_v2_csv": {
+        "path": "data/calibration_v2/calibration_v2.csv",
+        "sha256": "8201200f4c5d7c869a71c3c927ccee0dfb83d6b91a595241dd49996deee1d46e"
+      },
+      "calibration_v2_json": {
+        "path": "data/calibration_v2/calibration_v2.json",
+        "sha256": "d7d96d321c7ebb4a5b3cd55ded2f2bb72628b6ec38b82ef135c5be088369ed9e"
+      },
+      "candidate_run_manifest": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/run_manifest.json",
+        "sha256": "6f8bfe3141a9870c37f6810da6b9a5459cf701242f9cbb3d32a8b01c2f0f265b"
+      },
+      "parity_report": {
+        "applicability": "65-class candidate (northeast_v1_b4_dev_v2); pinned development-split 260-image sample only (4/species x 65, val split, seed 42) -- not benchmark, not calibration, not a population-level equivalence bound. Satisfies the pre-calibration ONNX-CPU parity prerequisite; a new parity run is not required before scoring calibration_v2.",
+        "path": "training/reports/northeast_v1_b4_dev_v2_parity.json",
+        "sha256": "bec08235a48e9583f2b40556c9c8d860c41904729bcded9d6f91c37716c8297e"
+      },
+      "prototypes_npy": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/prototypes.npy",
+        "sha256": "0e52a7f350996a48f4129e1924e9b0af79517e4c3273dd9ecc7e851121d43825"
+      },
+      "taxonomy_json": {
+        "path": "training/artifacts/northeast_v1_b4_dev_v2/taxonomy.json",
+        "sha256": "c8672287d59b5b9d3fb9aec5fd85a008ad30441f2ce3159713a3752b37a04767"
+      },
+      "unknown_test_v2_csv": {
+        "path": "data/unknown_test_v2/unknown_test_v2.csv",
+        "sha256": "d706cb6dbda7a672594fc425ce5c8f8f0f6f868662c3d52c5f9c88083163b09f"
+      },
+      "unknown_test_v2_json": {
+        "path": "data/unknown_test_v2/unknown_test_v2.json",
+        "sha256": "eea1cbb3118dfc05f42f477ef58d6ccbc5458df1e8a5496845a146d161a89e6d"
+      }
+    },
+    "calibration_v2_row_identity_order_sha256": "18310f852897e2bc52479d0ce6964d0b3332fe536b2b683b723acb56dd28880c",
+    "closed_sources": [
+      "northeast_final_test_v1"
+    ],
+    "dataset_quotas": {
+      "calibration_v2": {
+        "known_holdout": 650,
+        "known_holdout_per_species": 10,
+        "non_ant_insect": 150,
+        "out_of_scope_ant": 300,
+        "species_count": 65,
+        "total": 1250,
+        "unrelated": 150
+      },
+      "unknown_test_v2": {
+        "known_holdout": 390,
+        "known_holdout_per_species": 6,
+        "non_ant_insect": 100,
+        "out_of_scope_ant": 200,
+        "purpose": "single-use independent test; bound here for future identity verification only -- no unknown_test_v2 image may be opened until after this contract is frozen and a candidate threshold is selected and reviewed.",
+        "species_count": 65,
+        "total": 790,
+        "unrelated": 100
+      }
+    },
+    "decision_shape": {
+      "comparison": "strict_less_than",
+      "equal_threshold_action": "normal_results",
+      "per_species_or_per_class": false,
+      "scope": "single_global_threshold"
+    },
+    "gate_framing": "selective_confidence_gate_not_unknown_species_detector",
+    "grid": {
+      "description": "threshold = integer / 100.0 for integer in -100..100 inclusive; generated from range(), never by repeated float addition.",
+      "divisor": 100,
+      "n_points": 201,
+      "start": -100,
+      "step": 1,
+      "stop": 100
+    },
+    "implementation_sources": {
+      "api_inference": {
+        "path": "api/inference.py",
+        "sha256": "73bb6e19c4b743e70021c66025fda054e33b48da24b2e9a36e940bfb61f3d8cf"
+      },
+      "gate_v2_contract": {
+        "path": "training/gate_v2_contract.py",
+        "sha256": "1ef20d0d292065f027dd2c0b941445c24eb804a5b67f57eb579a577d091f836f"
+      },
+      "score_calibration_v2": {
+        "path": "training/score_calibration_v2.py",
+        "sha256": "1ae110356984d29b528621edc95c1243d6499861ae8df8b8376c27e229dde6b8"
+      },
+      "select_gate_v2_threshold": {
+        "path": "training/select_gate_v2_threshold.py",
+        "sha256": "ae76d6fdeaffb7795ab59d380b059fbc41ee1ad3d312be59b4db858db3ac8b60"
+      }
+    },
+    "is_v1_reconstruction": false,
+    "low_quality_known": "absent_from_gate_v2_categories_and_not_used",
+    "notes": "New deterministic v2 contract. v1 recorded the selected 0.60 result (data/calibration_v1/calibration_v1.json:frozen_candidate_abstention_threshold) but not a reproducible selection algorithm -- eval_unknown_test.py's own docstring states 0.60 was a hardcoded constant, added to machine_readable_rule after the fact purely for reproduction of the value, not as a record of how it was chosen. This contract is not an attempt to reconstruct that undocumented process; it is a new, fully deterministic algorithm for v2.",
+    "policy_name": "gate_v2_threshold_selection_v1",
+    "runtime": {
+      "geo_reranking": "never_applied",
+      "inference_policy_json": "never_consulted_by_scorer_or_selector",
+      "provider_policy": {
+        "exclusive": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ]
+      },
+      "rounding": "none_before_storage",
+      "signal": "raw_pre_geo_max_cosine"
+    },
+    "selection": {
+      "coverage_floor_denominator": 100,
+      "coverage_floor_numerator": 65,
+      "diagnostic_only_categories": [
+        "out_of_scope_ant",
+        "non_ant_insect",
+        "unrelated"
+      ],
+      "feasibility_rule": "100 * accepted_known >= 65 * total_known (exact integer comparison)",
+      "no_useful_gate_found_action": "emit no candidate threshold or policy; unknown_test_v2 evaluation remains prohibited",
+      "no_useful_gate_found_status": "no_useful_gate_found",
+      "ood_never_affects_selection": true,
+      "primary_objective": "maximize_accepted_known_top1_accuracy",
+      "tie_break_order": [
+        "higher_accepted_coverage",
+        "lower_threshold"
+      ],
+      "usefulness_floor_denominator": 100,
+      "usefulness_floor_numerator": 5,
+      "usefulness_rule": "accepted_accuracy must improve on baseline_accuracy by at least 5/100, checked by exact integer cross multiplication; equality at exactly 5.0 percentage points passes (>=, not >)"
+    },
+    "single_use_rule": {
+      "authorization_required_before_evaluation": "a reviewed, frozen candidate threshold from this contract's selection step",
+      "retuning_after_unknown_test_v2": "forbidden",
+      "unknown_test_v2": "exactly_one_evaluation_after_freeze_and_review"
+    }
+  },
+  "content_sha256": "991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77",
+  "generation": {
+    "generator": "training/freeze_gate_v2_contract.py",
+    "note": "generation metadata is NOT part of content and NOT covered by content_sha256"
+  },
+  "schema_version": 1,
+  "status": "frozen_before_calibration_scoring"
+}

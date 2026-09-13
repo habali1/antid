@@ -619,3 +619,65 @@ bytes preserved alongside those reports:
 **All of the above must be fixed before any future parity run.** A future
 run must write versioned `v2` reports (e.g. `parity_report_v2.json`) rather
 than overwrite the frozen `v1` reports listed above.
+
+## Gate v2: status as of Phase 5C1
+
+- **Phase 5B2 datasets are frozen and committed**: `data/calibration_v2/`
+  (1,250 rows) and `data/unknown_test_v2/` (790 rows), manifest hashes
+  bound in `training/gate_v2_selection_contract.json`.
+- **Phase 5C threshold-selection contract is approved and prepared, not yet
+  executed.** `docs/plans/gate-v2-threshold-selection.md` +
+  `training/gate_v2_selection_contract.json`
+  (`content_sha256: 991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77`,
+  `status: frozen_before_calibration_scoring`) define a new, fully
+  deterministic v2 algorithm -- not a reconstruction of v1's undocumented
+  0.60 selection. The contract additionally binds canonical-LF hashes of
+  its own four implementation sources (`api/inference.py`,
+  `training/gate_v2_contract.py`, `training/score_calibration_v2.py`,
+  `training/select_gate_v2_threshold.py`), an explicit `approved_outputs`
+  destination pair, and a canonical identity-order hash over
+  calibration_v2.csv's `(photo_id, observation_uuid, sha256)` row sequence
+  (computed from CSV metadata only, never an image) that the scorer and the
+  shared validator both recompute from score records -- so a reordered,
+  missing, or substituted row is rejected even after a fresh
+  content_sha256 recompute. `validate_contract` now checks every frozen
+  semantic field (policy_name, dataset_quotas, binding paths,
+  approved_outputs, runtime, decision_shape, selection policy,
+  single_use_rule, closed_sources, low_quality_known, gate_framing) for
+  EXACT equality against constants defined once in `gate_v2_contract.py`
+  (and consumed, not duplicated, by `freeze_gate_v2_contract.py`) and
+  rejects unexpected top-level content keys -- an internally-consistent but
+  altered contract (e.g. a smaller quota, a redirected output path) is
+  rejected, not just a rehashed one. So real execution verifies code
+  identity, output-path safety, and full semantic equality to the one
+  approved contract before doing any work.
+  `training/score_calibration_v2.py` (ONNX-CPU scorer, --artifacts-dir
+  verified by byte hash),
+  `training/select_gate_v2_threshold.py` (image-free selector, writes
+  its output for both `candidate_selected` and `no_useful_gate_found`),
+  and `training/gate_v2_contract.py` (shared schema/arithmetic/score-file
+  validator, now also checking runtime/provenance shape, exactly-65/exactly-10
+  known_holdout distribution, top-3 index/slug distinctness and agreement,
+  non-increasing similarities, a bounded top-level contract key set
+  including a type/shape-checked `generation` block, a required
+  `dataset_quotas.unknown_test_v2.purpose`, and totality over malformed
+  score JSON -- unhashable/wrong-typed `category`, identity fields, or
+  `top3_indices` entries produce validation problems, never an incidental
+  KeyError/TypeError) are prepared and covered by
+  `training/test_gate_v2_calibration.py` (165 synthetic/offline tests,
+  including an end-to-end run against a from-scratch tiny ONNX model) --
+  no code has been run against a real calibration_v2 image yet.
+- **No calibration_v2 scores exist.** `data/calibration_v2/calibration_v2_scores.json`
+  and `data/calibration_v2/calibration_v2_selection.json` do not exist.
+- **unknown_test_v2 remains completely untouched by inference** -- no image
+  from it has ever been opened.
+- **The 65-species candidate's parity prerequisite is satisfied** by the
+  already-committed `training/reports/northeast_v1_b4_dev_v2_parity.json`
+  (0/260 top-1 and top-3-set disagreements, 5/5 ONNX repeats bit-identical,
+  100% CPUExecutionProvider node placement) -- no new parity run is required
+  before scoring calibration_v2.
+- **Next gate: code review of the Phase 5C1 preparation (this section),
+  then a separately authorized execution turn** that actually runs
+  `score_calibration_v2.py --score` against real calibration_v2 images and
+  `select_gate_v2_threshold.py` against the resulting scores. No commit of
+  that real output happens before its own review.
