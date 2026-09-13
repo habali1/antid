@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -55,6 +56,29 @@ def _fake_passing_evaluation() -> dict:
             },
         },
     }
+
+
+def run_git(repo: Path, *args, check: bool = True) -> subprocess.CompletedProcess:
+    """generate_inference_policy_v2.py's --check now performs REAL git
+    operations (clean-tree checks, HEAD resolution, ancestry, and reading
+    a file's content at a specific past commit via `git show`) -- fixtures
+    in this file build an actual small git repository rather than mocking
+    gate_v2_contract.require_clean_tracked_tree/get_git_head away."""
+    result = subprocess.run(["git", *args], cwd=str(repo), capture_output=True, text=True)
+    if check and result.returncode != 0:
+        raise RuntimeError(f"git {' '.join(args)} failed in {repo}: {result.stdout}{result.stderr}")
+    return result
+
+
+def git_commit_all(repo: Path, message: str) -> str:
+    """Stages every change (new/modified/deleted, tracked or not) and
+    commits it, tolerating a no-op (nothing to commit) once a first commit
+    already exists. Returns the resulting HEAD commit hash."""
+    run_git(repo, "add", "-A")
+    result = run_git(repo, "commit", "-q", "-m", message, check=False)
+    if result.returncode != 0 and "nothing to commit" not in (result.stdout + result.stderr):
+        raise RuntimeError(f"git commit failed in {repo}: {result.stdout}{result.stderr}")
+    return run_git(repo, "rev-parse", "HEAD").stdout.strip()
 
 
 def patch_passing_evaluation(testcase: unittest.TestCase) -> None:
@@ -105,12 +129,14 @@ def build_tiny_policy_v2_fixture(testcase: unittest.TestCase, tmp: Path, *, run_
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(REPO / rel, dest)
 
-    tree_patcher = mock.patch.object(gc, "require_clean_tracked_tree")
-    head_patcher = mock.patch.object(gc, "get_git_head", return_value="a" * 40)
-    tree_patcher.start()
-    head_patcher.start()
-    testcase.addCleanup(tree_patcher.stop)
-    testcase.addCleanup(head_patcher.stop)
+    # Real git repo, real commits -- ev2.run_evaluate() below (when
+    # run_evaluate=True) itself requires a clean tracked tree and a real
+    # HEAD (via ec.require_clean_tracked_tree/get_git_head, thin wrappers
+    # over the gc. versions), so this must exist BEFORE it runs.
+    run_git(repo, "init", "-q")
+    run_git(repo, "config", "user.email", "fixture@example.com")
+    run_git(repo, "config", "user.name", "Fixture")
+    git_commit_all(repo, "fixture initial state")
 
     patch_passing_evaluation(testcase)
 
@@ -175,6 +201,13 @@ def build_tiny_policy_v2_fixture(testcase: unittest.TestCase, tmp: Path, *, run_
     fx["parity_path"] = parity_path
     fx["parity_byte_hash"] = parity_byte_hash
     fx["candidate_hashes"] = candidate_hashes
+
+    # Commit everything written since the initial commit (eval output,
+    # attempt marker, parity report, etc.) -- the tree must be clean again
+    # before any test calls g2.cmd_write() (which requires it), and THIS
+    # commit becomes the "generation commit" a written policy will record
+    # in content.provenance.git_head.
+    fx["generation_commit"] = git_commit_all(repo, "fixture: evaluation + parity evidence")
 
     if run_evaluate:
         # Everything a successful preflight needs now exists on disk. Run
@@ -525,14 +558,19 @@ class TestPublishAndModes(unittest.TestCase):
         result = g2.cmd_write(args)
         stored = json.loads(result["dest"].read_text(encoding="utf-8"))
         provenance = stored["content"]["provenance"]
-        self.assertEqual(provenance["git_head"], "a" * 40)
+        self.assertEqual(provenance["git_head"], self.fx["generation_commit"])
         self.assertEqual(set(provenance["source_hashes"]), set(g2.PROVENANCE_SOURCE_PATHS))
         self.assertIn("diagnostic", provenance["note"].lower())
         self.assertIn("api/inference.py", provenance["note"])
 
     def test_write_refuses_when_schema_copies_diverge(self):
+        # training/policy_schema.py is a TRACKED provenance source, so the
+        # mutation must be committed -- otherwise cmd_write's clean-tree
+        # gate (which runs before the schema-identity check) would trip
+        # first and this test would never reach what it's testing.
         training_copy = self.fx["repo"] / "training/policy_schema.py"
         training_copy.write_text(training_copy.read_text(encoding="utf-8") + "\n# drift\n", encoding="utf-8")
+        git_commit_all(self.fx["repo"], "diverge training/policy_schema.py")
         with self.assertRaises(g2.GeneratorV2Error) as ctx:
             g2.cmd_write(_g2_args(self.fx))
         self.assertIn("byte-identical", str(ctx.exception))
@@ -553,6 +591,7 @@ class TestPublishAndModes(unittest.TestCase):
         # canonical-LF hashes are still equal -- confirms this is genuinely
         # a line-ending-only divergence, not a content divergence.
         self.assertEqual(gc.canonical_lf_sha256_file(training_copy), gc.canonical_lf_sha256_file(api_copy))
+        git_commit_all(self.fx["repo"], "CRLF-only divergence")
         with self.assertRaises(g2.GeneratorV2Error) as ctx:
             g2.cmd_write(_g2_args(self.fx))
         self.assertIn("byte-identical", str(ctx.exception))
@@ -656,6 +695,109 @@ class TestPublishAndModes(unittest.TestCase):
         with self.assertRaises(g2.GeneratorV2Error) as ctx:
             g2.cmd_check(args)
         self.assertIn("top-level key set", str(ctx.exception))
+
+    # -------------- lifecycle correction: git_head is a generation commit,
+    # not a "must equal current HEAD" requirement ---------------------------
+    def test_check_passes_after_an_unrelated_later_commit(self):
+        args = _g2_args(self.fx)
+        result = g2.cmd_write(args)
+        generation_commit = self.fx["generation_commit"]
+
+        unrelated = self.fx["repo"] / "UNRELATED.txt"
+        unrelated.write_text("an unrelated change, nothing to do with provenance", encoding="utf-8")
+        new_head = git_commit_all(self.fx["repo"], "unrelated commit B")
+        self.assertNotEqual(new_head, generation_commit)
+
+        checked = g2.cmd_check(args)
+        self.assertEqual(checked["content_sha256"], result["content_sha256"])
+        # the policy's OWN recorded git_head is untouched -- still commit A.
+        stored = json.loads(result["dest"].read_text(encoding="utf-8"))
+        self.assertEqual(stored["content"]["provenance"]["git_head"], generation_commit)
+
+    def test_check_fails_when_a_provenance_bound_source_changes_afterward(self):
+        args = _g2_args(self.fx)
+        g2.cmd_write(args)
+
+        training_data_copy = self.fx["repo"] / "training/data.py"
+        training_data_copy.write_text(
+            training_data_copy.read_text(encoding="utf-8") + "\n# changed after generation\n", encoding="utf-8")
+        git_commit_all(self.fx["repo"], "change a provenance-bound source")
+
+        with self.assertRaises(g2.GeneratorV2Error) as ctx:
+            g2.cmd_check(args)
+        self.assertIn("has changed since commit", str(ctx.exception))
+
+    def test_check_fails_when_recorded_git_head_is_malformed(self):
+        args = _g2_args(self.fx)
+        result = g2.cmd_write(args)
+        dest = result["dest"]
+        stored = json.loads(dest.read_text(encoding="utf-8"))
+        stored["content"] = json.loads(json.dumps(stored["content"]))
+        stored["content"]["provenance"]["git_head"] = "not-a-commit-hash"
+        stored["content_sha256"] = schema.compute_content_sha256(2, stored["content"])
+        dest.write_text(json.dumps(stored, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        with self.assertRaises(g2.GeneratorV2Error) as ctx:
+            g2.cmd_check(args)
+        self.assertIn("40-character lowercase hex", str(ctx.exception))
+
+    def test_check_fails_when_recorded_git_head_is_well_formed_but_nonexistent(self):
+        args = _g2_args(self.fx)
+        result = g2.cmd_write(args)
+        dest = result["dest"]
+        stored = json.loads(dest.read_text(encoding="utf-8"))
+        stored["content"] = json.loads(json.dumps(stored["content"]))
+        stored["content"]["provenance"]["git_head"] = "f" * 40
+        stored["content_sha256"] = schema.compute_content_sha256(2, stored["content"])
+        dest.write_text(json.dumps(stored, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        with self.assertRaises(g2.GeneratorV2Error) as ctx:
+            g2.cmd_check(args)
+        self.assertIn("does not resolve to a commit object", str(ctx.exception))
+
+    def test_check_fails_when_recorded_git_head_resolves_but_source_hashes_disagree(self):
+        args = _g2_args(self.fx)
+        result = g2.cmd_write(args)
+        dest = result["dest"]
+        stored = json.loads(dest.read_text(encoding="utf-8"))
+        # git_head remains the REAL, valid generation commit -- only one
+        # recorded source hash is corrupted to a different well-formed value.
+        stored["content"] = json.loads(json.dumps(stored["content"]))
+        stored["content"]["provenance"]["source_hashes"]["training_data"] = "0" * 64
+        stored["content_sha256"] = schema.compute_content_sha256(2, stored["content"])
+        dest.write_text(json.dumps(stored, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        with self.assertRaises(g2.GeneratorV2Error) as ctx:
+            g2.cmd_check(args)
+        self.assertIn("does not match the canonical-LF hash", str(ctx.exception))
+
+    def test_check_mutation_followed_by_content_sha256_recomputation_still_fails(self):
+        # A broader restatement of the correction-3 mutation tests above,
+        # specifically pairing a content mutation with a freshly
+        # recomputed content_sha256 -- content_sha256 alone must never be
+        # sufficient to pass --check.
+        args = _g2_args(self.fx)
+        result = g2.cmd_write(args)
+        dest = result["dest"]
+        stored = json.loads(dest.read_text(encoding="utf-8"))
+        stored["content"] = json.loads(json.dumps(stored["content"]))
+        stored["content"]["gate_framing"] = "a plausible-looking but tampered framing statement"
+        stored["content_sha256"] = schema.compute_content_sha256(2, stored["content"])
+        dest.write_text(json.dumps(stored, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        with self.assertRaises(g2.GeneratorV2Error) as ctx:
+            g2.cmd_check(args)
+        self.assertIn("does not exactly match", str(ctx.exception))
+
+    def test_check_writes_zero_bytes(self):
+        args = _g2_args(self.fx)
+        result = g2.cmd_write(args)
+        dest = result["dest"]
+        before_bytes = dest.read_bytes()
+        before_entries = sorted(p.name for p in dest.parent.iterdir())
+
+        g2.cmd_check(args)
+
+        after_bytes = dest.read_bytes()
+        after_entries = sorted(p.name for p in dest.parent.iterdir())
+        self.assertEqual(before_bytes, after_bytes)
+        self.assertEqual(before_entries, after_entries)
 
 
 if __name__ == "__main__":

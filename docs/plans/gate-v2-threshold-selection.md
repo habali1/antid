@@ -308,3 +308,56 @@ synthetic fixtures in this phase's test suite, never against real
 evidence. Promotion (an actual `--write` run, review of its output, and
 atomic publication to the live serving directory) is a separate,
 not-yet-started phase.
+
+## Phase 5E1 correction -- `--check`'s generation commit is immutable, not "must equal current HEAD"
+
+A lifecycle blocker was found after Phase 5E2 generated a real candidate
+policy: the original `cmd_check()` reran preflight using the repo's
+**current** git HEAD and rebuilt `content.provenance.git_head` from it, then
+compared that rebuilt value against the policy's own **recorded**
+`git_head`. Any later commit -- even one wholly unrelated to Gate v2 --
+moves current HEAD forward, so `--check` would reject an otherwise-unchanged
+policy for no reason other than time having passed. That made durable
+freezing/deployment fundamentally incompatible with later re-verification.
+
+The fix: `content.provenance.git_head` is now treated as the **immutable
+generation commit**, never required to equal current HEAD.
+`run_preflight()` gained an internal `git_head_override` parameter (defaults
+to current HEAD, used unchanged by `--preflight`/`--write`). `cmd_check()`
+now, before rebuilding anything, calls
+`validate_recorded_generation_commit()` against the policy's own recorded
+`content.provenance.git_head` and `source_hashes`, fully and fail-closed:
+
+- strict 40-character lowercase hex commit hash
+- resolves to an actual commit object in this repository (`git cat-file -t`)
+- is an ancestor of the current HEAD (`git merge-base --is-ancestor`) --
+  never a future or unrelated-branch commit
+- every recorded provenance source hash matches the canonical-LF hash of
+  that file **as it existed at that commit** (read via `git show
+  <commit>:<path>`, never the working tree) -- catches a policy whose
+  provenance was rehashed to internally-consistent-looking values that
+  don't correspond to real git history
+- every **current working-tree** provenance source ALSO matches the
+  recorded hash -- an unrelated later commit is fine, but any change to a
+  provenance-bound implementation source (including this generator itself)
+  still makes the policy stale
+
+Only once that validated commit is established does `cmd_check()` rerun the
+complete current preflight with `git_head_override` set to it, so the
+rebuilt policy's `content.provenance.git_head` matches the recorded one
+even though real current HEAD has moved on. Every other comparison
+(schema, content, `content_sha256`, evidence, artifact hashes, rule, parity
+facts, provider policy, generation envelope) is retained exactly as before.
+`api/inference_policy.py`'s loader is untouched -- provenance, including
+this git verification, stays diagnostic-only and is never a serving-time
+requirement; the API never invokes git.
+
+Because `generate_inference_policy_v2.py` is itself one of the six
+provenance-bound sources, **this very code change makes the Phase 5E2
+candidate policy's recorded provenance stale** -- `--check` against it will
+now correctly report that `training/generate_inference_policy_v2.py` has
+changed since its generation commit. That candidate policy
+(`training/artifacts/northeast_v1_b4_dev_v2/inference_policy.json`,
+byte sha256 `9e9d0ea4447555170bec40902fd2f19582d44102c8047d516bedb969d3e93171`)
+was deliberately left untouched by this correction; regenerating it under
+the corrected, committed code is a separately authorized, one-write phase.

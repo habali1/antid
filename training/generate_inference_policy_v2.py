@@ -80,11 +80,19 @@ Three modes:
                overwrite an existing file there. A final readback + schema
                + API-loader check against the real published file follows.
   --check      re-derives authority for a previously-written candidate
-               policy: reruns the complete read-only preflight, rebuilds
-               the expected deterministic policy content from it, and
-               requires the stored schema version/content/content_sha256
-               to match EXACTLY (only `generation` may differ) before
-               verifying through the API loader. Writes nothing.
+               policy: fully validates the policy's OWN recorded
+               content.provenance.git_head as the immutable generation
+               commit (format, existence, ancestry-of-current-HEAD, and
+               that every provenance source matches both that commit's
+               history AND the current working tree -- so an unrelated
+               later commit never stales out an unchanged policy, but any
+               change to a provenance-bound source, including this
+               generator itself, does), then reruns the complete read-only
+               preflight using that validated commit, rebuilds the
+               expected deterministic policy content from it, and requires
+               the stored schema version/content/content_sha256 to match
+               EXACTLY (only `generation` may differ) before verifying
+               through the API loader. Writes nothing.
 
 --artifacts-dir is always required and is refused outright if it resolves
 to the live training/artifacts root.
@@ -94,6 +102,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
+import subprocess
 import sys
 import tempfile
 from datetime import datetime, timezone
@@ -186,6 +196,103 @@ def compute_source_provenance(repo: Path) -> dict[str, str]:
     return hashes
 
 
+GIT_COMMIT_HEX_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
+def _git_object_type(repo: Path, ref: str) -> str | None:
+    """Returns the object type git reports for `ref` (e.g. "commit"), or
+    None if `ref` doesn't resolve to anything (or git itself fails) --
+    never raises."""
+    try:
+        result = subprocess.run(["git", "cat-file", "-t", ref], cwd=str(repo),
+                                capture_output=True, text=True)
+    except OSError:
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip()
+
+
+def _git_is_ancestor(repo: Path, ancestor: str, descendant: str) -> bool:
+    try:
+        result = subprocess.run(["git", "merge-base", "--is-ancestor", ancestor, descendant],
+                                cwd=str(repo), capture_output=True)
+    except OSError:
+        return False
+    return result.returncode == 0
+
+
+def _git_blob_canonical_lf_sha256(repo: Path, commit: str, rel_path: str) -> str:
+    """Reads `rel_path` as it existed AT `commit` (via `git show`, never the
+    working tree) and returns its canonical-LF sha256. Fails closed with a
+    controlled GeneratorV2Error -- never an uncaught CalledProcessError --
+    if git can't produce that blob (e.g. the path didn't exist at that
+    commit)."""
+    try:
+        result = subprocess.run(["git", "show", f"{commit}:{rel_path}"], cwd=str(repo),
+                                capture_output=True)
+    except OSError as exc:
+        _fail(f"could not read {rel_path} at commit {commit}: {exc}")
+    if result.returncode != 0:
+        _fail(f"git show {commit}:{rel_path} failed: "
+              f"{result.stderr.decode('utf-8', errors='replace').strip()}")
+    return gc.sha256_bytes(gc.canonical_lf_bytes(result.stdout))
+
+
+def validate_recorded_generation_commit(repo: Path, recorded_git_head: Any,
+                                        recorded_source_hashes: Any) -> None:
+    """Fail-closed validation of a policy's content.provenance.git_head as
+    the IMMUTABLE generation commit -- deliberately never required to equal
+    the CURRENT HEAD (that would make durable freezing/deployment
+    incompatible with later verification: any later, unrelated commit
+    would falsely stale-out an unchanged policy). What IS required:
+      - strict 40-character lowercase hex commit hash
+      - resolves to an actual commit object in this repository
+      - is an ancestor of the current HEAD (never a future/unrelated commit)
+      - every recorded provenance source hash matches the canonical-LF hash
+        of that file AS IT EXISTED AT THAT COMMIT (read via `git show`,
+        never the working tree) -- catches a policy whose provenance was
+        rehashed to internally-consistent-looking values that don't
+        actually correspond to real git history
+      - every CURRENT working-tree provenance source ALSO matches the
+        recorded hash -- an unrelated later commit is fine, but ANY change
+        to a provenance-bound implementation source (including this
+        generator itself) makes the policy stale
+    Every failure is a controlled GeneratorV2Error, never a traceback."""
+    if not isinstance(recorded_git_head, str) or not GIT_COMMIT_HEX_RE.match(recorded_git_head):
+        _fail(f"content.provenance.git_head is not a strict 40-character lowercase hex commit "
+              f"hash: {recorded_git_head!r}")
+    obj_type = _git_object_type(repo, recorded_git_head)
+    if obj_type != "commit":
+        _fail(f"content.provenance.git_head {recorded_git_head!r} does not resolve to a commit "
+              f"object in this repository (git cat-file -t reported {obj_type!r})")
+    current_head = gc.get_git_head(repo)
+    if not _git_is_ancestor(repo, recorded_git_head, current_head):
+        _fail(f"content.provenance.git_head {recorded_git_head!r} is not an ancestor of the "
+              f"current HEAD {current_head!r}")
+    if not isinstance(recorded_source_hashes, dict):
+        _fail("content.provenance.source_hashes is not a JSON object")
+    for name, rel_path in PROVENANCE_SOURCE_PATHS.items():
+        recorded_hash = recorded_source_hashes.get(name)
+        if not gc.is_valid_sha256_hex(recorded_hash):
+            _fail(f"content.provenance.source_hashes[{name!r}] is not a 64-char lowercase hex "
+                  f"string: {recorded_hash!r}")
+        commit_hash = _git_blob_canonical_lf_sha256(repo, recorded_git_head, rel_path)
+        if commit_hash != recorded_hash:
+            _fail(f"content.provenance.source_hashes[{name!r}] {recorded_hash!r} does not match "
+                  f"the canonical-LF hash {commit_hash!r} of {rel_path} as it existed at commit "
+                  f"{recorded_git_head} -- the recorded provenance is internally inconsistent "
+                  f"with git history")
+        working_tree_path = Path(repo) / rel_path
+        if not working_tree_path.exists():
+            _fail(f"provenance source file missing from the working tree: {working_tree_path}")
+        working_tree_hash = gc.canonical_lf_sha256_file(working_tree_path)
+        if working_tree_hash != recorded_hash:
+            _fail(f"{rel_path} has changed since commit {recorded_git_head} (working-tree "
+                  f"canonical-LF hash {working_tree_hash!r} != recorded {recorded_hash!r}) -- "
+                  f"this policy's provenance is stale and it must be regenerated")
+
+
 def _require_schema_copies_byte_identical(repo: Path) -> None:
     """The required synchronization gate: training/policy_schema.py and
     api/policy_schema.py must be byte-for-byte IDENTICAL, checked via raw
@@ -206,9 +313,17 @@ def _require_schema_copies_byte_identical(repo: Path) -> None:
 
 
 # --------------------------------------------------------------- preflight
-def run_preflight(args) -> dict[str, Any]:
+def run_preflight(args, *, git_head_override: str | None = None) -> dict[str, Any]:
     """Validates every piece of Gate v2 evidence, the candidate artifacts,
-    parity, preprocessing, and the CPU-only ONNX session. Writes nothing."""
+    parity, preprocessing, and the CPU-only ONNX session. Writes nothing.
+
+    `git_head_override`: when None (the default -- used by --preflight and
+    --write), `git_head` in the returned dict is the CURRENT repo HEAD, as
+    always. --check passes its OWN validated `content.provenance.git_head`
+    here instead, so the rebuilt policy's provenance.git_head matches the
+    IMMUTABLE generation commit rather than whatever HEAD has since moved
+    to -- every other piece of evidence below is still read fresh from the
+    CURRENT working tree, exactly as for --preflight/--write."""
     artifacts_dir = require_explicit_non_live_artifacts_dir(args.repo, args.artifacts_dir)
     if not artifacts_dir.is_dir():
         _fail(f"--artifacts-dir does not exist or is not a directory: {artifacts_dir}")
@@ -418,7 +533,7 @@ def run_preflight(args) -> dict[str, Any]:
     # copies must be byte-identical wherever this runs -- checked via raw
     # bytes (see _require_schema_copies_byte_identical), not the
     # canonical-LF hash used for provenance recording below.
-    git_head = gc.get_git_head(args.repo)
+    git_head = git_head_override if git_head_override is not None else gc.get_git_head(args.repo)
     _require_schema_copies_byte_identical(args.repo)
     source_hashes = compute_source_provenance(args.repo)
 
@@ -636,7 +751,16 @@ def cmd_check(args) -> dict[str, Any]:
     content_sha256 to match the freshly rebuilt values EXACTLY. Only
     `generation` (timestamps, generator_version) is permitted to differ.
     Only after that structural/content match succeeds does it verify
-    through the API loader. Writes nothing."""
+    through the API loader. Writes nothing.
+
+    content.provenance.git_head is treated as the IMMUTABLE generation
+    commit, not required to equal the CURRENT HEAD -- an unrelated commit
+    made after generation must never stale out an otherwise-unchanged
+    policy. validate_recorded_generation_commit() fully verifies that
+    recorded commit (format, existence, ancestry, and that every
+    provenance-bound source both matches what was ACTUALLY at that commit
+    AND still matches the CURRENT working tree) before the recorded value
+    is trusted enough to use as the rebuild's git_head."""
     artifacts_dir = require_explicit_non_live_artifacts_dir(args.repo, args.artifacts_dir)
     dest = artifacts_dir / "inference_policy.json"
     if not dest.exists():
@@ -648,7 +772,17 @@ def cmd_check(args) -> dict[str, Any]:
     if not isinstance(stored, dict):
         _fail(f"{dest} is not a JSON object")
 
-    pre = run_preflight(args)
+    stored_content_for_provenance = stored.get("content")
+    if not isinstance(stored_content_for_provenance, dict):
+        _fail(f"{dest} content is not a JSON object")
+    stored_provenance = stored_content_for_provenance.get("provenance")
+    if not isinstance(stored_provenance, dict):
+        _fail(f"{dest} content.provenance is not a JSON object")
+    recorded_git_head = stored_provenance.get("git_head")
+    recorded_source_hashes = stored_provenance.get("source_hashes")
+    validate_recorded_generation_commit(args.repo, recorded_git_head, recorded_source_hashes)
+
+    pre = run_preflight(args, git_head_override=recorded_git_head)
     rebuilt_policy, rebuilt_content_sha256 = build_policy(pre)
 
     # ---- top-level envelope: exact key set. Extra/missing top-level keys

@@ -1011,3 +1011,52 @@ This phase added only schema/generator machinery:
 - **Next gate:** a separately authorized `--write` run against the
   candidate directory, review of its output, then a separate atomic
   promotion step -- neither done in this phase.
+
+## Gate v2: Phase 5E1 correction -- `--check`'s recorded git_head is an immutable generation commit
+
+Found after Phase 5E2 generated a real candidate policy: the original
+`cmd_check()` rebuilt `content.provenance.git_head` from the repo's
+**current** HEAD, so any later commit -- even one wholly unrelated to Gate
+v2 -- would falsely stale-out an unchanged policy on the next `--check`.
+This made durable freezing/deployment incompatible with later
+re-verification.
+
+Fix: `run_preflight()` gained a `git_head_override` parameter
+(`--preflight`/`--write` still use current HEAD, unchanged). `cmd_check()`
+now calls new `validate_recorded_generation_commit()` against the policy's
+OWN recorded `content.provenance.git_head`/`source_hashes` FIRST, fully
+fail-closed: strict 40-hex format; resolves to a real commit object
+(`git cat-file -t`); is an ancestor of current HEAD (`git merge-base
+--is-ancestor`); every recorded source hash matches that file's
+canonical-LF hash **as it existed at that commit** (`git show
+<commit>:<path>`, never the working tree); and every recorded source hash
+ALSO matches the CURRENT working-tree file. Only then does it rerun the
+complete current preflight with that validated commit as
+`git_head_override`, so unrelated later commits are tolerated but any
+change to a provenance-bound source (this generator included) still makes
+the policy stale. `api/inference_policy.py`'s loader is untouched --
+provenance stays diagnostic-only; the API never invokes git.
+
+New tests in `training/test_generate_policy_v2.py` (7 added, now 51
+total in that file, 371 training tests overall): `--check` passes after
+an unrelated later commit; `--check` fails when a provenance-bound source
+changes afterward; controlled failure for a malformed recorded
+`git_head`, a well-formed-but-nonexistent one, and one that resolves but
+whose recorded source hashes disagree with that commit's real content;
+a content mutation with freshly recomputed `content_sha256` still fails;
+`--check` writes zero bytes. The fixture in that file now builds a REAL
+small git repository (two commits: fixture setup, then generation
+evidence) instead of mocking git away, since `--check` performs real git
+operations.
+
+**The Phase 5E2 candidate policy was deliberately left untouched by this
+correction** (`training/artifacts/northeast_v1_b4_dev_v2/inference_policy.json`,
+byte sha256 `9e9d0ea4447555170bec40902fd2f19582d44102c8047d516bedb969d3e93171`,
+content_sha256 `2b6679e95ff2fe270965e93c3c3bbdb5eae0444b3f3b5eaaaad9700e451afbd8`).
+Because `generate_inference_policy_v2.py` is itself one of the six
+provenance-bound sources, this code change makes that candidate's recorded
+provenance **stale** -- a `--check` against it will now correctly report
+that this generator's source has changed since its generation commit.
+Regenerating it under the corrected, committed code is a separately
+authorized, one-write phase; this correction did not regenerate, stage, or
+commit it.
