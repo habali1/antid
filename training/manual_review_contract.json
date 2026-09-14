@@ -1,0 +1,607 @@
+{
+  "content": {
+    "adjudication_label_meanings": {
+      "different_image": "unrelated images that merely landed as a candidate",
+      "different_photo_same_observation": "a genuinely different photograph from the same observation is NOT a perceptual duplicate",
+      "same_source_image": "resized, recompressed, cropped, rotated, mirrored, or otherwise re-uploaded derivatives of the same source photograph are duplicates",
+      "uncertain": "adjudicator could not confidently decide"
+    },
+    "adjudication_labels": [
+      "different_image",
+      "different_photo_same_observation",
+      "same_source_image",
+      "uncertain"
+    ],
+    "adjudication_record_required_fields": [
+      "candidate_pairs_report_sha256",
+      "dhash_distance",
+      "domain",
+      "identity_a",
+      "identity_b",
+      "label",
+      "notes",
+      "pair_id",
+      "phash_distance",
+      "prev_record_hash",
+      "record_hash",
+      "reviewed_at_utc",
+      "reviewer_id",
+      "scan_report_content_sha256",
+      "session_id"
+    ],
+    "approved_output_paths": {
+      "candidate_pairs_report": "training/perceptual_duplicate_candidate_pairs.json",
+      "domain_summary_report": "training/perceptual_duplicate_domain_summary.json",
+      "manual_review_ledger": "training/manual_review_ledger.jsonl",
+      "metadata_leakage_report": "training/perceptual_duplicate_metadata_leakage.json",
+      "pair_adjudication_ledger": "training/pair_adjudication_ledger.jsonl",
+      "perceptual_hashes_report": "training/perceptual_duplicate_hashes.json",
+      "post_adjudication_stop_status_report": "training/perceptual_duplicate_post_adjudication_stop_status.json",
+      "stop_status_report": "training/perceptual_duplicate_stop_status.json"
+    },
+    "approved_species_slugs": [
+      "aphaenogaster-rudis",
+      "camponotus-americanus",
+      "camponotus-nearcticus",
+      "camponotus-novaeboracensis",
+      "camponotus-subbarbatus",
+      "formica-exsectoides",
+      "lasius-americanus",
+      "lasius-aphidicola",
+      "lasius-claviger",
+      "lasius-emarginatus",
+      "lasius-interjectus",
+      "lasius-neoniger",
+      "nylanderia-flavipes",
+      "ponera-pennsylvanica",
+      "temnothorax-curvispinosus"
+    ],
+    "comparison_domains": [
+      {
+        "kind": "cross",
+        "name": "benchmark_v1_vs_calibration_v1",
+        "parts": [
+          "benchmark_v1",
+          "calibration_v1"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "benchmark_v1_vs_calibration_v2",
+        "parts": [
+          "benchmark_v1",
+          "calibration_v2"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "benchmark_v1_vs_expansion_development",
+        "parts": [
+          "benchmark_v1",
+          "expansion_development"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "benchmark_v1_vs_expansion_train",
+        "parts": [
+          "benchmark_v1",
+          "expansion_train"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "benchmark_v1_vs_final_test",
+        "parts": [
+          "benchmark_v1",
+          "final_test"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "benchmark_v1_vs_unknown_test_v1",
+        "parts": [
+          "benchmark_v1",
+          "unknown_test_v1"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "benchmark_v1_vs_unknown_test_v2",
+        "parts": [
+          "benchmark_v1",
+          "unknown_test_v2"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v1_vs_calibration_v2",
+        "parts": [
+          "calibration_v1",
+          "calibration_v2"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v1_vs_expansion_development",
+        "parts": [
+          "calibration_v1",
+          "expansion_development"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v1_vs_expansion_train",
+        "parts": [
+          "calibration_v1",
+          "expansion_train"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v1_vs_final_test",
+        "parts": [
+          "calibration_v1",
+          "final_test"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v1_vs_unknown_test_v1",
+        "parts": [
+          "calibration_v1",
+          "unknown_test_v1"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v1_vs_unknown_test_v2",
+        "parts": [
+          "calibration_v1",
+          "unknown_test_v2"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v2_vs_expansion_development",
+        "parts": [
+          "calibration_v2",
+          "expansion_development"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v2_vs_expansion_train",
+        "parts": [
+          "calibration_v2",
+          "expansion_train"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v2_vs_final_test",
+        "parts": [
+          "calibration_v2",
+          "final_test"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v2_vs_unknown_test_v1",
+        "parts": [
+          "calibration_v2",
+          "unknown_test_v1"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "calibration_v2_vs_unknown_test_v2",
+        "parts": [
+          "calibration_v2",
+          "unknown_test_v2"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "expansion_development_vs_expansion_train",
+        "parts": [
+          "expansion_development",
+          "expansion_train"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "expansion_development_vs_final_test",
+        "parts": [
+          "expansion_development",
+          "final_test"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "expansion_development_vs_unknown_test_v1",
+        "parts": [
+          "expansion_development",
+          "unknown_test_v1"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "expansion_development_vs_unknown_test_v2",
+        "parts": [
+          "expansion_development",
+          "unknown_test_v2"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "expansion_train_vs_final_test",
+        "parts": [
+          "expansion_train",
+          "final_test"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "expansion_train_vs_unknown_test_v1",
+        "parts": [
+          "expansion_train",
+          "unknown_test_v1"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "expansion_train_vs_unknown_test_v2",
+        "parts": [
+          "expansion_train",
+          "unknown_test_v2"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "final_test_vs_unknown_test_v1",
+        "parts": [
+          "final_test",
+          "unknown_test_v1"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "final_test_vs_unknown_test_v2",
+        "parts": [
+          "final_test",
+          "unknown_test_v2"
+        ]
+      },
+      {
+        "kind": "cross",
+        "name": "unknown_test_v1_vs_unknown_test_v2",
+        "parts": [
+          "unknown_test_v1",
+          "unknown_test_v2"
+        ]
+      },
+      {
+        "kind": "within",
+        "name": "within_benchmark_v1",
+        "parts": [
+          "benchmark_v1"
+        ]
+      },
+      {
+        "kind": "within",
+        "name": "within_calibration_v1",
+        "parts": [
+          "calibration_v1"
+        ]
+      },
+      {
+        "kind": "within",
+        "name": "within_calibration_v2",
+        "parts": [
+          "calibration_v2"
+        ]
+      },
+      {
+        "kind": "within",
+        "name": "within_expansion_development",
+        "parts": [
+          "expansion_development"
+        ]
+      },
+      {
+        "kind": "within",
+        "name": "within_expansion_train",
+        "parts": [
+          "expansion_train"
+        ]
+      },
+      {
+        "kind": "within",
+        "name": "within_final_test",
+        "parts": [
+          "final_test"
+        ]
+      },
+      {
+        "kind": "within",
+        "name": "within_unknown_test_v1",
+        "parts": [
+          "unknown_test_v1"
+        ]
+      },
+      {
+        "kind": "within",
+        "name": "within_unknown_test_v2",
+        "parts": [
+          "unknown_test_v2"
+        ]
+      }
+    ],
+    "domain_part_image_layouts": {
+      "benchmark_v1": {
+        "dataset": "benchmark_v1",
+        "subdir": null
+      },
+      "calibration_v1": {
+        "dataset": "calibration_v1",
+        "subdir": null
+      },
+      "calibration_v2": {
+        "dataset": "calibration_v2",
+        "subdir": null
+      },
+      "expansion_development": {
+        "dataset": "northeast_expansion_v1",
+        "subdir": "clean"
+      },
+      "expansion_train": {
+        "dataset": "northeast_expansion_v1",
+        "subdir": "clean"
+      },
+      "final_test": {
+        "dataset": "northeast_final_test_v1",
+        "subdir": "clean"
+      },
+      "unknown_test_v1": {
+        "dataset": "unknown_test_v1",
+        "subdir": null
+      },
+      "unknown_test_v2": {
+        "dataset": "unknown_test_v2",
+        "subdir": null
+      }
+    },
+    "duplicate_suspicion_values": [
+      "none",
+      "strong",
+      "suspected"
+    ],
+    "expansion_scan_split_row_counts": {
+      "development": 600,
+      "train": 3000
+    },
+    "implementation_sources": {
+      "adjudicate_pairs": {
+        "path": "training/adjudicate_pairs.py",
+        "sha256": "ab77de2c5d826c7638e17c201ad1e71214c99efb9ff9a1052ce4e04c2464694c"
+      },
+      "append_only_ledger": {
+        "path": "training/append_only_ledger.py",
+        "sha256": "8a2470b6710a57757242a0cb901f0ac3011419455b7c57254da679e155fb2ffd"
+      },
+      "finalize_stop_status": {
+        "path": "training/finalize_stop_status.py",
+        "sha256": "77af081bad6395d8e64c30b0509722cb331b4bdb9ed68d20c43a21fad3cef206"
+      },
+      "freeze_manual_review_contract": {
+        "path": "training/freeze_manual_review_contract.py",
+        "sha256": "e920998981bac054bfd6c4b6aa09f674af6adb35b0bb3e0f2e3147c6c9a6df09"
+      },
+      "generate_manual_review_queue": {
+        "path": "training/generate_manual_review_queue.py",
+        "sha256": "7f7f0e67ada48ff17bcd95f172af71a8885181e89bf3deb4c08a73a8dceba253"
+      },
+      "manual_review_contract": {
+        "path": "training/manual_review_contract.py",
+        "sha256": "b9d3451a2bc1c00952b570d9b985c2b934b5171b14c68671697dbc54547c94e0"
+      },
+      "manual_review_tool": {
+        "path": "training/manual_review_tool.py",
+        "sha256": "dd4dcf70b576e5d392ea1ea00b3ae7366e19f92ee53eea4cf052cae1a4d4dd62"
+      },
+      "perceptual_hash": {
+        "path": "training/perceptual_hash.py",
+        "sha256": "4f2b1af9a1bb0f8d46b7caa9ce53ccc851dfa3361c061b3020d893f4ba48c1ec"
+      },
+      "scan_perceptual_duplicates": {
+        "path": "training/scan_perceptual_duplicates.py",
+        "sha256": "68cf75004d73e7a06cb762212b6c4f32b5c34cfef32f0cfcaafee9f305858904"
+      }
+    },
+    "label_plausibility_values": [
+      "implausible",
+      "plausible",
+      "uncertain"
+    ],
+    "metadata_leakage": "detected/reported independently of perceptual duplication: identical observation_uuid values across datasets/splits, even when their photographs differ",
+    "mutation_policy": "findings never mutate a manifest or an image -- no deletion, replacement, relabeling, or silent substitution. unusable/poor-quality findings are reported and final evaluation may proceed. A confirmed train/development <-> northeast_final_test_v1 same-source-image collision, a matching observation_uuid across those sets, or any final-test collision with another previously used evidence set each mandates a stop for reviewed interpretation before northeast_final_test_v1 model inference.",
+    "other_evidence_manifests": {
+      "benchmark_v1": {
+        "byte_sha256": "61b3439850da9100b4ae8393f4f9cd90d45b4d5b381f20eaa1ea63d8fb1ec38c",
+        "path": "data/benchmark_v1/benchmark_v1.csv",
+        "provenance_json_byte_sha256": "137260dc56e4a24115c71df37383d600ed97d83cbc021080f9d0290a0c311ce9",
+        "provenance_json_path": "data/benchmark_v1/benchmark_v1.json",
+        "row_count": 1591
+      },
+      "calibration_v1": {
+        "byte_sha256": "83a80351f8ac65e89ea6124ac7de6d2cb6a3c68efc1f33eb3ecc2eca8c5f63c0",
+        "path": "data/calibration_v1/calibration_v1.csv",
+        "provenance_json_byte_sha256": "2e4c4be09656ab001312334641d3306323a8e07ab729634a90a0af1d13af35ed",
+        "provenance_json_path": "data/calibration_v1/calibration_v1.json",
+        "row_count": 1005
+      },
+      "calibration_v2": {
+        "byte_sha256": "8201200f4c5d7c869a71c3c927ccee0dfb83d6b91a595241dd49996deee1d46e",
+        "path": "data/calibration_v2/calibration_v2.csv",
+        "provenance_json_byte_sha256": "d7d96d321c7ebb4a5b3cd55ded2f2bb72628b6ec38b82ef135c5be088369ed9e",
+        "provenance_json_path": "data/calibration_v2/calibration_v2.json",
+        "row_count": 1250
+      },
+      "unknown_test_v1": {
+        "byte_sha256": "b010af9a66db79fd6b40cd808d666f5f6dd5ebe376321c139707d05dd1849b07",
+        "path": "data/unknown_test_v1/unknown_test_v1.csv",
+        "provenance_json_byte_sha256": "90e0a388691829fa5e49f5779a24bf5838d8ee85ab4fa9f4f02435fccad4f50d",
+        "provenance_json_path": "data/unknown_test_v1/unknown_test_v1.json",
+        "row_count": 573
+      },
+      "unknown_test_v2": {
+        "byte_sha256": "d706cb6dbda7a672594fc425ce5c8f8f0f6f868662c3d52c5f9c88083163b09f",
+        "path": "data/unknown_test_v2/unknown_test_v2.csv",
+        "provenance_json_byte_sha256": "eea1cbb3118dfc05f42f477ef58d6ccbc5458df1e8a5496845a146d161a89e6d",
+        "provenance_json_path": "data/unknown_test_v2/unknown_test_v2.json",
+        "row_count": 790
+      }
+    },
+    "perceptual_hash": {
+      "candidate_rule": "A pair is flagged when the minimum Hamming distance across all orientation-hash combinations satisfies pHash <= 10 OR dHash <= 8 (boundary equality included). These thresholds generate CANDIDATES only -- they never automatically declare duplication, and a negative scan does not prove that every crop or derivative is absent.",
+      "dhash": {
+        "bits": 64,
+        "resample": "Pillow LANCZOS",
+        "resize": [
+          9,
+          8
+        ],
+        "rule": "bit=1 iff left pixel > right pixel"
+      },
+      "orientations": 8,
+      "phash": {
+        "bits": 64,
+        "coefficients": "top-left 8x8 (row-major)",
+        "resample": "Pillow LANCZOS",
+        "resize": [
+          32,
+          32
+        ],
+        "threshold": "median of the 64 coefficients; bit=1 iff coefficient > median",
+        "transform": "explicit orthonormal 2-D DCT-II, float64 cosine matrix"
+      },
+      "preprocessing": "verify source bytes against the manifest sha256; apply EXIF transpose; convert deterministically to grayscale; generate all 8 dihedral orientations (4 rotations and their horizontal mirrors) before hashing",
+      "search": "exact radius-search index (BK-tree), one per hash type, over every orientation hash of the query side, queried against an index built from every orientation hash of the indexed side; a brute-force reference implementation is retained for small synthetic tests only and proven equal to the indexed output.",
+      "thresholds": {
+        "dhash_max_hamming_distance": 8,
+        "phash_max_hamming_distance": 10
+      }
+    },
+    "queue_artifact": {
+      "byte_sha256": "99a0cbb191f5e3eb1dcb68a84e6018020aeb89be6f4335c06ca2eb5537cae7f4",
+      "identity_order_sha256": "d3de0c721808552b7c0c2a942756550e54b0bf3cc6b481df2f52c8f6ec2231e4",
+      "path": "training/manual_review_queue.csv",
+      "row_count": 600
+    },
+    "queue_composition": {
+      "expansion_dataset": "northeast_expansion_v1",
+      "expansion_manifest_path": "data/northeast_expansion_v1/northeast_train_dev_v1.csv",
+      "expansion_splits": [
+        "train",
+        "development"
+      ],
+      "final_test_dataset": "northeast_final_test_v1",
+      "final_test_manifest_path": "data/northeast_final_test_v1/northeast_final_test_v1.csv",
+      "final_test_split": "final_test",
+      "n_final_test_rows": 450,
+      "n_new_species": 15,
+      "n_queue_rows": 600,
+      "n_sampled_rows": 150,
+      "per_slug_per_split": 5
+    },
+    "queue_row_required_fields": [
+      "queue_index",
+      "suggested_session",
+      "dataset",
+      "slug",
+      "split",
+      "species",
+      "taxon_id",
+      "observation_uuid",
+      "photo_id",
+      "sha256",
+      "selection_digest",
+      "review_order_digest"
+    ],
+    "remediation_rule": "Findings from the manual review do not modify northeast_final_test_v1 under any circumstance. Unusable images (no visible ant, corrupted file, clearly different organism) are counted and reported alongside the final-test result as a known limitation. Poor-quality but usable images remain in scope by design: they reflect real user input, and the confidence gate exists precisely to handle them. No image is removed, replaced, or relabeled.",
+    "review_record_required_fields": [
+      "contract_content_sha256",
+      "dataset",
+      "duplicate_suspicion",
+      "label_plausibility",
+      "notes",
+      "observation_uuid",
+      "photo_id",
+      "prev_record_hash",
+      "queue_byte_sha256",
+      "queue_identity_order_sha256",
+      "queue_index",
+      "record_hash",
+      "review_state",
+      "reviewed_at_utc",
+      "reviewer_id",
+      "session_id",
+      "sha256",
+      "slug",
+      "split"
+    ],
+    "review_states": [
+      "poor_quality_usable",
+      "uncertain",
+      "unusable_corrupt",
+      "unusable_no_visible_ant",
+      "unusable_wrong_organism",
+      "usable"
+    ],
+    "seed": 20260905,
+    "session_policy": {
+      "max_decisions_per_session": 300,
+      "n_suggested_sessions": 2,
+      "note": "The tool remains pausable and may use additional session IDs during actual review, but no single session may record more than 300 decisions.",
+      "rows_per_suggested_session": 300
+    },
+    "source_manifests": {
+      "northeast_expansion_v1": {
+        "byte_sha256": "9840997f7121907eabc9c5675244749f9d0eaa3908844bfd9db781d2424215f7",
+        "path": "data/northeast_expansion_v1/northeast_train_dev_v1.csv",
+        "row_count": 3600
+      },
+      "northeast_final_test_v1": {
+        "byte_sha256": "0c230bb51f8f2d074a796fce4b1d35a50595a0843d8955291a9829fc4f56f992",
+        "path": "data/northeast_final_test_v1/northeast_final_test_v1.csv",
+        "row_count": 450
+      }
+    },
+    "stop_before_inference_domains": [
+      "benchmark_v1_vs_final_test",
+      "calibration_v1_vs_final_test",
+      "calibration_v2_vs_final_test",
+      "expansion_development_vs_final_test",
+      "expansion_train_vs_final_test",
+      "final_test_vs_unknown_test_v1",
+      "final_test_vs_unknown_test_v2"
+    ],
+    "stop_before_inference_reasons": [
+      "confirmed_same_source_image",
+      "matching_observation_uuid"
+    ],
+    "summary_artifact": {
+      "byte_sha256": "58335df32b91e0f4ce57758c4f293d3427bc7ba2e0243d9a06836107f7751c67",
+      "content_sha256": "888db2eaa217f23e5073461be652191fa174fc8606ff6acef7c7df9251cc073b",
+      "path": "training/manual_review_queue_summary.json"
+    }
+  },
+  "content_sha256": "f32133d6c532b89890f5ec026e338eb71d029c1a60cedce0ef9bc00ef852e4a9",
+  "generation": {
+    "generator": "training/freeze_manual_review_contract.py",
+    "note": "generation metadata is NOT part of content and NOT covered by content_sha256"
+  },
+  "schema_version": 1,
+  "status": "frozen_before_manual_review"
+}

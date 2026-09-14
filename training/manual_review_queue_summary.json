@@ -1,0 +1,116 @@
+{
+  "content": {
+    "approved_species_slugs": [
+      "aphaenogaster-rudis",
+      "camponotus-americanus",
+      "camponotus-nearcticus",
+      "camponotus-novaeboracensis",
+      "camponotus-subbarbatus",
+      "formica-exsectoides",
+      "lasius-americanus",
+      "lasius-aphidicola",
+      "lasius-claviger",
+      "lasius-emarginatus",
+      "lasius-interjectus",
+      "lasius-neoniger",
+      "nylanderia-flavipes",
+      "ponera-pennsylvanica",
+      "temnothorax-curvispinosus"
+    ],
+    "counts": {
+      "expansion_development": 75,
+      "expansion_train": 75,
+      "final_test": 450,
+      "suggested_session_1": 300,
+      "suggested_session_2": 300,
+      "total": 600
+    },
+    "implementation_sources": {
+      "generate_manual_review_queue": "7f7f0e67ada48ff17bcd95f172af71a8885181e89bf3deb4c08a73a8dceba253",
+      "manual_review_contract": "b9d3451a2bc1c00952b570d9b985c2b934b5171b14c68671697dbc54547c94e0"
+    },
+    "queue_csv": {
+      "byte_sha256": "99a0cbb191f5e3eb1dcb68a84e6018020aeb89be6f4335c06ca2eb5537cae7f4",
+      "identity_order_sha256": "d3de0c721808552b7c0c2a942756550e54b0bf3cc6b481df2f52c8f6ec2231e4",
+      "path": "training/manual_review_queue.csv",
+      "row_count": 600
+    },
+    "seed": 20260905,
+    "source_manifests": {
+      "northeast_expansion_v1": {
+        "byte_sha256": "9840997f7121907eabc9c5675244749f9d0eaa3908844bfd9db781d2424215f7",
+        "path": "data/northeast_expansion_v1/northeast_train_dev_v1.csv",
+        "per_slug_counts": {
+          "aphaenogaster-rudis": {
+            "development": 5,
+            "train": 5
+          },
+          "camponotus-americanus": {
+            "development": 5,
+            "train": 5
+          },
+          "camponotus-nearcticus": {
+            "development": 5,
+            "train": 5
+          },
+          "camponotus-novaeboracensis": {
+            "development": 5,
+            "train": 5
+          },
+          "camponotus-subbarbatus": {
+            "development": 5,
+            "train": 5
+          },
+          "formica-exsectoides": {
+            "development": 5,
+            "train": 5
+          },
+          "lasius-americanus": {
+            "development": 5,
+            "train": 5
+          },
+          "lasius-aphidicola": {
+            "development": 5,
+            "train": 5
+          },
+          "lasius-claviger": {
+            "development": 5,
+            "train": 5
+          },
+          "lasius-emarginatus": {
+            "development": 5,
+            "train": 5
+          },
+          "lasius-interjectus": {
+            "development": 5,
+            "train": 5
+          },
+          "lasius-neoniger": {
+            "development": 5,
+            "train": 5
+          },
+          "nylanderia-flavipes": {
+            "development": 5,
+            "train": 5
+          },
+          "ponera-pennsylvanica": {
+            "development": 5,
+            "train": 5
+          },
+          "temnothorax-curvispinosus": {
+            "development": 5,
+            "train": 5
+          }
+        },
+        "row_count": 3600
+      },
+      "northeast_final_test_v1": {
+        "byte_sha256": "0c230bb51f8f2d074a796fce4b1d35a50595a0843d8955291a9829fc4f56f992",
+        "path": "data/northeast_final_test_v1/northeast_final_test_v1.csv",
+        "row_count": 450
+      }
+    }
+  },
+  "content_sha256": "888db2eaa217f23e5073461be652191fa174fc8606ff6acef7c7df9251cc073b",
+  "schema_version": 1
+}

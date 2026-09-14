@@ -155,6 +155,19 @@
   near-duplicate review** (sha256 dedup only catches byte-identical files, not
   recompressed/resized duplicates). Neither has been done. No training or
   evaluation has started.
+
+  **Correction (Phase 5F1, not rewriting the above -- it is left as written
+  because it is what was true at the time):** the 65-species training
+  described immediately above, and every Gate v2 phase since, **already
+  occurred** without this review ever having been done. It was not
+  performed before training as this section originally required; it was
+  deferred. It is **not optional** and it is **not retroactively
+  satisfied** by anything that has happened since. It is now **mandatory
+  before any model inference is run against `northeast_final_test_v1`** --
+  see "Phase 5F1: manual-quality/perceptual-duplicate review machinery
+  (preparation only)" below for the frozen contract, the deterministic
+  600-row review queue, and the perceptual-hash scan tooling this
+  correction prepares (not yet run).
 - A model trained on CC BY-NC / CC BY-NC-SA imagery inherits the non-commercial restriction. The restriction applies to the trained weights and any derived artifacts (`model.pth`, `backbone.onnx`, `prototypes.npy`), not only to the source images. A full licensing review is mandatory before any commercial use, public deployment, or redistribution of the model artifacts.
 - Keep personal local history and optional accounts on the roadmap. Public
   maps/social sharing remain deferred; no paid infrastructure without approval.
@@ -1117,3 +1130,201 @@ whatever HEAD currently is.
 
 **Next gate:** an isolated API smoke test of the candidate policy -- not
 promotion, not deployment.
+
+## Phase 5F1: manual-quality/perceptual-duplicate review machinery (preparation only)
+
+**Preparation only -- no actual review, scan, adjudication, or finalization
+has been run.** No dataset image was opened. `northeast_final_test_v1`
+remains closed to model inference; nothing here promotes or modifies any
+artifact. This section reflects the machinery after six Codex-reviewed
+correction passes (working-tree state, not yet staged/committed).
+
+- New shared, pure schema/constants module `training/manual_review_contract.py`:
+  the frozen seed (`20260905`), the 600-row manual-review queue composition
+  (450 `northeast_final_test_v1` rows + 15 new species x 5 train x 5
+  development = 150 sampled rows from `northeast_expansion_v1`), the
+  SEPARATE 9,259-row perceptual-scan population across all 8 domain parts
+  (the full 3,000 train + 600 development rows, never just the review
+  sample, plus 450 final_test + the 5 other-evidence sets' full row counts:
+  benchmark_v1 1,591 / calibration_v1 1,005 / unknown_test_v1 573 /
+  calibration_v2 1,250 / unknown_test_v2 790), the per-domain-part image
+  directory layout binding (`domain_part_image_layouts` -- expansion/
+  final_test go through a `clean` curation subdirectory, the 5
+  other-evidence sets store images directly under `{dataset}/{slug}/`, with
+  a shared deterministic `.jpg`/`.jpeg`/`.png` extension resolver that
+  fails closed on zero or ambiguous matches), the two digest formulas
+  (`compute_selection_digest` for bucket selection, a separately salted
+  `compute_review_order_digest` for intermixing the 600 rows into two
+  300-row suggested sessions), the exact review-state/label-plausibility/
+  duplicate-suspicion enums, the remediation rule verbatim, the
+  perceptual-hash algorithm parameters (32x32 pHash resize, top-left 8x8
+  DCT-II coefficients, median threshold; 9x8 dHash; 8 dihedral
+  orientations; thresholds pHash<=10 / dHash<=8), the four adjudication
+  labels, the 36 canonical comparison domains (8 within-part + 28
+  cross-part, mechanically generated so A-vs-B and B-vs-A can never both
+  appear), the 7 domains that mandate a stop before
+  `northeast_final_test_v1` model inference, and the shared strict schema
+  validators for all five scan reports plus the post-adjudication
+  finalization artifact (exact keys, cross-report hash bindings, and
+  semantic derivation -- a mutated-then-rehashed report is still rejected).
+- New generic `training/append_only_ledger.py`: a hash-chained, append-only
+  JSONL ledger (genesis hash, `prev_record_hash`/`record_hash` chaining,
+  exact required-field-set enforcement, duplicate-identity rejection)
+  shared by both the manual-review tool and the pair-adjudication tool.
+  Tail recovery is governed by the raw trailing-newline byte, not merely
+  whether the last line parses: a newline-terminated but malformed final
+  line is real corruption and fails closed (never auto-deleted); a
+  non-newline-terminated invalid fragment is treated as an interrupted
+  write and physically truncated (atomic, fsynced); a non-newline-
+  terminated but *valid* final record (interrupted after the JSON bytes
+  landed but before the trailing newline) is preserved and newline-
+  terminated, never discarded.
+- New `training/generate_manual_review_queue.py`: builds the deterministic
+  600-row manual-review queue from
+  `data/northeast_final_test_v1/northeast_final_test_v1.csv` and
+  `data/northeast_expansion_v1/northeast_train_dev_v1.csv` -- **CSV
+  metadata only, never an image path**. `--preflight`/`--write`/`--check`
+  modes; fails closed on a source-manifest row-count/column mismatch, a
+  bucket with fewer than 5 eligible rows, or a duplicate/missing row
+  identity.
+- New `training/perceptual_hash.py`: pHash/dHash using only Pillow and
+  NumPy (no new dependency) -- verify source bytes against the manifest
+  sha256, EXIF-transpose, deterministic grayscale, all 8 dihedral
+  orientations, an explicit orthonormal float64 DCT-II cosine matrix (no
+  FFT shortcut) for pHash, strict-greater-than pixel comparison for dHash,
+  plus a BK-tree exact radius-search index proven equal to a brute-force
+  reference on randomized and real-image synthetic fixtures.
+- `training/manual_review_tool.py`: pausable, append-only, hash-chained
+  recording of one reviewer decision per frozen queue row. Every working
+  mode (`--preflight`/`--next`/`--status`/`--record`) now goes through
+  `load_verified_ledger`, ONE shared semantic verification path that --
+  beyond generic hash-chain replay -- rejects an unknown/extra or
+  duplicate `queue_index` and re-runs full decision-field validation
+  against the frozen queue row and current contract for every EXISTING
+  record, not merely the one being appended; a record whose identity-bound
+  field was altered and the hash chain locally recomputed is rejected by
+  every mode, and progress/the next index are derived from that one
+  verified snapshot rather than a second raw read. `--preflight` can never
+  report `ok: true` with an outstanding chain or semantic problem. Enforces
+  the 300-decisions-per-session cap (additional session IDs remain usable
+  beyond it); **never imports onnxruntime or any inference/model module**
+  (statically checked by its own test, via AST import inspection, not a
+  substring grep).
+- `training/scan_perceptual_duplicates.py`: metadata-only manifest loading
+  and independent metadata-leakage detection (matching `observation_uuid`
+  across datasets/splits, regardless of whether the photographs differ)
+  are pure/no-image-access; `load_and_verify_full_scan_state` is the ONE
+  shared full-verification entry point (contract, all five reports, schema/
+  binding, reconstructed 8-part population, genuine re-derivation) reused
+  by `--check` here and by every mode of `adjudicate_pairs.py` and
+  `finalize_stop_status.py`. Within-domain candidate search
+  (`generate_candidate_pairs_within_indexed`/`_bruteforce`) examines every
+  unordered pair exactly once, in one canonical sorted identity order, so
+  A-vs-B and B-vs-A can never both appear under the same `pair_id`.
+  `compute_hashes_for_rows` is the ONE function that opens image bytes (not
+  run this phase). `cmd_scan` validates the freshly assembled five-report
+  bundle BOTH structurally (`mrc.validate_scan_report_bundle`) AND against
+  the real frozen population (`validate_reports_against_population`) while
+  everything is still in memory, strictly before the exclusive five-file
+  publish -- either layer failing publishes nothing, leaves no temp files,
+  and a corrected later `--scan` remains possible. A real, metadata/
+  filesystem-only `--resolve-check` mode resolves every one of the 9,259
+  scan rows' image paths (zero bytes opened) and reports per-part extension
+  counts. `evaluate_stop_conditions` implements the mandatory-stop rule: a
+  CONFIRMED `same_source_image` adjudication or a metadata-leakage finding
+  in a stop-mandating domain stops before inference; a bare perceptual
+  candidate never does on its own -- but the scan-time `stop_status_report`
+  itself can never carry a confirmed-duplicate reason, since it runs before
+  any adjudication.
+- `training/adjudicate_pairs.py`: same append-only/hash-chain discipline,
+  keyed by an order-independent `pair_id`
+  (`manual_review_contract.compute_pair_id`), recording one of the four
+  exact adjudication labels per candidate pair. Every working mode
+  (`--preflight`/`--next`/`--status`/`--record`, and
+  `confirmed_same_source_pairs`) goes through `load_verified_state` (the
+  shared scan-state loader above -- never a candidate-report-only envelope
+  check) and `load_verified_ledger`, ONE shared semantic ledger-
+  verification path reused as-is by `finalize_stop_status.py`: beyond
+  generic chain replay, it rejects an unknown/extra or duplicate `pair_id`
+  and re-runs full field validation (identity_a/b, domain, pHash/dHash
+  distance, both report-hash bindings, enums, timestamp) against the fully
+  verified candidate row for every EXISTING record.
+- New `training/finalize_stop_status.py`: a SEPARATE, contract-bound
+  post-adjudication finalization artifact and gate
+  (`--preflight`/`--finalize`/`--check`) -- the scan-time
+  `stop_status_report` is produced before adjudication and can never carry
+  a confirmed-duplicate stop; this artifact is produced only once every
+  candidate pair has an adjudication record, via
+  `adjudicate_pairs.load_verified_ledger(..., require_canonical_tail=
+  True)` -- the same shared ledger check every other mode uses, plus the
+  additional requirement that the raw ledger bytes are newline-terminated
+  with no silently-dropped trailing fragment. It folds confirmed
+  same-source findings in by domain, preserves every scan-time
+  metadata-leakage stop verbatim, activates the mandatory stop only in the
+  7 frozen critical domains, refuses to complete until the ledger's
+  `pair_id` set exactly equals the candidate set, and publishes
+  exclusively/atomically -- never modifying the five scan reports, the
+  ledger, or any dataset. It is the actual required gate before
+  `northeast_final_test_v1` model inference; no new remediation policy is
+  invented, only the already-frozen `STOP_BEFORE_INFERENCE_DOMAINS`/stop
+  reasons/`remediation_rule` are acted on.
+- Frozen JSON contract `training/manual_review_contract.json` (written by
+  `training/freeze_manual_review_contract.py --write`, byte-for-byte
+  reproducible via `--check`, binding all 9 implementation-source file
+  hashes including `finalize_stop_status.py`): `content_sha256`
+  `f32133d6c532b89890f5ec026e338eb71d029c1a60cedce0ef9bc00ef852e4a9`.
+- Deterministic queue `training/manual_review_queue.csv` (600 rows; byte
+  sha256 `99a0cbb191f5e3eb1dcb68a84e6018020aeb89be6f4335c06ca2eb5537cae7f4`
+  -- unchanged since the first round, since queue selection itself never
+  changed) and its summary `training/manual_review_queue_summary.json`
+  (byte-for-byte reproducible via `--check`; embeds source-manifest hashes/
+  counts, not the 600 rows themselves): `content_sha256`
+  `888db2eaa217f23e5073461be652191fa174fc8606ff6acef7c7df9251cc073b`
+  (byte sha256 `58335df32b91e0f4ce57758c4f293d3427bc7ba2e0243d9a06836107f7751c67`).
+  Composition verified exactly: 450 `final_test` + 75 `train` + 75
+  `development` = 600 review-queue rows (the separate 9,259-row perceptual-
+  scan population is described above); every one of the 15 new species
+  contributes exactly 5 train + 5 development review-queue rows; suggested
+  sessions split exactly 300/300.
+- Test files (272 tests total, all offline/synthetic, all passing):
+  `training/test_manual_review_contract.py` (52),
+  `training/test_append_only_ledger.py` (17 -- including all three raw
+  trailing-newline tail-recovery cases),
+  `training/test_perceptual_hash.py` (25 -- exact pHash/dHash boundary
+  cases at 10/11 and 8/9, resize/recompression/rotation/mirror synthetic
+  candidates, BK-tree-vs-brute-force equality, all against synthetic
+  in-memory images only),
+  `training/test_generate_manual_review_queue.py` (26 -- composition,
+  determinism, source-manifest mismatch rejection, duplicate/missing
+  identity rejection, no-real-image-access proof via a `Path.open` spy),
+  `training/test_manual_review_tool.py` (36 -- schema rejection, append-
+  only/session-cap/resume, the no-model-import guard, other-evidence
+  manifest-substitution rejection, and mutate-and-rehash ledger-tamper
+  regressions proving every mode rejects a semantically altered existing
+  record and the ledger stays byte-identical),
+  `training/test_scan_and_adjudicate.py` (59 -- metadata leakage,
+  canonical within-set candidate-pair generation, indexed-vs-brute-force
+  equality under unordered semantics, pre-publication population
+  validation with zero-files-left-behind proofs, real end-to-end `--scan`/
+  `--check` re-derivation failure injection, and adjudication-ledger
+  mutate-and-rehash regressions), `training/test_freeze_manual_review_contract.py`
+  (32 -- contract determinism plus a static no-dataset-mutation guard),
+  `training/test_finalize_stop_status.py` (25 -- completeness gating,
+  leakage-preservation, confirmed-duplicate stop derivation, and ledger
+  semantic-validation failure injection including a trailing-fragment
+  rejection even with every real record present).
+- **Only preparation was run**: `py_compile` on every Phase 5F1 module, the
+  offline/synthetic test suites above plus the full existing regression
+  discovery (933 tests total, 13 skipped/GPU-only, 0 failures),
+  `freeze_manual_review_contract.py --write`/`--check` (twice),
+  `generate_manual_review_queue.py --check` (twice, unchanged), a real
+  metadata-only `--preflight` for the queue tool/scanner/manual-review
+  tool, and a real metadata/filesystem-only `--resolve-check` (9,259/9,259
+  rows resolved, 0 missing, 0 ambiguous). `--review`/`--record`, `--scan`,
+  `--adjudicate`, and `--finalize` were never invoked. No dataset image was
+  opened; no report, ledger, or finalization artifact exists on disk; git
+  status/diff confirm no `data/` file changed and nothing is staged.
+- **Next gate:** an explicitly separate, later-authorized phase to actually
+  run the manual review (`--record`) against the frozen queue, then the
+  perceptual scan (`--scan`), pair adjudication (`--record`), and finally
+  `finalize_stop_status.py --finalize` -- none of which are authorized yet.
