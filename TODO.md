@@ -1579,7 +1579,82 @@ index 430 still shows `unusable_no_visible_ant`/`plausible`), which is
 correct and expected -- that file is what the reviewer actually wrote, not
 what was later clarified.
 
-**Perceptual scanning (`scan_perceptual_duplicates.py --scan`), pair
-adjudication, and finalization have NOT started.** No perceptual-scan
-report, adjudication ledger, or finalization artifact exists. No image has
-been opened at any point in Phase 5F1 or 5F2.
+**Perceptual scanning (`scan_perceptual_duplicates.py --scan`) is described
+in the Phase 5F3 section below. Pair adjudication and finalization have NOT
+started.** No adjudication ledger or finalization artifact exists. No image
+was opened at any point in Phase 5F1 or 5F2.
+
+## Phase 5F3: perceptual-duplicate/metadata-leakage scan run exactly once
+
+**`scan_perceptual_duplicates.py --scan` has been run exactly once, for
+real, against the full frozen 9,259-row scan population (the separate,
+larger population described in the Phase 5F1 section above -- never the
+600-row manual-review sample).** All five scan reports were produced,
+published atomically, and re-verified once with `--check` (full
+re-derivation against the real population, not merely self-consistency).
+Both manual-review ledgers (`manual_review_ledger.jsonl`,
+`manual_review_corrections.jsonl`) are byte-identical to their committed
+state before and after -- the scanner never touches them.
+
+- **9,259 images hashed**, verified against their manifest sha256 before
+  decoding, under **Pillow 12.3.0 / NumPy 2.4.6** (recorded in
+  `perceptual_duplicate_hashes.json`'s content).
+- **435 metadata-leakage findings** (matching `observation_uuid` across
+  datasets, independent of the photographs) -- **every one of them is
+  `calibration_v1` <-> `calibration_v2`; none involve `final_test`** or
+  any other domain pair.
+- **16,539 perceptual candidate pairs across all 36 domains -- ALL OF THEM
+  UNCONFIRMED.** A candidate pair is a pHash/dHash proximity match only; it
+  becomes a duplicate ONLY after a human adjudicator records
+  `same_source_image` for it via `adjudicate_pairs.py --record`, which has
+  not run. Candidate-rule decomposition (mutually exclusive, verified
+  directly from the published report): pairs satisfying BOTH the
+  pHash<=10 AND dHash<=8 rules simultaneously: **517**; pHash-rule-only
+  (dHash>8): **11,805**; dHash-rule-only (pHash>10): **4,217**; of the 517
+  satisfying both, those with EXACT pHash=0 and dHash=0 (byte-identical or
+  near-identical-content images): **435** (a coincidental match in COUNT,
+  not identity, with the 435 metadata-leakage findings above -- the two are
+  independent signals over different domain pairs and are not claimed to
+  be the same underlying pairs).
+- Of the 16,539 candidates, **1,681** fall in the 7 frozen critical
+  (`STOP_BEFORE_INFERENCE_DOMAINS`) domains that pair `final_test` against
+  train/development/the 5 other-evidence sets:
+  `benchmark_v1_vs_final_test` 332, `calibration_v1_vs_final_test` 253,
+  `calibration_v2_vs_final_test` 188, `expansion_development_vs_final_test`
+  104, `expansion_train_vs_final_test` 569, `final_test_vs_unknown_test_v1`
+  133, `final_test_vs_unknown_test_v2` 102. `within_final_test` holds
+  another **53** candidates but is NOT one of the 7 stop domains (it is a
+  within-set domain, not a final_test-vs-something cross domain).
+- **Scan-time `overall_stop_before_inference: false`** -- correct and
+  expected: the scan-time `stop_status_report` can never carry a confirmed-
+  duplicate reason (it runs before any adjudication exists), and none of
+  the 435 leakage findings touch a stop domain, so nothing here currently
+  mandates a stop. This says nothing about what a completed adjudication
+  might later find among the 1,681 + 53 final-test-adjacent candidates.
+- Report hashes (byte sha256 / content_sha256), all reconfirmed via a
+  second real `--check` before this evidence commit:
+  `perceptual_duplicate_hashes.json`
+  `d0fd1f6ec081d3387a01228b409d80cc439ff002774a7efb318e930b7f37b58d` /
+  `c5e5af6e10349c926e2098b358b8c7a41988d7d530189288f5248d9e60d0ad6b`;
+  `perceptual_duplicate_metadata_leakage.json`
+  `4c962c36a7f60ed5e7305162ab430f7860262ef972145fd9a3a6dd0b836342cb` /
+  `52c824eac24b20a2deaf3c71dc2353dae5c8513e3017ac908d5d145f82d31066`;
+  `perceptual_duplicate_candidate_pairs.json`
+  `3ce05cf2cdb91d77d6a5b153e4ee4d1f6be1fbd29de1788e2a1bac3964c9f93b` /
+  `aa565447b7aa5c9ac19f997eaa314d9ebeaa5f562a12ebb35f0baec02332a769`;
+  `perceptual_duplicate_domain_summary.json`
+  `38075e7c9203750274bc85394a4488062eb50a0ba101eaeb4718756162865082` /
+  `cf673de4d409c070bcf814bcf6ba834378d044997ce2b18bb403a17886e9b27d`;
+  `perceptual_duplicate_stop_status.json`
+  `91dfc220ce82949990a2f18896b6e6d53bf6d0f3db8a8b2dc0dea49bf4a52deb` /
+  `b6cce48c5156a97bef504b60d670758ef13c42b2edf966c7f9ba667583492947`.
+- **Pair adjudication has NOT started.** `training/pair_adjudication_
+  ledger.jsonl` does not exist. **The frozen finalizer
+  (`finalize_stop_status.py`) currently requires every one of the 16,539
+  candidates to have an adjudication record before `--finalize` can
+  succeed.** Adjudicating 16,539 pairs is a substantial, separate reviewer
+  workload -- whether/how to reduce, batch, or otherwise scope that work
+  (and the finalizer's all-or-nothing completeness rule itself) requires
+  its own separately reviewed decision before adjudication begins. No
+  image beyond the ones already hashed in this scan has been or will be
+  opened without that decision.

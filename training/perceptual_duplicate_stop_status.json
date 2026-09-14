@@ -1,0 +1,155 @@
+{
+  "content": {
+    "contract_content_sha256": "f32133d6c532b89890f5ec026e338eb71d029c1a60cedce0ef9bc00ef852e4a9",
+    "domain_summary_report_content_sha256": "cf673de4d409c070bcf814bcf6ba834378d044997ce2b18bb403a17886e9b27d",
+    "domains": {
+      "benchmark_v1_vs_calibration_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "benchmark_v1_vs_calibration_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "benchmark_v1_vs_expansion_development": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "benchmark_v1_vs_expansion_train": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "benchmark_v1_vs_final_test": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "benchmark_v1_vs_unknown_test_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "benchmark_v1_vs_unknown_test_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v1_vs_calibration_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v1_vs_expansion_development": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v1_vs_expansion_train": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v1_vs_final_test": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v1_vs_unknown_test_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v1_vs_unknown_test_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v2_vs_expansion_development": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v2_vs_expansion_train": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v2_vs_final_test": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v2_vs_unknown_test_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "calibration_v2_vs_unknown_test_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "expansion_development_vs_expansion_train": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "expansion_development_vs_final_test": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "expansion_development_vs_unknown_test_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "expansion_development_vs_unknown_test_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "expansion_train_vs_final_test": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "expansion_train_vs_unknown_test_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "expansion_train_vs_unknown_test_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "final_test_vs_unknown_test_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "final_test_vs_unknown_test_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "unknown_test_v1_vs_unknown_test_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "within_benchmark_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "within_calibration_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "within_calibration_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "within_expansion_development": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "within_expansion_train": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "within_final_test": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "within_unknown_test_v1": {
+        "reasons": [],
+        "stop_before_inference": false
+      },
+      "within_unknown_test_v2": {
+        "reasons": [],
+        "stop_before_inference": false
+      }
+    },
+    "overall_stop_before_inference": false
+  },
+  "content_sha256": "b6cce48c5156a97bef504b60d670758ef13c42b2edf966c7f9ba667583492947",
+  "schema_version": 1
+}

@@ -1,0 +1,227 @@
+{
+  "content": {
+    "candidate_pairs_report_content_sha256": "aa565447b7aa5c9ac19f997eaa314d9ebeaa5f562a12ebb35f0baec02332a769",
+    "contract_content_sha256": "f32133d6c532b89890f5ec026e338eb71d029c1a60cedce0ef9bc00ef852e4a9",
+    "domains": {
+      "benchmark_v1_vs_calibration_v1": {
+        "a_count": 1591,
+        "b_count": 1005,
+        "candidate_count": 856,
+        "leakage_count": 0
+      },
+      "benchmark_v1_vs_calibration_v2": {
+        "a_count": 1591,
+        "b_count": 1250,
+        "candidate_count": 606,
+        "leakage_count": 0
+      },
+      "benchmark_v1_vs_expansion_development": {
+        "a_count": 1591,
+        "b_count": 600,
+        "candidate_count": 309,
+        "leakage_count": 0
+      },
+      "benchmark_v1_vs_expansion_train": {
+        "a_count": 1591,
+        "b_count": 3000,
+        "candidate_count": 1864,
+        "leakage_count": 0
+      },
+      "benchmark_v1_vs_final_test": {
+        "a_count": 1591,
+        "b_count": 450,
+        "candidate_count": 332,
+        "leakage_count": 0
+      },
+      "benchmark_v1_vs_unknown_test_v1": {
+        "a_count": 1591,
+        "b_count": 573,
+        "candidate_count": 481,
+        "leakage_count": 0
+      },
+      "benchmark_v1_vs_unknown_test_v2": {
+        "a_count": 1591,
+        "b_count": 790,
+        "candidate_count": 360,
+        "leakage_count": 0
+      },
+      "calibration_v1_vs_calibration_v2": {
+        "a_count": 1005,
+        "b_count": 1250,
+        "candidate_count": 884,
+        "leakage_count": 435
+      },
+      "calibration_v1_vs_expansion_development": {
+        "a_count": 1005,
+        "b_count": 600,
+        "candidate_count": 255,
+        "leakage_count": 0
+      },
+      "calibration_v1_vs_expansion_train": {
+        "a_count": 1005,
+        "b_count": 3000,
+        "candidate_count": 1451,
+        "leakage_count": 0
+      },
+      "calibration_v1_vs_final_test": {
+        "a_count": 1005,
+        "b_count": 450,
+        "candidate_count": 253,
+        "leakage_count": 0
+      },
+      "calibration_v1_vs_unknown_test_v1": {
+        "a_count": 1005,
+        "b_count": 573,
+        "candidate_count": 360,
+        "leakage_count": 0
+      },
+      "calibration_v1_vs_unknown_test_v2": {
+        "a_count": 1005,
+        "b_count": 790,
+        "candidate_count": 289,
+        "leakage_count": 0
+      },
+      "calibration_v2_vs_expansion_development": {
+        "a_count": 1250,
+        "b_count": 600,
+        "candidate_count": 182,
+        "leakage_count": 0
+      },
+      "calibration_v2_vs_expansion_train": {
+        "a_count": 1250,
+        "b_count": 3000,
+        "candidate_count": 1041,
+        "leakage_count": 0
+      },
+      "calibration_v2_vs_final_test": {
+        "a_count": 1250,
+        "b_count": 450,
+        "candidate_count": 188,
+        "leakage_count": 0
+      },
+      "calibration_v2_vs_unknown_test_v1": {
+        "a_count": 1250,
+        "b_count": 573,
+        "candidate_count": 270,
+        "leakage_count": 0
+      },
+      "calibration_v2_vs_unknown_test_v2": {
+        "a_count": 1250,
+        "b_count": 790,
+        "candidate_count": 238,
+        "leakage_count": 0
+      },
+      "expansion_development_vs_expansion_train": {
+        "a_count": 600,
+        "b_count": 3000,
+        "candidate_count": 576,
+        "leakage_count": 0
+      },
+      "expansion_development_vs_final_test": {
+        "a_count": 600,
+        "b_count": 450,
+        "candidate_count": 104,
+        "leakage_count": 0
+      },
+      "expansion_development_vs_unknown_test_v1": {
+        "a_count": 600,
+        "b_count": 573,
+        "candidate_count": 145,
+        "leakage_count": 0
+      },
+      "expansion_development_vs_unknown_test_v2": {
+        "a_count": 600,
+        "b_count": 790,
+        "candidate_count": 115,
+        "leakage_count": 0
+      },
+      "expansion_train_vs_final_test": {
+        "a_count": 3000,
+        "b_count": 450,
+        "candidate_count": 569,
+        "leakage_count": 0
+      },
+      "expansion_train_vs_unknown_test_v1": {
+        "a_count": 3000,
+        "b_count": 573,
+        "candidate_count": 767,
+        "leakage_count": 0
+      },
+      "expansion_train_vs_unknown_test_v2": {
+        "a_count": 3000,
+        "b_count": 790,
+        "candidate_count": 662,
+        "leakage_count": 0
+      },
+      "final_test_vs_unknown_test_v1": {
+        "a_count": 450,
+        "b_count": 573,
+        "candidate_count": 133,
+        "leakage_count": 0
+      },
+      "final_test_vs_unknown_test_v2": {
+        "a_count": 450,
+        "b_count": 790,
+        "candidate_count": 102,
+        "leakage_count": 0
+      },
+      "unknown_test_v1_vs_unknown_test_v2": {
+        "a_count": 573,
+        "b_count": 790,
+        "candidate_count": 137,
+        "leakage_count": 0
+      },
+      "within_benchmark_v1": {
+        "a_count": 1591,
+        "b_count": 1591,
+        "candidate_count": 561,
+        "leakage_count": 0
+      },
+      "within_calibration_v1": {
+        "a_count": 1005,
+        "b_count": 1005,
+        "candidate_count": 345,
+        "leakage_count": 0
+      },
+      "within_calibration_v2": {
+        "a_count": 1250,
+        "b_count": 1250,
+        "candidate_count": 141,
+        "leakage_count": 0
+      },
+      "within_expansion_development": {
+        "a_count": 600,
+        "b_count": 600,
+        "candidate_count": 62,
+        "leakage_count": 0
+      },
+      "within_expansion_train": {
+        "a_count": 3000,
+        "b_count": 3000,
+        "candidate_count": 1686,
+        "leakage_count": 0
+      },
+      "within_final_test": {
+        "a_count": 450,
+        "b_count": 450,
+        "candidate_count": 53,
+        "leakage_count": 0
+      },
+      "within_unknown_test_v1": {
+        "a_count": 573,
+        "b_count": 573,
+        "candidate_count": 90,
+        "leakage_count": 0
+      },
+      "within_unknown_test_v2": {
+        "a_count": 790,
+        "b_count": 790,
+        "candidate_count": 72,
+        "leakage_count": 0
+      }
+    },
+    "metadata_leakage_report_content_sha256": "52c824eac24b20a2deaf3c71dc2353dae5c8513e3017ac908d5d145f82d31066"
+  },
+  "content_sha256": "cf673de4d409c070bcf814bcf6ba834378d044997ce2b18bb403a17886e9b27d",
+  "schema_version": 1
+}
