@@ -1514,3 +1514,72 @@ additive mechanism, authorizing EXACTLY this one correction and no other**
   evidence commit adding the resulting `training/manual_review_
   corrections.jsonl` (and, separately, a decision on whether/when to also
   commit the completed Phase 5F2 `manual_review_ledger.jsonl` itself).
+
+## Phase 5F2: manual review completed and frozen as evidence
+
+**The real Phase 5F2 manual review is complete and its evidence is now
+committed.** `training/manual_review_ledger.jsonl` holds 600 semantically
+verified records (two sessions of exactly 300: `phase5f2-review-session-1`
+= 300, `phase5f2-review-session-2` = 300), passing
+`manual_review_tool.py --preflight`'s full shared verification path (chain
++ per-record re-validation against the frozen queue/contract) with zero
+`chain_problems` and `remaining_count: 0`. Byte sha256: `75a2ef010
+58d978ddec19daf4e9eb4d599ed497cc03a506ac23fd3ed0e06bec4` (549,954 bytes).
+**This file is immutable append-only evidence -- it is committed exactly
+as it was written and is never edited, rechained, or replaced again.**
+
+The one approved queue_index-430 correction (see the section above for the
+full provenance-binding design) has been written for real, exactly once:
+
+- **First attempt (shell-mangled, zero writes, not a real attempt):**
+  invoking with an unquoted `--repo C:\dev\antid` let the shell strip
+  every backslash, producing the literal (invalid) path `C:devantid`.
+  `correct_manual_review.py`'s very first step
+  (`_require_clean_tracked_tree`) failed trying to `git status` in that
+  nonexistent directory and exited 1 BEFORE contract/ledger loading,
+  record construction, temp-file creation, or publication -- confirmed
+  by re-checking every prior invariant (ledger hash, correction-artifact
+  absence, zero temp files, untouched git status) immediately afterward.
+  This did not count as the artifact-generation attempt.
+- **Second, separately authorized attempt (the real one-shot write):**
+  invoked with quoted forward-slash paths
+  (`--repo 'C:/dev/antid'`, argument-round-trip proven identical via a
+  direct `pathlib.Path` equality assertion first), run exactly once,
+  directly, no pipe/wrapper/retry. Exit 0.
+  `training/manual_review_corrections.jsonl`: byte sha256
+  `bfc1d7614e0e3964773bc6e4aa98680992d1971c9f3255d1550cbbdb7af165c8`
+  (2,152 bytes, exactly 1 record, newline-terminated), `record_hash`
+  `335e5759663937fcc782ddf8d06a43ff89bc326d21496be8a3f6397b20b6a5bb`,
+  `prev_record_hash` = the ledger genesis hash, `corrected_at_utc`
+  `2026-09-14T19:07:28Z`, generator provenance `generator_git_commit`
+  `b485ea0ebae64664c7516d8aed72b93c9e7ac3f8` (the preparation commit),
+  `generator_source_sha256`
+  `676b4bdbf8c179649e8ea1aff85e9d521ea5ad11d07c277fc0f92448e75daec7`,
+  `generator_protocol_version` `phase5f2-correction-v1-single-target-430`.
+  `--check` immediately afterward, and again before this evidence commit,
+  both confirm `total_corrections: 1`, `approved_correction_pending:
+  false`, and the exact effective counts below -- byte-identical, chain-
+  valid, every approved-target/original-ledger/generator-provenance
+  binding intact.
+
+**Effective counts (original ledger + the one correction, in-memory
+overlay only -- neither file is mutated to produce this view):**
+`usable` 542, `poor_quality_usable` 53, `unusable_no_visible_ant` 1,
+`unusable_wrong_organism` 4, `plausible` 542, `implausible` 5, `uncertain`
+53, `duplicate_suspicion: none` 600, final-test `poor_quality_usable` 41,
+final-test unusable total 3.
+
+**The original ledger remains the sole immutable record of what was
+actually decided at review time.** Any consumer that wants the corrected
+(effective) view -- rather than the as-originally-recorded one -- MUST
+separately load and apply `training/manual_review_corrections.jsonl` via
+`correct_manual_review.effective_records()`/`effective_counts()`; reading
+`manual_review_ledger.jsonl` alone yields the pre-correction state (queue_
+index 430 still shows `unusable_no_visible_ant`/`plausible`), which is
+correct and expected -- that file is what the reviewer actually wrote, not
+what was later clarified.
+
+**Perceptual scanning (`scan_perceptual_duplicates.py --scan`), pair
+adjudication, and finalization have NOT started.** No perceptual-scan
+report, adjudication ledger, or finalization artifact exists. No image has
+been opened at any point in Phase 5F1 or 5F2.
