@@ -1328,3 +1328,189 @@ correction passes (working-tree state, not yet staged/committed).
   run the manual review (`--record`) against the frozen queue, then the
   perceptual scan (`--scan`), pair adjudication (`--record`), and finally
   `finalize_stop_status.py --finalize` -- none of which are authorized yet.
+
+## Phase 5F2: manual review completed; single-target correction mechanism prepared
+
+The real 600-row manual review (`manual_review_tool.py --record`, the gate
+Phase 5F1 left explicitly unauthorized) has since been run to completion:
+`training/manual_review_ledger.jsonl` now holds 600 semantically verified
+records (two sessions of exactly 300), passing
+`manual_review_tool.load_verified_ledger` end to end -- generic hash-chain
+replay AND full re-validation of every record against its frozen queue row
+and the frozen contract. Byte sha256 of the ledger as it stands:
+`75a2ef01058d978ddec19daf4e9eb4d599ed497cc03a506ac23fd3ed0e06bec4`. This
+file, like the real review/scan/adjudication/finalization steps themselves,
+remains uncommitted pending its own separate authorization -- nothing about
+it is staged by this entry.
+
+**A reviewer needed to correct one already-recorded judgment** (queue_index
+430: `unusable_no_visible_ant` -> `poor_quality_usable`, a clarification
+that the ant was present but small/out of focus, not truly absent) after
+the review had already completed. The original ledger is append-only and
+closed by design; editing it after the fact would break the guarantee
+Phase 5F1's own hardening pass established (every working mode refuses a
+tampered-but-rehashed record). So the correction is a **wholly separate,
+additive mechanism, authorizing EXACTLY this one correction and no other**
+-- not a general-purpose corrections tool:
+
+- `training/correct_manual_review.py` (+ `training/manual_review_
+  corrections.jsonl`, not yet written): an append-only, hash-chained
+  ledger for the correction, same `append_only_ledger.py` discipline as
+  the original review/adjudication ledgers, but a write-ONCE artifact --
+  `--write` refuses outright if the file already exists, rather than
+  appending a second time. A SEPARATE file the original ledger never
+  touches; deliberately NOT added to `manual_review_contract.
+  APPROVED_OUTPUT_PATHS` (embedded verbatim in the already-frozen
+  `manual_review_contract.json`; adding a key there would change its
+  `content_sha256`). None of the 9 already-frozen Phase 5F1 implementation
+  sources were edited, so the frozen contract/queue/summary remain
+  byte-for-byte unchanged (`--check` reconfirmed twice: contract
+  `f32133d6c532b89890f5ec026e338eb71d029c1a60cedce0ef9bc00ef852e4a9`,
+  queue `99a0cbb191f5e3eb1dcb68a84e6018020aeb89be6f4335c06ca2eb5537cae7f4`,
+  summary `888db2eaa217f23e5073461be652191fa174fc8606ff6acef7c7df9251cc073b`).
+- **Every value that matters is a frozen module constant, not CLI input.**
+  `load_verified_original()` gates the ORIGINAL ledger's byte sha256,
+  record count (600), and per-session counts (300/300) against frozen
+  `APPROVED_*` constants BEFORE a single correction is even considered --
+  a ledger with a different byte hash (even one that is itself perfectly
+  chain-valid, or a full rechain of the identical 600 records in a
+  different order) is rejected outright. `validate_correction_fields()`
+  then binds every field to the ONE approved target (`queue_index` 430,
+  its exact row identity, its exact original `record_hash`/judgment, the
+  exact corrected judgment, and a fixed `reason`) -- not merely "internally
+  consistent with itself", but equal to the frozen constants. `--write`'s
+  CLI accepts ONLY operational metadata (`--reviewer-id`, `--session-id`,
+  `--corrected-at-utc`); there is no flag, and no parameter on
+  `build_approved_correction_fields()`, through which a different
+  `queue_index` or judgment combination could ever be supplied. A future
+  correction requires a separately reviewed protocol/source update, not a
+  flag on this one.
+- **Each correction record also binds its own generator's provenance**,
+  following the exact immutable-generation-commit pattern already
+  established for Gate v2's `generate_inference_policy_v2.py`: the git
+  commit `correct_manual_review.py` was committed at, that file's
+  canonical-LF sha256 AT that commit (read via `git show`, never the
+  working tree), and a fixed protocol version
+  (`phase5f2-correction-v1-single-target-430`). `--write` requires the
+  correction source to be committed and the tracked tree clean before it
+  will run at all. `--check` validates the recorded commit as a REAL
+  ancestor of current HEAD (an unrelated later commit does not invalidate
+  existing evidence) and re-verifies the source hash both at that commit
+  and in the current working tree (a later edit to the generator itself
+  -- even a well-intentioned one -- makes the evidence stale and forces
+  regeneration).
+- **Lifecycle is deliberately asymmetric**, not a copy of the
+  preflight/write/check trio used elsewhere: `--preflight` reports the
+  approved correction as pending (file absent) or applied (file present)
+  without requiring either state; `--write` refuses if any correction
+  artifact already exists; `--check` REQUIRES the artifact to exist and
+  contain exactly the one approved record -- zero, extra, duplicate, or
+  substituted corrections all fail closed, even after being rehashed to
+  look self-consistent. The resulting effective counts are checked against
+  a frozen `APPROVED_EFFECTIVE_COUNTS` constant as an independent, final
+  assertion, not merely derived and trusted.
+- **Publication is a structurally exclusive, atomic stage/fsync/hard-link
+  publisher, local to `correct_manual_review.py`** -- NOT
+  `append_only_ledger.append_record()`, which opens its destination in
+  plain append mode and is a TOCTOU race (two concurrent callers can both
+  observe the destination absent and both then write). Since this
+  protocol permits exactly one record for this artifact, ever,
+  `_publish_single_correction_record()` instead: builds the complete
+  record in memory (`prev_record_hash` = the ledger genesis hash,
+  `record_hash` via `append_only_ledger`'s own canonical hashing
+  functions -- the artifact stays fully hash-chain-compatible); serializes
+  it as exactly one newline-terminated JSONL line; stages that into a
+  UNIQUE temp file (pid + a random uuid4 suffix) in the destination's own
+  directory; the ENTIRE open/write/flush/fsync/prevalidate/link lifecycle
+  runs inside one `try/finally` so a failure at ANY of those steps --
+  not merely during prevalidation or the link attempt -- still guarantees
+  the temp file is removed; prevalidates the staged bytes (exact
+  round-trip, exactly one parsed record, a full `verify_chain` replay)
+  BEFORE attempting to publish; publishes via `os.link(tmp, dest)`, which
+  fails atomically at the filesystem level (`FileExistsError`) if `dest`
+  already exists -- the same same-directory hard-link pattern
+  `scan_perceptual_duplicates.publish_reports_atomically` and
+  `finalize_stop_status.cmd_finalize` already use, never `os.replace`,
+  never plain append, and never trusting a prior `.exists()` check by
+  itself. `append_only_ledger.py` (a frozen Phase 5F1 implementation
+  source) was NOT modified to add this -- the publisher is local, so the
+  frozen contract's implementation-source hashes stay unchanged.
+- **Publication success is never trusted on comparing bytes alone.**
+  Before `record_correction`/`--write` reports success, it reloads the
+  PUBLISHED artifact from disk through the full real verification path
+  (`load_verified_original` + `load_verified_corrections`, freshly
+  re-invoked against the file that now actually exists on disk -- never
+  reusing the pre-publish state or the in-memory dict the publisher
+  returned) and independently re-confirms: exactly one correction exists;
+  the hash chain is valid; every approved-target/original-ledger binding
+  and generator-provenance check passes; the resulting effective counts
+  exactly equal `APPROVED_EFFECTIVE_COUNTS`; and the persisted bytes equal
+  the prevalidated staged bytes. Any post-publication verification failure
+  raises `CorrectionError` WITHOUT deleting or rewriting the (already
+  correctly published) artifact -- it is left exactly as it is, for manual
+  review, never silently repaired or discarded.
+- `effective_records`/`effective_counts` remain pure, in-memory-only
+  functions: the original 600 records, with the one matching correction's
+  judgment fields overlaid; row count is always exactly 600.
+- Simulated in memory (never written) against the real repo's frozen
+  contract/queue and the real 600-record ledger, the approved correction
+  reproduces exactly: `usable` 542, `poor_quality_usable` 53,
+  `unusable_no_visible_ant` 1, `unusable_wrong_organism` 4, `implausible`
+  5, `plausible` 542, `uncertain` 53, `duplicate_suspicion: none` 600,
+  final-test `poor_quality_usable` 41, final-test unusable total 3 -- and
+  the real ledger's byte hash was confirmed unchanged before and after.
+- `training/test_correct_manual_review.py` (45 tests, offline/synthetic,
+  all passing, including a REAL throwaway git repository per fixture --
+  `git init` + a real commit containing a copy of the actual
+  `correct_manual_review.py`, mirroring `test_generate_policy_v2.py`'s
+  established pattern -- so the generator-provenance checks are exercised
+  against real git history, not mocked away): frozen-original-ledger-
+  authority rejection (byte-different, and separately a fully rechained-
+  but-still-byte-different ledger, both rejected BEFORE any correction is
+  considered; wrong record count; wrong session counts), single-approved-
+  target enforcement (no CLI flags exist for target/judgment; a direct
+  Python call with a tampered `queue_index` or an alternate but otherwise
+  *valid* judgment combination is rejected), lifecycle tests (`--check` on
+  an absent artifact fails; write-then-check succeeds; a second `--write`
+  is refused; extra/substituted corrections fail even after rehashing),
+  generator-provenance tests (an uncommitted source edit or a dirty tree
+  blocks `--write`; the written record's commit/source-hash/version are
+  exactly right; an unrelated LATER commit leaves existing evidence valid;
+  a later edit to the generator source itself invalidates it; mutated-and-
+  rehashed commit/source-hash fields are rejected), exact-effective-count
+  enforcement, mutate-and-rehash rejection of row identity/reason/contract
+  binding, exclusive-atomic-publication tests (successful publication is
+  exactly one valid record with no temp file left; a pre-existing sentinel
+  destination is never touched; a destination created mid-publish -- via a
+  wrapped `os.link` -- wins the race, stays byte-identical, and `--write`
+  fails cleanly; two REAL `threading.Barrier`-synchronized concurrent
+  `--write` calls -- exactly one succeeds, exactly one fails, one record
+  on disk, no temp files; an `os.fsync` failure AFTER the temp file is
+  created still leaves no destination and no temp file; an unexpected
+  `os.link` error and a forced prevalidation failure both leave nothing
+  behind), and post-publication-verification tests (the reload/re-verify
+  step is proven to actually execute, via call-counting; a forced
+  post-publication count mismatch, a forced reload/re-verification
+  failure, and a real on-disk byte corruption injected right after a
+  genuine successful publish all block success while leaving the already-
+  published artifact untouched, never deleted or rewritten) -- every path
+  proven to leave the original ledger byte-identical throughout.
+- **Only preparation was run this pass**: `py_compile`, the new offline
+  test suite plus the full Phase 5F1 suite (317 tests, 1 skip, 0
+  failures), `--check` (twice, unchanged) for both the queue and the
+  contract, and a real read-only `--preflight` against the actual repo
+  (reporting the current, uncorrected baseline: `unusable_no_visible_ant`
+  2, `poor_quality_usable` 52, `plausible` 543, `uncertain` 52,
+  `approved_correction_pending: true`). The real `--write` was
+  deliberately NOT run -- `training/manual_review_corrections.jsonl` does
+  not exist yet. No image was opened; no perceptual scan, adjudication, or
+  finalization step was touched.
+- **Next gate -- an explicit TWO-commit lifecycle, each separately
+  authorized:** (1) this preparation commit (source, tests, and this TODO
+  entry -- no ledger, no correction artifact); (2) the real,
+  separately-authorized `correct_manual_review.py --write`, run only after
+  commit (1) is itself committed (so the generator-provenance binding has
+  a real commit to point at) and the tracked tree is clean; then a further
+  evidence commit adding the resulting `training/manual_review_
+  corrections.jsonl` (and, separately, a decision on whether/when to also
+  commit the completed Phase 5F2 `manual_review_ledger.jsonl` itself).
