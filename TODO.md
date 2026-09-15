@@ -1658,3 +1658,142 @@ state before and after -- the scanner never touches them.
   its own separately reviewed decision before adjudication begins. No
   image beyond the ones already hashed in this scan has been or will be
   opened without that decision.
+
+## Phase 5F4A: perceptual-pair adjudication v2 protocol prepared, NOT run
+
+**The "separately reviewed decision" flagged at the end of the Phase 5F3
+section above has been made: a separate, additive, versioned v2
+adjudication protocol (`docs/plans/perceptual-adjudication-v2.md`) scopes
+the 16,539-candidate workload down to a 3,972-row mandatory queue, split
+into three independently-tracked workstreams.** This revises finalization
+SCOPE only -- it does not alter the Phase 5F1 scan, the frozen pHash<=10/
+dHash<=8 candidate rule, the frozen 0.61 Gate v2 threshold, or the four
+adjudication labels' own meanings. No candidate image has been opened; no
+real adjudication has occurred.
+
+**Correction pass applied (same phase, before any evidence generation):**
+the initial preparation recorded implementation-source provenance against
+commit `44061a4` even though none of the six new source paths existed at
+that commit -- invalid provenance. The two real generated artifacts from
+that initial pass (`pair_adjudication_v2_queue.json`,
+`pair_adjudication_v2_contract.json`) were deleted (never committed;
+byte sha256 `0dcac037b02deebfc72811a0589582455d1e73ac535fac1133f1db5ebbd31a5a`
+and `a5d24185a8e255653f8f7343b85410b97822723682a708cf40be00bc0c2428c1`
+respectively, recorded here only for the record) and are **not**
+regenerated in this phase. Generation now requires a real two-commit
+lifecycle (source-preparation commit, then a separate evidence-generation
+phase) -- see below and the plan doc.
+
+- Three workstreams, mechanically re-derived and verified against the real
+  committed `perceptual_duplicate_candidate_pairs.json` (never merely
+  copied): `final_test_independence` (blocking, 1,681 candidates across the
+  7 frozen `final_test`-vs-everything domains), `final_test_internal_
+  repetition` (diagnostic, 53 candidates, `within_final_test` only --
+  confirmed same-source pairs here are reported as an effective-sample-
+  size limitation, NOT leakage, and never alone trigger a stop), and
+  `gate_evidence_independence` (blocking, 2,238 candidates across 5 domains
+  binding `calibration_v2`/`expansion_development`/`expansion_train`
+  against each other and `unknown_test_v2`). Scoped total **3,972** +
+  outside-scope **12,567** = the full frozen scan's **16,539** -- verified,
+  not assumed. Every outside-scope candidate is reported as
+  `not_adjudicated`, never `not_duplicate`, and the excluded population is
+  now itself hash-bound (`outside_scope_identity_order_sha256`, verified
+  fresh against the real candidate report at every runtime load).
+- The two blocking channels stop **independently** the moment their own
+  first `same_source_image` or `uncertain` decision lands; the diagnostic
+  channel never stops early. `uncertain` makes its channel inconclusive and
+  blocking -- never cleared or passed.
+- **Priority order is now literal** (corrected from the initial pass's
+  within-domain interpretation): ALL 18 both-pHash-and-dHash-rule
+  candidates queue first, globally (queue_index 0-17), across the 5
+  domains that contain them, each forming its own small single-domain
+  priority block; then every remaining candidate queues exactly as if
+  those 18 rows never existed, in the originally specified domain
+  sequence. Split into **25 session blocks** (5 new small priority blocks
+  + the 20 standard blocks) -- one domain AND one priority tier per
+  session, <=300 rows, numbered blocks for large domains. Real,
+  mechanically-verified `identity_order_sha256 =
+  7e906cc2a66017940a8aef586e0eb9be7743c36f1dddec4ec22d46341562d14f`
+  (preflight-only; not yet bound into a generated queue artifact).
+- **Source provenance is now a real two-commit lifecycle.** Every one of
+  the six approved implementation sources must be bound to a commit that
+  actually, verifiably contains that exact path/content --
+  `freeze_pair_adjudication_v2_contract.py --write` refuses unless the
+  tracked tree is clean and every source is tracked at HEAD;
+  `verify_implementation_source_provenance` (in
+  `pair_adjudication_v2_contract.py`) checks the recorded commit resolves
+  and is an ancestor of current HEAD, the source's content at that commit
+  hashes to the recorded value, AND the current working tree still
+  matches (authoritative, not diagnostic -- unlike Gate v2's provenance,
+  a bound-source edit fails `--check`, not merely marks it stale). `--check`
+  never rebuilds against a fresh current HEAD (an unrelated later commit
+  must not invalidate already-generated evidence); it reuses the
+  published contract's own recorded sources verbatim and re-verifies them
+  separately. `adjudicate_pairs_v2.load_verified_v2_state` runs this same
+  check before trusting any contract; every stored ledger record binds
+  generator provenance to the CONTRACT's own recorded `adjudicate_pairs_v2`
+  entry, never an independently computed current-HEAD/working-tree value.
+- **`session_id` is now mechanically bound**, never an arbitrary caller
+  value: it must exactly equal the current eligible queue row's own
+  `suggested_session`, enforced in `record_adjudication` itself (not only
+  the UI) and re-checked for every stored ledger record; the review UI
+  refuses to even launch/construct for a mismatched session.
+- **Runtime state loading now rederives the queue from the verified
+  candidate report** (not just self-consistency of the queue file against
+  the contract's recorded hashes) -- a jointly-tampered queue+contract
+  pair that recomputes every internal hash consistently is still rejected
+  because the rederived rows/outside-scope population no longer match.
+- **Contract generation independently rederives the exact canonical queue
+  too.** `freeze_pair_adjudication_v2_contract.py` no longer trusts only the
+  queue artifact's row count/identity hash: it rebuilds the expected queue
+  from the verified candidate report and requires both exact parsed content
+  and exact canonical bytes before a contract can be published. Its
+  `generation` envelope is also schema-checked with exact keys and frozen
+  values during `--check`, so modifying generation metadata while preserving
+  `content_sha256` cannot evade validation.
+- **The review UI cannot cross a frozen session boundary.** After every
+  decision (including a blocking channel's early-stop decision), the session
+  re-reads the globally eligible row but exposes/opens it only when its
+  `suggested_session` still equals the UI's current session. A next-session
+  row is reported for handoff and is never opened implicitly.
+- New requirement versus v1: `adjudicate_pairs_v2.py --record` now acquires
+  a structurally exclusive per-write lock (`training/pair_adjudication_v2.
+  lock`, atomic `O_CREAT|O_EXCL`) before touching the ledger -- a
+  pre-existing/stale lock is NEVER silently removed, only reported for
+  review; the append is reverified-then-fsynced-then-reverified inside the
+  lock, and only the lock this invocation created is ever released;
+  `--record` also requires a clean tracked tree before touching the ledger.
+- Files (all new, none of the frozen Phase 5F1 sources modified):
+  `pair_adjudication_v2_contract.py`, `build_pair_adjudication_v2_queue.py`,
+  `freeze_pair_adjudication_v2_contract.py`, `adjudicate_pairs_v2.py`,
+  `pair_adjudication_v2_review.py` (all PIL/Tkinter imports deferred to
+  `launch_review_ui()`, never invoked here), `finalize_stop_status_v2.py`,
+  and six test modules (98 tests, all passing, offline/synthetic fixtures
+  including real throwaway-git-repo provenance fixtures). Neither
+  `pair_adjudication_v2_queue.json` nor `pair_adjudication_v2_contract.json`
+  exists -- generation is deferred to the two-commit lifecycle above.
+- All 317 pre-existing Phase 5F1/5F2/5F3 tests still pass unchanged; the
+  five committed scan reports and both existing ledgers are byte-identical
+  to their committed state before and after this work.
+- A real, metadata-only `adjudicate_pairs_v2.py --next` invocation was run
+  once during the initial preparation pass, before this correction pass
+  identified the provenance defect -- it was read-only against the (since
+  deleted) real queue/contract: no image was opened, no ledger was
+  written, and no adjudication was consumed. It is recorded here as a
+  procedural deviation (the phase's own instructions say "do not run
+  --next") and is **not** repeated in this or any later preparation pass.
+- **No real pair has been adjudicated. `pair_adjudication_v2_queue.json`,
+  `pair_adjudication_v2_contract.json`, `pair_adjudication_v2_ledger.jsonl`,
+  `pair_adjudication_v2.lock`, and
+  `perceptual_duplicate_post_adjudication_stop_status_v2.json` do not
+  exist.** A real source-preparation commit, then a separate evidence-
+  generation phase, then running `--next`, opening the review UI,
+  adjudicating any pair, and finalizing all require their own separately
+  authorized phases.
+
+- Final verification after these corrections: all **98** Phase 5F4A tests
+  and all **317** pre-existing Phase 5F tests pass (**415 total, 1 expected
+  skip**); all six new implementation modules compile cleanly; the real
+  metadata-only queue preflight still derives 3,972 rows, 18 globally-first
+  both-rule rows, 25 session blocks, and identity-order sha256
+  `7e906cc2a66017940a8aef586e0eb9be7743c36f1dddec4ec22d46341562d14f`.
