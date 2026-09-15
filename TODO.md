@@ -1797,3 +1797,31 @@ phase) -- see below and the plan doc.
   metadata-only queue preflight still derives 3,972 rows, 18 globally-first
   both-rule rows, 25 session blocks, and identity-order sha256
   `7e906cc2a66017940a8aef586e0eb9be7743c36f1dddec4ec22d46341562d14f`.
+
+## Phase 5F4B: v2 adjudication queue and contract generated, NOT adjudicated
+
+The required two-commit lifecycle is now in progress. The six implementation
+sources, tests, plan, and preparation notes were committed first as
+`7e847379bfadc378f1fa1b57c6ebd3f7390e81c1`. Against that clean committed
+state, the queue and contract were each generated exactly once, then checked
+twice byte-for-byte. No `--next`, reviewer UI, `--record`, or finalizer path
+was run.
+
+- `training/pair_adjudication_v2_queue.json`: 2,500,250 bytes; byte sha256
+  `28f9d3f984d14d88905cee5357e39802d384d87586fb10cab4e078e9057ca70d`;
+  3,972 rows; identity-order sha256
+  `7e906cc2a66017940a8aef586e0eb9be7743c36f1dddec4ec22d46341562d14f`;
+  18 both-rule rows globally first; 25 session blocks.
+- `training/pair_adjudication_v2_contract.json`: 9,579 bytes; byte sha256
+  `27d9f66949a0ec2b9cb22a8993646a3c8a301955d7e3b664d1281ec44c230fb3`;
+  content sha256
+  `852275c4a6d3107ece2fef9a2f97b3834d0ca21078c8cfb164ef015c21b415f0`;
+  all six implementation-source entries bind commit `7e847379...`.
+- Scope remains exactly 3,972 mandatory + 12,567 outside scope = 16,539;
+  outside-scope identity-order sha256 is
+  `d43fb8839beb641df258385d1b83c291e68d68bf1732dc5bc701db93470d92db`.
+- Both real metadata-only runtime preflights pass: adjudicated 0, remaining
+  3,972, every workstream pending, `ready_to_finalize: false`.
+- `pair_adjudication_v2_ledger.jsonl`, `pair_adjudication_v2.lock`, and
+  `perceptual_duplicate_post_adjudication_stop_status_v2.json` remain absent.
+  No real image has been opened.

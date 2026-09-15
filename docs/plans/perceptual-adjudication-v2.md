@@ -1,13 +1,27 @@
 # Perceptual-pair adjudication v2 protocol
 
-Status: **prepared, not yet generated**. `training/pair_adjudication_v2_queue.json`
-and `training/pair_adjudication_v2_contract.json` do not exist yet -- they
-are produced by a separate, later, two-commit lifecycle (see "Source
-provenance and the two-commit lifecycle" below), not by this preparation
-pass. This document describes the design and is the human-readable
-companion to the eventual machine-readable contract; once that contract
-exists, it is authoritative and this document must be reconciled to it if
+Status: **generated and frozen; adjudication not started**. The source-
+preparation commit is `7e847379bfadc378f1fa1b57c6ebd3f7390e81c1`.
+`training/pair_adjudication_v2_queue.json` and
+`training/pair_adjudication_v2_contract.json` were then generated exactly
+once and verified twice each. The machine-readable contract is authoritative;
+this document is its human-readable companion and must be reconciled to it if
 the two ever disagree.
+
+Frozen evidence:
+
+- Queue byte sha256:
+  `28f9d3f984d14d88905cee5357e39802d384d87586fb10cab4e078e9057ca70d`
+  (2,500,250 bytes, 3,972 rows); identity-order sha256:
+  `7e906cc2a66017940a8aef586e0eb9be7743c36f1dddec4ec22d46341562d14f`.
+- Contract byte sha256:
+  `27d9f66949a0ec2b9cb22a8993646a3c8a301955d7e3b664d1281ec44c230fb3`
+  (9,579 bytes); content sha256:
+  `852275c4a6d3107ece2fef9a2f97b3834d0ca21078c8cfb164ef015c21b415f0`.
+- Outside-scope population: 12,567 candidates, identity-order sha256
+  `d43fb8839beb641df258385d1b83c291e68d68bf1732dc5bc701db93470d92db`.
+- Both runtime preflights pass with zero adjudications: 3,972 remaining,
+  every workstream pending, and no stop condition.
 
 ## What this is, and what it is not
 
@@ -185,10 +199,10 @@ exact path with that exact content** — never the working tree, never a
 plausible-looking but wrong commit. This requires two separate commits, in
 order:
 
-1. **Source-preparation commit** (not part of this preparation pass) —
+1. **Source-preparation commit** —
    commits the six approved source files (and their tests/docs) for real,
    with the tracked tree otherwise clean.
-2. **Evidence-generation phase** (also not part of this preparation pass) —
+2. **Evidence-generation phase** —
    only once (1) exists does `build_pair_adjudication_v2_queue.py --write`
    and then `freeze_pair_adjudication_v2_contract.py --write` run.
    `--write` refuses outright unless the tracked tree is clean AND every
@@ -249,11 +263,11 @@ envelope (exact keys and frozen values) before `--check` reconstruction;
   derivation functions plus git-backed provenance verification (shared by
   every other v2 module).
 - `training/build_pair_adjudication_v2_queue.py` — the queue builder
-  (`--preflight`/`--write`/`--check`); `training/pair_adjudication_v2_queue.json`
-  does not exist yet.
+  (`--preflight`/`--write`/`--check`); the generated queue is frozen by the
+  hashes at the top of this document.
 - `training/freeze_pair_adjudication_v2_contract.py` — the contract
   builder (`--check`/`--write`), enforcing the two-commit lifecycle above;
-  `training/pair_adjudication_v2_contract.json` does not exist yet.
+  the generated contract is frozen by the hashes at the top of this document.
 - `training/adjudicate_pairs_v2.py` — the ledger/lock/eligibility CLI (only
   the current next eligible pair may ever be recorded; session_id is
   mechanically bound; generator provenance is bound to the contract, not
@@ -273,12 +287,10 @@ envelope (exact keys and frozen values) before `--check` reconstruction;
   regressions for jointly rehashed noncanonical queues, generation-envelope
   mutation, and UI session-boundary isolation).
 
-## Reserved, not created in this phase
+## Runtime outputs still reserved and absent
 
-`training/pair_adjudication_v2_queue.json`,
-`training/pair_adjudication_v2_contract.json`,
 `training/pair_adjudication_v2_ledger.jsonl`,
 `training/pair_adjudication_v2.lock`,
 `training/perceptual_duplicate_post_adjudication_stop_status_v2.json` —
-generation is deferred to the two-commit lifecycle above; no real pair has
-been adjudicated, no image has been opened, and no finalization has run.
+no real pair has been adjudicated, no image has been opened, and no
+finalization has run.
