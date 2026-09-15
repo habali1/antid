@@ -287,10 +287,28 @@ envelope (exact keys and frozen values) before `--check` reconstruction;
   regressions for jointly rehashed noncanonical queues, generation-envelope
   mutation, and UI session-boundary isolation).
 
-## Runtime outputs still reserved and absent
+## Current runtime state
 
-`training/pair_adjudication_v2_ledger.jsonl`,
-`training/pair_adjudication_v2.lock`,
-`training/perceptual_duplicate_post_adjudication_stop_status_v2.json` —
-no real pair has been adjudicated, no image has been opened, and no
-finalization has run.
+`training/pair_adjudication_v2_ledger.jsonl` now contains the first 309
+visually adjudicated rows. The ledger verified cleanly at the reviewer
+handoff; `training/pair_adjudication_v2.lock` and
+`training/perceptual_duplicate_post_adjudication_stop_status_v2.json` remain
+absent. Finalization has not run.
+
+## Reviewer handoff after the first 309 decisions
+
+The first 309 queue rows (queue indexes 0 through 308) were visually
+adjudicated by reviewer `huso1`. Beginning with queue index 309, the user
+delegated the remaining visual comparison workload to Codex. Subsequent
+records therefore use reviewer id `codex-visual-v1`; they must never be
+written as, or attributed to, `huso1`.
+
+This is an operational reviewer handoff, not a scope, threshold, label, or
+finalization-contract change: `reviewer_id` is already a required non-empty
+provenance field and is deliberately not frozen to one identity. The same
+four frozen labels and the same per-channel early-stop behavior remain in
+force. Codex must visually inspect both images in every pair; pHash/dHash
+distances or dataset labels may prioritize/contextualize a pair but must not
+alone determine its adjudication. Any pair that cannot be resolved visually
+is recorded as `uncertain`, never guessed. Final reporting must stratify
+adjudication counts by `reviewer_id` and disclose this mixed-reviewer method.

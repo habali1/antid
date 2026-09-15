@@ -1825,3 +1825,22 @@ was run.
 - `pair_adjudication_v2_ledger.jsonl`, `pair_adjudication_v2.lock`, and
   `perceptual_duplicate_post_adjudication_stop_status_v2.json` remain absent.
   No real image has been opened.
+
+## Phase 5F4C: reviewer handoff after 309 completed decisions
+
+Reviewer `huso1` completed queue indexes 0--308 (309 decisions): the 18
+globally-first both-rule candidates, all 238
+`calibration_v2_vs_unknown_test_v2` candidates, and all 53
+`within_final_test` candidates. Results at handoff: 304 `different_image`,
+5 `different_photo_same_observation`, 0 `same_source_image`, 0 `uncertain`;
+all workstreams remain unstopped. The ledger is valid and no lock remains.
+
+The user then delegated the remaining visual comparison work to Codex. Before
+opening queue index 309, the method is fixed as follows: preserve all existing
+`huso1` records unchanged; write future records with reviewer id
+`codex-visual-v1`; visually inspect both images for every decision; never use
+pHash/dHash or metadata alone as the label; record `uncertain` rather than
+guessing; retain all existing early-stop rules; and stratify the final report
+by reviewer id. This uses the contract's existing required `reviewer_id`
+provenance field and does not alter the frozen queue, contract, labels, scope,
+or finalization semantics.
