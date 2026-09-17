@@ -1868,3 +1868,12 @@ causal attribution** without a controlled B4 ablation. Determinism was used
 to keep the original comparison fair; it need not be imposed on a new
 throughput experiment. B4 remains the better selected model and already fits
 the serving contract; do not switch to V2-S solely for speed.
+
+The separate `training/final_test_v1_reporting_rule.json` and
+`training/eval_northeast_final_test_v1_once.py` preparation commit freezes the
+450-row, 15×30 denominator and raw ONNX-CPU 0.61 gate report. Its exclusive
+attempt marker is created before the first image read; a failed attempt after
+that point is consumed, not retried. The result must carry
+`perceptual_independence_incomplete_by_decision`, never a v2 screening pass.
+Preflight is metadata-only. The actual one-shot run and subsequent evidence
+commit are separate operations.
