@@ -1,102 +1,42 @@
 {
   "content": {
     "artifact_hashes": {
-      "backbone.onnx": "7856e2b035a31704c23db36c70aee96ebcd8cfb7a0711e5c878c90044d7e2cdb",
-      "prototypes.npy": "b2aec98b94f1a48a0b2170b25cefd774a4ac0a7a0535217299075f4d25a0bae2",
-      "taxonomy.json": "057819601f47613a0b3fa099982547d4234e4f28f0cd45170d50774695538cf9"
+      "backbone.onnx": "fc22d26ae5c73d20613dafcef02e75291c8779ec8a1296ebc9a72f0e7d7f826b",
+      "prototypes.npy": "0e52a7f350996a48f4129e1924e9b0af79517e4c3273dd9ecc7e851121d43825",
+      "taxonomy.json": "c8672287d59b5b9d3fb9aec5fd85a008ad30441f2ce3159713a3752b37a04767"
     },
     "decision": {
       "equal_threshold_action": "normal_results",
-      "float32_note": "No float32 value widens to exactly this float64 threshold (verified: float(np.float32(0.6))=0.6000000238418579 != 0.6 exactly), so equal_threshold_action documents an action for a boundary that a float32 similarity score can never exactly hit in practice.",
       "low_confidence_if": {
         "comparison": "strict_less_than",
         "signal": "raw_pre_geo_max_cosine",
-        "threshold": 0.6
+        "threshold": 0.61
       },
       "non_finite_action": "request_error",
       "normal_results_if": {
         "comparison": "greater_than_or_equal",
-        "threshold": 0.6
+        "threshold": 0.61
       }
     },
+    "gate_framing": "independently validated selective confidence/abstention gate; NOT an unknown-species detector",
     "not_in_scope": "No per-species exceptions. No geo dependency.",
     "not_validated_for": [
       "CUDA or any non-CPU execution provider",
       "retrained or re-exported artifacts (any artifact_hashes change invalidates this policy)",
-      "another backbone architecture, including EfficientNetV2",
-      "expanded or reordered taxonomy, or new prototype rows",
-      "unknown-species detection (this is a confidence/quality gate, not an out-of-catalog detector)",
-      "diagnosing photo quality",
-      "reliably distinguishing a blurry known ant from an unsupported ant",
-      "post-geo or rounded similarity scores (gate applies to raw, unrounded, pre-geo max cosine)",
+      "unknown-species detection (this is a selective confidence/abstention gate, not an out-of-catalog detector)",
       "per-species thresholds (a single global threshold only)",
-      "population claims from the 200-image parity diagnostic sample",
-      "the species absent from Phase C known_holdout: ['anoplolepis-custodiens', 'megaponera-analis', 'paltothyreus-tarsatus', 'polyrhachis-schistacea', 'veromessor-pergandei']"
+      "population-level claims from the 260-image parity sample or the 65 x 6-row per-species independent-evaluation table",
+      "post-geo or rounded similarity scores (gate applies to raw, unrounded, pre-geo max cosine)"
     ],
-    "phase_c": {
-      "cross_checked_against_calibration_v1_results_at_0_60": "6 of 8 metrics (non_ant_insect and unrelated false-acceptance rates have no calibration_v1.json counterpart to cross-check)",
-      "historical_candidate_status": {
-        "note": "Describes the threshold at selection time, before independent evaluation. The phase_c_validation status above is the later, independent evaluation on unknown_test_v1 that superseded this candidate status.",
-        "selected_at": "2026-08-21T19:10:49Z",
-        "value": "CANDIDATE -- NOT VALIDATED, NOT APPROVED FOR PRODUCTION"
-      },
-      "known_holdout_species_coverage": {
-        "absent_species_unmeasured": [
-          "anoplolepis-custodiens",
-          "megaponera-analis",
-          "paltothyreus-tarsatus",
-          "polyrhachis-schistacea",
-          "veromessor-pergandei"
-        ],
-        "covered": 45,
-        "note": "These 5 species have zero unknown_test_v1 known_holdout images (same low-observation-velocity species thin throughout this project's iNat-based sets). Their rejection/abstention behavior at 0.60 is entirely unmeasured, not merely under-sampled.",
-        "total": 50
-      },
-      "metrics": {
-        "accuracy_among_accepted": {
-          "count": 100,
-          "of": 117,
-          "rate": 0.8547008547008547
-        },
-        "accuracy_before_abstention": {
-          "count": 120,
-          "of": 172,
-          "rate": 0.6976744186046512
-        },
-        "correct_predictions_rejected": {
-          "count": 20,
-          "of": 120,
-          "rate": 0.16666666666666666
-        },
-        "incorrect_predictions_rejected": {
-          "count": 35,
-          "of": 52,
-          "rate": 0.6730769230769231
-        },
-        "known_photos_rejected": {
-          "count": 55,
-          "of": 172,
-          "rate": 0.31976744186046513
-        },
-        "non_ant_insect_false_acceptance": {
-          "count": 16,
-          "of": 99,
-          "rate": 0.16161616161616163
-        },
-        "out_of_scope_ant_false_acceptance": {
-          "count": 91,
-          "of": 200,
-          "rate": 0.455
-        },
-        "unrelated_false_acceptance": {
-          "count": 16,
-          "of": 102,
-          "rate": 0.1568627450980392
-        }
-      },
-      "not_a_photo_quality_detector": true,
-      "status": "INDEPENDENTLY VALIDATED as a selective confidence/abstention gate; NOT VALIDATED as an unknown-species detector",
-      "unknown_test_v1_eval_json_sha256": "cd4d88829a0ca63fb9a562e4a49fc4c63284f05f3796502a1411377ddbfbf8e8"
+    "parity_report": {
+      "byte_sha256": "bec08235a48e9583f2b40556c9c8d860c41904729bcded9d6f91c37716c8297e",
+      "generation_metadata_workspace_git_dirty": true,
+      "max_cosine_abs_divergence": 1.9669532775878906e-06,
+      "n_images": 260,
+      "note": "Parity evidence generation recorded workspace_git_dirty=True -- carried through here verbatim, never concealed or reinterpreted. Parity is validated and bound, never rerun or rewritten by this generator.",
+      "path": "training/reports/northeast_v1_b4_dev_v2_parity.json",
+      "top1_disagreements": 0,
+      "top3_set_disagreements": 0
     },
     "preprocessing": {
       "contract": {
@@ -129,17 +69,19 @@
           380,
           380
         ]
-      },
-      "prior_real_image_diagnostic": {
-        "n_images": 200,
-        "preprocessing_tensor_max_abs_diff": 0.0,
-        "sample_list_hash_sha256": "c6a3f2b0b1ed2bc8887eadf5cac5475c2195ac8abc4887e1315adb07075e6887",
-        "source": "training/artifacts/parity_report.json:stage_b_real_end_to_end_parity"
-      },
-      "sequencing_note": "api/inference.py's source hash recorded in preprocessing.source_hashes is diagnostic provenance only, not a binding constraint. The API now ships the confidence gate and reads this policy from the artifact directory. Regenerate the policy after serving-code or bound-artifact changes so the recorded provenance describes the runtime being shipped.",
+      }
+    },
+    "provenance": {
+      "git_head": "918422c1237d7847b8e963502416abeff1cd0eae",
+      "note": "Diagnostic provenance only -- the API loader never reads or checks this block, so an edit to any of these files after this policy was generated does not retroactively deactivate an already-active gate. It DOES mean this policy's recorded provenance is stale relative to the current tree and the policy should be regenerated (via --write) before deployment. This applies equally to api/inference.py, whose only RUNTIME binding is the separate preprocessing.contract/executable_check fields above, not this hash.",
+      "source_hash_algorithm": "sha256 of canonical-LF-normalized (CRLF->LF) file bytes",
       "source_hashes": {
-        "api/inference.py": "73bb6e19c4b743e70021c66025fda054e33b48da24b2e9a36e940bfb61f3d8cf",
-        "training/data.py": "62b97843f22a5f7375edf4ba1e6608de17914d3f4c75a889e30217e6d915c082"
+        "api_inference": "73bb6e19c4b743e70021c66025fda054e33b48da24b2e9a36e940bfb61f3d8cf",
+        "api_inference_policy": "1bebd2eecb754368c8312f02d9045ba5655ed778c07719f7650e0b1f414fa04f",
+        "api_policy_schema": "0918a306908ff6d65a87fa576da5a025b37abc66fbf616fb8d42a02396ea5627",
+        "generate_inference_policy_v2": "91ff4520c7bafeb74e45fefbb71414050eb942a1e261c2860602653ee34af2a2",
+        "training_data": "b152d178d900c7992ca3223206469ae6be02448b72205f464277d27cce92bd4b",
+        "training_policy_schema": "0918a306908ff6d65a87fa576da5a025b37abc66fbf616fb8d42a02396ea5627"
       }
     },
     "provider_policy": {
@@ -155,124 +97,27 @@
       },
       "operator_verbatim": "max_sim < value",
       "signal": "raw max cosine similarity before geo re-ranking",
-      "value": 0.6
+      "value": 0.61
     },
-    "runtime_comparison_semantics": {
-      "implementation": "Implemented by the API on the raw, unrounded, pre-geo maximum cosine. If this optional policy is absent or invalid, the API keeps closest-match inference available with gate_active=false and low_confidence=null.",
-      "non_finite_handling": "non-finite similarity (NaN/Inf) is a request error; see decision.non_finite_action",
-      "widening": "raw float32 max similarity is widened to float64 before comparison, without rounding"
-    },
-    "timm_pretrained_resolution": {
-      "crop_mode": "center",
-      "crop_pct": 0.922,
-      "input_size": [
-        3,
-        380,
-        380
-      ],
-      "interpolation": "bicubic",
-      "mean": [
-        0.485,
-        0.456,
-        0.406
-      ],
-      "note": "Resolved pretrained data configuration in the currently installed timm version. Not proof of the historical training environment -- requirements.txt pins timm as 'timm>=1.0'. timm resolves interpolation='bicubic' for this backbone; the project's own pipeline uses PIL bilinear, validated empirically by the executable preprocessing check above. Informational only -- changes nothing.",
-      "project_actually_uses": {
-        "crop": "none (squish resize)",
-        "interpolation": "bilinear"
-      },
-      "resolved_in_timm_version": "1.0.27",
-      "resolved_tag": "tf_efficientnet_b4/ns_jft_in1k",
-      "std": [
-        0.229,
-        0.224,
-        0.225
-      ]
-    },
-    "validated_environment": {
-      "differences": {},
-      "evidence_environment": {
-        "api_style_session_providers": [
-          "AzureExecutionProvider",
-          "CPUExecutionProvider"
-        ],
-        "numpy_version": "2.4.6",
-        "onnxruntime_version": "1.26.0",
-        "ort_available_providers": [
-          "AzureExecutionProvider",
-          "CPUExecutionProvider"
-        ],
-        "parity_onnx_providers_forced": [
-          "CPUExecutionProvider"
-        ],
-        "pillow_version": "12.2.0",
-        "python_executable": "C:\\dev\\antid\\.venv\\Scripts\\python.exe",
-        "python_version": "3.11.9",
-        "torch_cuda_available": true,
-        "torch_cuda_device": "NVIDIA GeForce RTX 5080",
-        "torch_version": "2.11.0+cu128",
-        "torchvision_version": "0.26.0+cu128"
-      },
-      "generation_environment": {
-        "graph_optimization_level": "GraphOptimizationLevel.ORT_ENABLE_ALL",
-        "numpy_version": "2.4.6",
-        "onnx_opset": 17,
-        "onnxruntime_version": "1.26.0",
-        "pillow_version": "12.2.0",
-        "python_version": "3.11.9",
-        "torch_version": "2.11.0+cu128",
-        "torchvision_version": "0.26.0+cu128"
-      },
-      "note": "Both blocks are informational context, not binding. A difference here does not mean the parity evidence is invalid, but it does mean the evidence was NOT measured under the environment recorded in generation_environment -- a newly upgraded runtime is not retroactively covered by historical parity evidence just because this generator ran successfully under it. CPUExecutionProvider exclusivity (provider_policy) is the only binding runtime requirement."
-    },
-    "validation": {
-      "evidence_notes": [
-        "calibration_v1_scores.json does not record a hash for backbone.onnx (expected optional omission)",
-        "unknown_test_v1_eval.json does not record a hash for backbone.onnx (expected optional omission)"
-      ],
-      "measured_parity": {
-        "boundary_band": [
-          0.55,
-          0.65
-        ],
-        "boundary_band_count": "14/200",
-        "boundary_band_gate_shift_crossings": 0,
-        "calibration_mirror_scope_limitation": "This comparison path ('calibration_mirror_cuda_batch32') is a batch-32 embedding diagnostic reproduction, not a byte-for-byte replay of the historical calibration/Phase C evaluator's entire scoring execution.",
-        "cuda_batch32_vs_onnx_cpu_max_sim_divergence_percentiles": {
-          "max": 0.00367659330368042,
-          "p50": 7.82310962677002e-05,
-          "p95": 0.0003484487533569335,
-          "p99": 0.0007627123594284056
-        },
-        "eval_batch_size_32_confirmed": "eval_calibration.py, eval_unknown_test.py, evaluate.py, and eval_benchmark.py all read batch_size from config.yaml (=32) via DataLoader(..., batch_size=cfg['batch_size']); confirmed by source inspection, not rerun",
-        "gate_disagreements": "0/200",
-        "historical_replay_caveat": "parity_flag_ablation.part_b_cross_check_vs_parity_report.max_diff_reference_path is 0.04015389084815979 (~0.0401539), even though that report's own note expected an exact replay. Not a shipping blocker: the production-relevant result is described only as a fixed batch-32 embedding diagnostic comparison, not an exact historical-evaluator replay.",
-        "limitation": "Sufficient engineering evidence for this personal/local app; not a population bound and not proof of perfect parity.",
-        "preprocessing_tensor_max_abs_diff_on_200_real_images": 0.0,
-        "sample": "fixed stratified 200-image diagnostic sample (seed=42, 4 images/species), not a random production sample (sample_list_hash_sha256=c6a3f2b0b1ed2bc8887eadf5cac5475c2195ac8abc4887e1315adb07075e6887)",
-        "top1_disagreements": "0/200"
-      },
-      "onnx_bound_by": [
-        "parity_report.json",
-        "parity_diagnostic.json",
-        "parity_flag_ablation.json"
-      ],
-      "provenance_hashes": {
-        "calibration_v1_json": "2e4c4be09656ab001312334641d3306323a8e07ab729634a90a0af1d13af35ed",
-        "calibration_v1_scores_json": "23adca5013995a535e45850ddde457c6eb3ba555bd4e9255b222f7d67c724063",
-        "config_yaml": "a161bff33ddd2d5bafb24775ddd04ea73f430cf4370aec3ab02d46735db07d9e",
-        "parity_diagnostic_json": "59c9818b852a1dc53a5876b9aeb2634eea6e4d1cd92c82783d3f2a955dc30335",
-        "parity_flag_ablation_json": "9be162144afadaf00770330ca4f2e26b45f605b95a06ecd1bfef1dfeb143acf6",
-        "parity_report_json": "dfe6030f1b8b7399923064a182dc0212963526322225465ca0f4c018892d245b",
-        "unknown_test_v1_eval_json": "cd4d88829a0ca63fb9a562e4a49fc4c63284f05f3796502a1411377ddbfbf8e8"
-      },
-      "provenance_statement": "The calibration and Phase C evaluation artifacts evaluated model.pth and did not record backbone.onnx. ONNX correspondence is not established by derivation from the checkpoint; it is established empirically by the parity reports, which recorded the current backbone.onnx hash alongside the same model.pth, prototypes.npy, taxonomy.json, and config.yaml hashes used by Phase C, and measured max-sim divergence between the two paths on a fixed 200-image stratified diagnostic sample."
+    "validation_evidence": {
+      "calibration_v2_scores_byte_sha256": "4fec18a938ef22e06d6073016d1692512e8fb1e4e41ec645d9aeb33afbebe46b",
+      "calibration_v2_scores_content_sha256": "35c7bf36042470dde8fc922106c6528fcb6a06e3bac454c4d196880796e778f4",
+      "calibration_v2_selection_byte_sha256": "00e56d2e64941086ee1d1c663890cb95d3daa4dcce1e729ef972879376f1489b",
+      "calibration_v2_selection_content_sha256": "82bc754dbf46643862504916f4c273922e9ac3cefc45bfa28e5eb4a15dfdc5b5",
+      "diagnostic_out_of_scope_ant_far": 0.51,
+      "gate_v2_evaluation_contract_content_sha256": "49bb0c4ee5749513b62e7bdfa7f50a7619fe16e2afc75a47d60bda25b4bdb10c",
+      "gate_v2_selection_contract_content_sha256": "991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77",
+      "parity_report_byte_sha256": "bec08235a48e9583f2b40556c9c8d860c41904729bcded9d6f91c37716c8297e",
+      "unknown_test_v2_eval_byte_sha256": "b695e44ecd902b3763b6f202695e0495308a9f10d43400c47a46253c6029447e",
+      "unknown_test_v2_eval_content_sha256": "e7c1d565c7ecd0999e00c65cc238296cf78525fc8efd00da8af91b3a0dbf7616",
+      "unknown_test_v2_evaluation_attempt_byte_sha256": "fd790252ffbe4b20a6f52c26fb902e0cd7fbfedbd88b5613da048992b1a062bf",
+      "validation_status": "validation_passed"
     }
   },
-  "content_sha256": "61a530740ce2eceb3c76f689a1e8facbb3c046cec1d77533f6a5aff4cbd611f4",
+  "content_sha256": "35aef7446b47df4c521a612a3d73db44a35e85b1bd0577dac2aa4330bf55b7b5",
   "generation": {
-    "generated_at": "2026-08-28T00:59:56Z",
-    "generator_version": "4.0.0"
+    "generated_at": "2026-09-13T16:34:07Z",
+    "generator_version": "1.0.0"
   },
-  "policy_schema_version": 1
+  "policy_schema_version": 2
 }

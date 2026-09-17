@@ -1,6 +1,17 @@
 # Artifacts
 
-These are the **real trained weights**: a 30-epoch fine-tune of
+**Historical 50-species evidence, not a description of the default files in
+this directory today.** The default `training/artifacts/` serving bundle was
+promoted to the 65-species B4 with a hash-bound 0.61 policy on 2026-09-17.
+The old six-file bundle is preserved locally under `v1_50species/` for
+rollback; both that backup and the model weights are gitignored. This
+document's benchmark, 0.60 gate, parity, and unrecoverable-split discussion
+belong to the **previous 50-species checkpoint**. Current results and their
+`perceptual_independence_incomplete_by_decision` label are in the root README.
+Do not run the commands below against the default directory or overwrite its
+65-species files.
+
+The previous bundle contained a 30-epoch fine-tune of
 `tf_efficientnet_b4` over 50 ant species (~9,990 iNaturalist images, ~200 per
 species), final training loss 0.056.
 
@@ -31,12 +42,10 @@ still forced into whichever of the 50 scores highest -- there is no "none of
 these" outcome, and nothing about model architecture changes that. See
 `benchmark_v1.json`'s `scope` field.
 
-Reproduce with:
-
-    cd ..
-    python eval_benchmark.py
-
-It **refuses to run** unless all 1,591 rows resolve to exactly one local image
+The frozen report records this historical run. Do not rerun it with today's
+default 65-species bundle: that would not reproduce the 50-species result and
+would spend a frozen evaluation set again. The evaluator **refuses to run**
+unless all 1,591 rows resolve to exactly one local image
 each with a verified sha256 match — never a silent partial evaluation. On a
 fresh clone, or if local images are missing/corrupted, restore the exact
 frozen set first:
@@ -203,26 +212,23 @@ the model grading its own homework, not a measurement of generalization.
 `benchmark_v1` exists specifically to give this model a number that isn't
 either of these two: not the unrecoverable 66.6% and not the contaminated 93%.
 
-If you retrain, `val_split.json` will be written automatically and
+For a future run with a pinned split, `val_split.json` is written automatically
+and
 
     python evaluate.py --geo          # reads val_split.json automatically
 
-becomes reproducible again for that run. `benchmark_v1` still applies
-independently of retraining — it's a fixed test set, not tied to any one
-checkpoint.
+becomes reproducible for that run. This does not authorize reusing the frozen
+`benchmark_v1` to select or grade another candidate.
 
-## Regenerating
+## Historical regeneration commands — do not run against the default bundle
 
-    cd ..
-    python train.py --config config.yaml     # on a CUDA GPU; overwrites everything here
-    python export.py                         # re-export ONNX from model.pth alone
-    python evaluate.py --geo                 # recompute eval.json (+ geo re-ranking) against val_split.json
-    python eval_benchmark.py                 # recompute against the frozen, unseen benchmark_v1
+Earlier runs used `train.py`, `export.py`, and `evaluate.py` in this directory.
+Without a separate `--artifacts-dir`, those commands can overwrite the live
+65-species bundle. The frozen benchmark must not be rerun as a current-model
+comparison.
 
 `geo_index.json` is written automatically when the image manifest carries
-observation coordinates (iNaturalist provides them). Note that `train.py` builds
-it from **all** samples, train and val — for a leak-free geo measurement on
-val_split.json use `python evaluate.py --geo --geo-source train`, which
-rebuilds the index from the training split only. `eval_benchmark.py` doesn't
-need this care: `benchmark_v1` is entirely disjoint from the training set by
-construction, so there's no leak-free variant to choose between.
+observation coordinates (iNaturalist provides them). Current `train.py`
+builds the sidecar from the **train split only**, not train plus validation;
+historical indexes may lack that provenance. The old `benchmark_v1` report
+remains bound to its original 50-species artifacts.

@@ -1,5 +1,10 @@
 # AntID Northeast candidate readiness — metadata audit v1
 
+> Historical metadata-only readiness snapshot, not a current work queue. The
+> expansion dataset was later frozen, the 65-species bundle promoted, and the
+> one-shot final test run with perceptual independence incomplete by decision.
+> See the root README and TODO closeout section for current state.
+
 Generated 2026-09-05T20:27:48.864672Z. This is a metadata snapshot, not a frozen dataset.
 No photos were downloaded, no split membership was assigned, and no model artifact was changed.
 

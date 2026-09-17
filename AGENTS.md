@@ -13,6 +13,23 @@ handful of artifact files — not through shared code (the one exception:
 `training/data.py` imports `StorageClient` from `data_pipeline/common.py` via a
 `sys.path` insert).
 
+## Current local serving state (2026-09-17)
+
+The default `training/artifacts/` bundle is the **65-species EfficientNet-B4**
+model with an active, hash-bound **0.61** selective-confidence policy under
+ONNX Runtime CPU. The original 50-species bundle and its 0.60 policy are
+preserved locally under `training/artifacts/v1_50species/` for rollback.
+Model weights and that rollback directory are gitignored: a fresh clone does
+not include a runnable serving bundle. The candidate copy is under
+`training/artifacts/northeast_v1_b4_dev_v2/`. Do not overwrite the default
+bundle with a smoke run or describe the old 50-species benchmark as current
+performance. The pinned all-65 development result is 1,766/2,596 top-1 and
+2,151/2,596 top-3. The one-shot final test covers **only the 15 added
+species**: 296/450 top-1 and 356/450 top-3, with the required label
+`perceptual_independence_incomplete_by_decision`. These populations are not
+directly comparable. See the root README for the evidence and limitations;
+do not rerun the final test or retune the threshold from it.
+
 ## The two contracts that hold everything together
 
 Almost every non-obvious bug in this codebase comes from breaking one of these.
@@ -40,26 +57,25 @@ classifier head) that `api/inference.py` never loads:
 A missing or invalid optional policy never prevents closest-match inference:
 the response carries `gate_active: false` and `low_confidence: null`, and
 `/health` exposes `inference_policy_loaded` plus `inference_policy_reason`.
-When active, the gate compares the raw, unrounded, pre-geo maximum cosine with
-the frozen 0.60 threshold. It is a validated confidence/abstention gate,
-**not** an unknown-species detector; roughly 45.5% of independently tested
-out-of-scope ant photographs still passed it.
+When active, the current gate compares the raw, unrounded, pre-geo maximum
+cosine with the frozen **0.61** threshold (strictly less means low confidence;
+equality is accepted). It is a validated confidence/abstention gate,
+**not** an unknown-species detector: 51% of out-of-scope ant photographs in
+`unknown_test_v2` passed it. The historical 50-species gate used 0.60.
 
 Training/eval bookkeeping files that are **not** part of the serving contract:
-- `val_split.json` — split membership for *this training run*, written by
+- `val_split.json` — split membership for a training run, written by
   `train.py` and read by `evaluate.py`. New runs pin sorted `train` and `val`
   keys plus their counts; legacy files may pin only `val`. The current
-  checkpoint's original split was not preserved. Without a pin, the val split is only
-  implied by the manifest's split column and row order, both of which are
-  rewritten when the manifest is regenerated — after which every reconstructed
-  split mixes training images back in and accuracy is inflated. (This is
-  exactly what happened to the current checkpoint's original split — see
-  `training/artifacts/README.md`.)
+  65-species run pinned its development split. The **previous** 50-species
+  checkpoint's original split was not preserved; re-deriving it from a
+  regenerated manifest mixes training images back in and inflates accuracy.
+  See `training/artifacts/README.md` for that historical failure.
 - `data/benchmark_v1/` — a separate, frozen, independently-scraped evaluation
   set (not tied to any one checkpoint) that exists because the point above
-  isn't hypothetical. Read via `training/eval_benchmark.py`; see "Results" in
-  the main README for the current number and `training/artifacts/README.md`
-  for full methodology.
+  isn't hypothetical. Its recorded 60.8%/79.3% raw result belongs to the
+  **previous 50-species model**, not the current 65-species bundle. See the
+  root README and `training/artifacts/README.md` for methodology.
 
 Classification is **embedding + cosine similarity, not softmax**. The model
 (`training/model.py`) trains a `Linear` classifier head with cross-entropy, but
@@ -133,11 +149,10 @@ names and multi-GB, so they're streamed in chunks.
 — falls back CUDA → MPS → CPU):
 ```bash
 python train.py --config config.yaml                  # any key overridable: --epochs --batch-size --lr --image-size --artifacts-dir
-python export.py                                       # re-export ONNX from artifacts/model.pth
+python export.py                                       # re-export ONNX; never target the live bundle casually
 python evaluate.py                                     # top-1/top-3 under cosine inference
 python evaluate.py --geo                               # + geo re-ranking, side by side
 python evaluate.py --geo --geo-source train            # leak-free geo index (train split only)
-python eval_benchmark.py                                # the reproducible baseline -- see below
 python test_policy_generator.py                         # policy evidence/schema/generator tests
 python test_geo_split.py                                # pinned-split + geo-sidecar integrity tests
 ```
@@ -146,28 +161,20 @@ CPU smoke run that exercises the whole training→artifact path in ~2 min (set
 ```bash
 python train.py --config config.smoke.yaml --epochs 1 --batch-size 2   --limit-batches 2 --artifacts-dir ../scratch/smoke
 ```
-`training/artifacts/` holds **real trained weights**: a 30-epoch B4 fine-tune
-over 50 species. Real training overwrites them. Note `config.smoke.yaml`
+`training/artifacts/` holds **real trained weights**: the selected 65-species
+B4 bundle. Real training overwrites them. Note `config.smoke.yaml`
 writes to that same `artifacts/` directory, so pass `--artifacts-dir` to a
 smoke run or it clobbers them.
 
-**Current accuracy: cite `eval_benchmark.py`'s number, not the historical one.**
-This checkpoint reported top-1 66.6% / top-3 81.9% at training time, but that
-split was never pinned and the manifest was regenerated right after — the
-split is now unrecoverable, and re-deriving any split from today's manifest
-scores ~93% top-1 purely from memorization (**never report that 93% as
-performance**). `data/benchmark_v1/` is a separate, frozen, independently-
-scraped set built to give this model a trustworthy number instead: **60.8%
-top-1 / 79.3% top-3 micro** (raw cosine), **64.2% / 82.2%** with geo
-re-ranking — reproduce with `python eval_benchmark.py`, which refuses to run
-unless all 1,591 images verify against `benchmark_v1.csv`'s sha256 (restore
-them with `python data_pipeline/scrape_benchmark.py --restore --out
-data/benchmark_v1` if missing). Macro (unweighted per-species mean) is close
-but not a reliable secondary number here — two species have 1 benchmark image
-each and both happen to score 100%. Full detail in
-`training/artifacts/README.md`. Don't use this benchmark to pick among model
-candidates during development — tune against a freshly pinned
-`val_split.json` instead, and touch benchmark_v1 once, on the finalized model.
+**Current performance:** cite the pinned all-65 development result and the
+separately labeled new-15-only final-test result in the root README. They
+measure different populations and are not directly comparable. The previous
+50-species checkpoint's 66.6%/81.9% training-time split is unrecoverable;
+reconstructed ~93% top-1 is memorization, **never** performance evidence.
+Its separate `benchmark_v1` report is historical: 60.8%/79.3% raw cosine,
+64.2%/82.2% with geo. Do not run that frozen set against the current bundle
+as a new tuning or comparable evaluation. Full old-model methodology is in
+`training/artifacts/README.md`.
 
 **API** (`cd api`, `pip install -r requirements.txt`):
 ```bash

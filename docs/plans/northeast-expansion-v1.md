@@ -1,5 +1,11 @@
 # AntID: Northeast coverage expansion v1
 
+> Historical plan, superseded as a current-status source. The 65-species B4
+> bundle with the 0.61 gate is now the local serving default, and the one-shot
+> final test has run with perceptual independence incomplete by decision. Read
+> the root README and TODO closeout section for current state; retain the
+> dated milestones below as evidence of the decisions made at each phase.
+
 Status: scope and personal/non-commercial license pool approved; Milestone 1
 implemented and verified; Milestone 2A metadata audit complete; the 15-species
 train/development/final-test photo download is complete and frozen

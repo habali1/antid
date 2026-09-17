@@ -1,5 +1,11 @@
 # Gate v2 threshold-selection contract
 
+> Historical phase record, superseded as a current-status source. The 0.61
+> threshold was selected on `calibration_v2`, evaluated once on separately
+> frozen `unknown_test_v2`, and its v2 policy is now the local default for the
+> 65-species bundle. Perceptual independence remains incomplete by decision.
+> The frozen contract and dated phase notes below are preserved, not revised.
+
 Status: **frozen_before_calibration_scoring** (`training/gate_v2_selection_contract.json`,
 `content_sha256: 991f7a0b8e83654e45575566eb0648ddcd69866e29c94b8a2030cc6f4bc19f77`).
 

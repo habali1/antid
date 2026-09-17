@@ -1,6 +1,62 @@
 # TODO
 
-## Active roadmap: Northeast expansion
+## Closeout state and residuals (2026-09-17)
+
+The selected 65-species B4 bundle is the local default-serving model with an
+active, hash-bound 0.61 confidence gate. The original 50-species bundle is
+retained at `training/artifacts/v1_50species/` for rollback. All-65 pinned
+development top-1/top-3 was 1,766/2,596 and 2,151/2,596; the one-shot final
+test measured **only the 15 added species** at 296/450 and 356/450. It
+remains labeled `perceptual_independence_incomplete_by_decision`; do not
+rerun that test or retune the model/gate from it. The following are recorded
+residuals, not prerequisites retroactively imposed on this local release:
+
+- **Committed suite is red after promotion.** In the rebuilt environment,
+  API discovery ran 33 tests with one failure: its real-artifact test assumes
+  the default directory is the v1/0.60 bundle. Training discovery exited
+  nonzero: the v1 policy-generator integration fixtures likewise clone the
+  now-v2 default artifacts while expecting v1 calibration hashes. A separate
+  final-test metrics unit test asserts exact floating-point equality
+  (`0.6666666666666665` versus `0.6666666666666666`), a brittle pattern
+  independent of promotion. The training output was truncated, so its total
+  failure count was not established. Data-pipeline discovery passed 215
+  tests; mobile `npm run typecheck` passed. This documentation/artifact
+  closeout commit **does not repair the red tests**; no test or code change
+  is included. Do not describe the full committed suite as green.
+- **Perceptual independence remains incomplete by decision.** Of 3,972
+  in-scope candidate pairs, 762 were adjudicated and 3,210 remain permanently
+  `not_adjudicated`, including 1,221 touching final-test cross-population
+  independence. The v2 contract did not pass; exact-byte and metadata checks
+  do not establish absence of recompressed or altered reuploads.
+- **The gate is not an unknown-species detector.** At 0.61, 51% of
+  out-of-scope ant photographs in `unknown_test_v2` were accepted. Preserve
+  the closest-match/confidence framing; do not claim open-set detection.
+- **Licensing limits use.** The expansion includes CC BY-NC/CC BY-NC-SA
+  material and legacy training-photo licenses are incompletely documented.
+  The current phase is personal/non-commercial. Public deployment,
+  redistribution, or commercial use needs a separate licensing review.
+- **Fresh-clone recovery is incomplete.** Mandatory ONNX/weights/prototypes
+  and `v1_50species/` are gitignored with no committed distribution source;
+  a fresh clone cannot start the API from Git alone. Frozen downloaded-set
+  manifests have restore modes, but live upstream availability was not
+  re-tested at closeout. The original 50-species `data/clean/` image tree
+  has no committed restore path, so exact clean-clone retraining is not
+  established. Keep `v1_50species/` permanently; the identical
+  `.promotion-stage-849f20b38b634283bfc246a62f68c4e8/previous/`
+  copy stays until an independently backed-up, hash-checked rollback path
+  and release sign-off permit its removal.
+- **Diagnostic visibility remains deferred.** `/health` threshold,
+  gate-active, and recognized-cell fields; `/identify` unrounded
+  `raw_pre_geo_max_cosine`; and informational current-runtime metadata in a
+  future v2 policy are optional follow-up work. They were not required for
+  the verified file-level promotion and must not silently trigger policy
+  regeneration or threshold changes.
+
+## Historical Northeast expansion roadmap (recorded before training)
+
+This section preserves phase-by-phase decisions and snapshots. Statements
+below about work being pending, the default being 50 species, or frozen sets
+being unopened describe their original phase, **not the current state** above.
 
 - Scope approved: keep the existing 50 species and add up to 15 missing
   Northeast species. One catalog, not a Northeast-only replacement.
@@ -13,9 +69,9 @@
   240/species: 200 train + 40 development), plus a disjoint, untouched
   `northeast_final_test_v1` (30/species). Cleaned copies are staged at
   `data/clean/{slug}/{photo_id}.jpg` alongside the original 50 species, ready
-  to resolve through `MANIFEST_CSV`/`LOCAL_DATA_DIR` for a retrain. This is
-  metadata-plus-download progress, not model training — no training or
-  evaluation has run against this data.
+  to resolve through `MANIFEST_CSV`/`LOCAL_DATA_DIR` for a retrain. At this
+  historical milestone this was metadata-plus-download progress; training
+  and one-shot evaluation were completed in later phases.
 - The 65-species training catalog is versioned outside the live serving
   artifacts: `data/northeast_expansion_v1/northeast_taxonomy_v1.json` (65
   entries, contiguous slug-sorted indices 0–64, with `common_name` preserved
@@ -36,11 +92,11 @@
   without guessing. Every `sha256` in the file is verified 64 lowercase hex
   characters matching the resolved file's actual bytes, with zero duplicates
   and zero overlap against `benchmark_v1`/`calibration_v1`/`unknown_test_v1`/
-  `northeast_final_test_v1`. `training/artifacts/taxonomy.json` and
-  `data/manifest_all.csv` remain the original, untouched 50-species
-  serving/training files — **do not treat either of those as the 65-species
-  source of truth**; retraining should read the versioned Northeast files
-  above.
+  `northeast_final_test_v1`. At this historical milestone,
+  `training/artifacts/taxonomy.json` and `data/manifest_all.csv` were still
+  the original 50-species files. The default artifact taxonomy has since
+  been promoted to 65 species; any future retraining should use the
+  versioned Northeast source files above.
 - Both versioned files are **reproducible from authoritative inputs**, not
   hand-maintained: `data_pipeline/build_northeast_training_catalog.py`
   deterministically rebuilds them from three small **committed** metadata
@@ -76,7 +132,7 @@
   this catalog: it loses the pinned train/val split, taxon IDs, coordinates,
   and all other manifest metadata, silently reconstructing a different
   (unpinned, taxon-id-less) split instead.
-- The current 50-species serving artifacts (`taxonomy.json`, `prototypes.npy`,
+- The original 50-species serving artifacts (`taxonomy.json`, `prototypes.npy`,
   `backbone.onnx`, `model.pth`, `geo_index.json`, `inference_policy.json`) are
   backed up, hash-verified, at `training/artifacts/v1_50species/` (gitignored,
   local-only) so the live app can be restored if the 65-species retrain is

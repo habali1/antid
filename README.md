@@ -61,15 +61,13 @@ draw of those two photos could just as easily have pulled it down. Treat macro
 as informational, not as evidence the model does better per-species than the
 micro number suggests.
 
-Random chance on 50 classes is 2%. Reproduce with `python eval_benchmark.py`
-from `training/` — it **refuses to run** unless all 1,591 rows resolve to
-exactly one local image apiece with a verified sha256 match against
-`benchmark_v1.csv`; it never silently evaluates a subset. If images are
-missing or don't match (e.g. on a fresh clone), restore the exact frozen set
-first — see **Restoring the benchmark locally**, below. Full per-species
-breakdown, the coordinate-bearing-subset figures, and sha256 hashes of both
-the benchmark manifest and the evaluated artifacts are written to
-`data/benchmark_v1/benchmark_v1_eval.json` each run.
+Random chance on 50 classes is 2%. The frozen historical report, not a new
+run against today's default 65-species bundle, is the source for these
+numbers. `eval_benchmark.py` verifies all 1,591 image hashes before scoring,
+but running it against the promoted default would **not** reproduce this
+50-species result. The archived per-species breakdown, coordinate-bearing
+figures, and evaluated-artifact hashes are in
+`data/benchmark_v1/benchmark_v1_eval.json`.
 
 > **Why a second, independently-scraped benchmark exists at all.** The
 > original training run measured 66.6% top-1 / 81.9% top-3 on its own
@@ -301,7 +299,10 @@ human-transported species that make up much of applied ant identification.
 The current optional `inference_policy.json` enables a frozen abstention rule:
 `low_confidence` when the raw, unrounded, pre-geo maximum cosine is strictly
 below **0.61** (equality is accepted). It was selected by the precommitted
-rule on `calibration_v2` and evaluated once on independent `unknown_test_v2`.
+rule on `calibration_v2` and evaluated exactly once on `unknown_test_v2`,
+which was separately frozen before scoring. "Independent" here describes
+that precommitted separation and single use; perceptual independence was not
+fully established and is labeled `perceptual_independence_incomplete_by_decision`.
 That validation passed its precommitted criteria, but 51% of out-of-scope ant
 photographs still passed, so this is a **confidence gate, not an
 unknown-species detector**. The earlier 50-species bundle and its 0.60 policy

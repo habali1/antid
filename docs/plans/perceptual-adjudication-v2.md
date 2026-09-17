@@ -1,5 +1,13 @@
 # Perceptual-pair adjudication v2 protocol
 
+> Historical frozen protocol, superseded for scope by the committed v3
+> decision. Adjudication stopped at 762/3,972 pairs; 3,210 remain permanently
+> `not_adjudicated`. The v2 finalization contract did not pass. The final test
+> subsequently ran once with the label
+> `perceptual_independence_incomplete_by_decision`. See the v3 decision and
+> root TODO closeout section for current status; preserve the original v2
+> protocol below as evidence.
+
 Status: **generated and frozen; adjudication not started**. The source-
 preparation commit is `7e847379bfadc378f1fa1b57c6ebd3f7390e81c1`.
 `training/pair_adjudication_v2_queue.json` and
