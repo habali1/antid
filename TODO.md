@@ -1844,3 +1844,27 @@ guessing; retain all existing early-stop rules; and stratify the final report
 by reviewer id. This uses the contract's existing required `reviewer_id`
 provenance field and does not alter the frozen queue, contract, labels, scope,
 or finalization semantics.
+
+## Phase 5F4 v3: stop and final-test handoff
+
+Pair review was permanently stopped and the 762-decision ledger frozen in
+commit `c488b8ff39b7e30210d7b42a6b0a1890b63ee7e3`. There are 3,210—not
+3,307—remaining in-scope candidates, permanently `not_adjudicated`. The v2
+contract has **not** passed. The v3 decision records the measured rationale
+and the incomplete perceptual-independence label. Before opening any final-test
+image for inference: commit the v3 decision, then separately commit a one-shot
+evaluator and reporting rule binding this label and all 450 frozen rows. Run
+the final test only once; preserve the unusable/poor-quality rows and disclose
+their manual-review counts alongside the result. No model or gate tuning from
+the final-test result.
+
+For the next catalog expansion, measure B4 throughput under
+`cudnn_deterministic=False` and `cudnn_benchmark=True` before assuming another
+~60-hour run is necessary. The earlier B4 epoch (~6,876 s) versus V2-S
+(~128 s) was about 54× slower under the shared deterministic policy; the
+full-run ratio was closer to 45×. A deterministic-cuDNN interaction with
+depthwise convolutions is a plausible primary explanation, **not a proven
+causal attribution** without a controlled B4 ablation. Determinism was used
+to keep the original comparison fair; it need not be imposed on a new
+throughput experiment. B4 remains the better selected model and already fits
+the serving contract; do not switch to V2-S solely for speed.

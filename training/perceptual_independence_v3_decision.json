@@ -1,0 +1,103 @@
+{
+  "schema_version": 3,
+  "decision_id": "phase5f-perceptual-independence-v3-partial-review-stop",
+  "status": "perceptual_independence_incomplete_by_decision",
+  "evidence": {
+    "v2_queue": {
+      "path": "training/pair_adjudication_v2_queue.json",
+      "byte_sha256": "28f9d3f984d14d88905cee5357e39802d384d87586fb10cab4e078e9057ca70d",
+      "in_scope_pairs": 3972,
+      "outside_scope_pairs": 12567
+    },
+    "v2_contract": {
+      "path": "training/pair_adjudication_v2_contract.json",
+      "byte_sha256": "27d9f66949a0ec2b9cb22a8993646a3c8a301955d7e3b664d1281ec44c230fb3"
+    },
+    "partial_ledger": {
+      "path": "training/pair_adjudication_v2_ledger.jsonl",
+      "frozen_at_commit": "c488b8ff39b7e30210d7b42a6b0a1890b63ee7e3",
+      "byte_sha256": "8e22ebacfbd567f6a043448af518e1c4622527fd4fbed8d261b259c9374280a2",
+      "adjudicated_pairs": 762,
+      "last_queue_index": 761,
+      "decisions": {
+        "different_image": 757,
+        "different_photo_same_observation": 5,
+        "same_source_image": 0,
+        "uncertain": 0
+      },
+      "reviewer_counts": {
+        "huso1": 309,
+        "codex-visual-v1": 453
+      }
+    },
+    "perceptual_candidate_report": {
+      "path": "training/perceptual_duplicate_candidate_pairs.json",
+      "byte_sha256": "3ce05cf2cdb91d77d6a5b153e4ee4d1f6be1fbd29de1788e2a1bac3964c9f93b"
+    },
+    "perceptual_hash_report": {
+      "path": "training/perceptual_duplicate_hashes.json",
+      "byte_sha256": "d0fd1f6ec081d3387a01228b409d80cc439ff002774a7efb318e930b7f37b58d",
+      "final_test_images": 450,
+      "final_test_vs_other_datasets_sha256_overlap": 0
+    },
+    "metadata_leakage_report": {
+      "path": "training/perceptual_duplicate_metadata_leakage.json",
+      "byte_sha256": "4c962c36a7f60ed5e7305162ab430f7860262ef972145fd9a3a6dd0b836342cb",
+      "findings_total": 435,
+      "findings_touching_final_test": 0,
+      "other_findings_domain_pair": "calibration_v1_vs_calibration_v2"
+    },
+    "both_rule_pairs": {
+      "in_scope": 18,
+      "adjudicated": 18,
+      "same_source_image": 0,
+      "uncertain": 0
+    },
+    "remaining_in_scope": {
+      "count": 3210,
+      "status": "not_adjudicated",
+      "both_rule_pairs": 0,
+      "phash_distance_median": 10,
+      "phash_distance_exactly_10": 1594
+    },
+    "workstreams": {
+      "final_test_independence": {
+        "total": 1681,
+        "adjudicated": 460,
+        "not_adjudicated": 1221
+      },
+      "final_test_internal_repetition": {
+        "total": 53,
+        "adjudicated": 53,
+        "not_adjudicated": 0,
+        "different_photo_same_observation": 5,
+        "same_source_image": 0
+      },
+      "gate_evidence_independence": {
+        "total": 2238,
+        "adjudicated": 249,
+        "not_adjudicated": 1989
+      }
+    }
+  },
+  "decision": {
+    "further_pair_adjudication": "permanently_stopped",
+    "v2_contract_result": "not_passed_not_finalized",
+    "v2_finalizer_must_not_be_run_as_a_pass": true,
+    "remaining_in_scope_status": "not_adjudicated",
+    "outside_v2_scope_status": "not_adjudicated",
+    "final_test_perceptual_independence": "incomplete_by_decision",
+    "gate_evidence_perceptual_independence": "incomplete_by_decision",
+    "final_test_inference": "permitted_once_under_v3_with_explicit_incomplete_independence_label",
+    "frozen_final_test_mutation": "forbidden",
+    "threshold_or_model_retuning_from_final_test": "forbidden",
+    "rerun_final_test_inference": "forbidden"
+  },
+  "limitations": [
+    "Zero confirmed duplicates in a prioritized, nonrandom 762-pair prefix does not prove zero duplicates among the 3210 unreviewed in-scope pairs.",
+    "A pHash median of 10 and no remaining both-rule pairs describe the remaining candidate distribution, not a validated false-positive rate or a guarantee of independence.",
+    "Zero SHA-256 and metadata overlap with final_test excludes those two exact overlap mechanisms only; recompressed, resized, or reuploaded imagery may remain.",
+    "The independent Gate v2 accuracy/coverage validation remains frozen, but its additional perceptual cross-set independence audit is incomplete.",
+    "The final-test result must retain the frozen 450 images, including the known unusable/poor-quality cases, and must carry this limitation alongside all metrics."
+  ]
+}
