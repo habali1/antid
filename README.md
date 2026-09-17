@@ -16,8 +16,32 @@ and ships a React Native client for iOS, Android, and web.
 
 ## Results
 
-50 species, evaluated on **benchmark_v1** — 1,591 images that are not just
-held out, but drawn from an entirely separate scrape, verified to share zero
+The default API artifact bundle now supports **65 species** with an active
+selective-confidence threshold of **0.61**. Its pinned development split
+(all 65 species) scored **1,766/2,596 top-1 (68.03%)** and **2,151/2,596
+top-3 (82.86%)**. The one-shot `northeast_final_test_v1` result covers only
+the **15 newly added species**, 30 images each: **296/450 top-1 (65.78%)** and
+**356/450 top-3 (79.11%)**. At the frozen 0.61 threshold, the gate accepted
+317/450 (70.44%); accepted top-1 was 252/317 (79.50%). The development and
+final-test populations are different and these percentages are **not a
+head-to-head comparison**. The final test was consumed once; it is not a
+tuning set.
+
+The final-test result carries the mandatory label
+`perceptual_independence_incomplete_by_decision`. Exact-byte and metadata
+overlap with other populations were zero, but 1,221 final-test
+cross-population perceptual candidates were left unadjudicated by decision.
+The v2 perceptual-independence screening **did not pass**; these candidates
+must not be described as confirmed non-duplicates. All 450 frozen images,
+including three manually marked unusable and 41 poor-quality-but-usable
+images, remain in the denominator. See
+`docs/plans/perceptual-independence-v3.md` and the frozen one-shot report in
+`data/northeast_final_test_v1/` for the evidence and limitations.
+
+### Previous 50-species model (historical benchmark)
+
+The previous bundle was evaluated on **benchmark_v1** — 1,591 images that are
+not just held out, but drawn from an entirely separate scrape, verified to share zero
 `photo_id`, zero `observation_uuid`, and zero image hash with anything the
 model trained on (methodology and verification in
 `data/benchmark_v1/benchmark_v1.json`). **Micro accuracy (image-weighted) is
@@ -60,7 +84,7 @@ the benchmark manifest and the evaluated artifacts are written to
 > on, so any 80/20 slice of a dataset it has fully seen averages out near
 > 93%; it's the model grading its own homework, not a measurement of
 > generalization. `train.py` now writes `artifacts/val_split.json` to pin the
-> split for future retrains, but for *this* checkpoint the only trustworthy,
+> split for future retrains, but for *that older* checkpoint the trustworthy,
 > reproducible number is benchmark_v1 above.
 
 **Several species score meaningfully lower on this fresh benchmark than the
@@ -87,9 +111,10 @@ their individual figures aren't statistically meaningful; they're still
 counted in the overall numbers above, and were deliberately kept rather than
 dropped or backfilled by loosening the freeze criteria.)
 
-**This measures accuracy among the 50 trained species only.** An ant that
-isn't one of them still gets forced into whichever of the 50 scores highest —
-the system has no "none of these" outcome. The shipped confidence gate can
+**This historical benchmark measures accuracy among its 50 trained species
+only.** An ant that isn't one of them still gets forced into whichever of the
+50 scores highest —
+the system has no "none of these" outcome. The older 0.60 confidence gate could
 abstain on weaker matches, but it is not an unknown-species detector: 45.5% of
 out-of-scope ant photographs still passed it in the independent test. Broader
 coverage or a genuinely open-set approach is still needed. See
@@ -103,35 +128,35 @@ finalized candidate. Repeatedly evaluating candidates against it and keeping
 the best score would slowly turn this benchmark into something the model is
 indirectly fit to, the same problem it exists to avoid.
 
-Training dataset: 9,989 images across 50 species (~200 each), 7,990 train /
-1,999 val, sourced through the public iNaturalist API.
+Previous-model training dataset: 9,989 images across 50 species (~200 each),
+7,990 train / 1,999 val, sourced through the public iNaturalist API.
 
 ---
 
 ## Data licensing and attribution
 
-The current 50-species dataset was collected with the legacy
+The original 50-species dataset was collected with the legacy
 `data_pipeline/scrape_inat_api.py` path. It applied **no photo-license filter**:
 the scraper selected the first photo from each eligible research-grade
 observation and its manifest did not record either `license_code` or
-attribution. All 50 species in `training/artifacts/taxonomy.json` therefore
+attribution. Those 50 legacy species therefore
 belong to a legacy mixed/undocumented license pool; their historical per-photo
 license provenance cannot be reconstructed from the training manifest alone.
 The older S3 scraper also did not filter on a photo-license field.
 
 Beginning **2026-09-05**, the Northeast expansion uses an explicit personal,
 non-commercial pool: CC0, CC BY, CC BY-SA, CC BY-NC, and CC BY-NC-SA. The 15
-provisional species governed by this policy are *Nylanderia flavipes*, *Lasius
+added species governed by this policy are *Nylanderia flavipes*, *Lasius
 neoniger*, *Lasius claviger*, *Camponotus novaeboracensis*, *Lasius
 emarginatus*, *Camponotus americanus*, *Camponotus subbarbatus*, *Camponotus
 nearcticus*, *Lasius americanus*, *Lasius aphidicola*, *Aphaenogaster rudis*,
 *Formica exsectoides*, *Ponera pennsylvanica*, *Temnothorax curvispinosus*, and
-*Lasius interjectus*. No expansion photos have been downloaded and this catalog
-is not frozen yet.
+*Lasius interjectus*. This 65-species catalog and its expansion data are now
+frozen; the new model uses that catalog.
 
-The planned expansion dataset will include CC BY-NC / CC BY-NC-SA material and
-is restricted to this personal, non-commercial phase. Every candidate and
-future download-manifest row must preserve the selected photo's license code,
+The expansion dataset includes CC BY-NC / CC BY-NC-SA material and
+is restricted to this personal, non-commercial phase. Candidate and
+download-manifest rows preserve the selected photo's license code,
 observer attribution, source URL, observation UUID, and photo ID. Do not strip
 attribution from copied or derived records. NoDerivatives and
 unlicensed/all-rights-reserved photos are excluded from the approved expansion
@@ -273,13 +298,14 @@ human-transported species that make up much of applied ant identification.
 
 ## Selective confidence gate
 
-The optional `inference_policy.json` enables a frozen abstention rule:
+The current optional `inference_policy.json` enables a frozen abstention rule:
 `low_confidence` when the raw, unrounded, pre-geo maximum cosine is strictly
-below 0.60. It was selected on `calibration_v1` and evaluated exactly once on
-the species-disjoint `unknown_test_v1`. Among known-species photographs,
-accuracy rose from 69.8% overall to 85.5% among accepted results. But 45.5% of
-out-of-scope ant photographs still passed, so this is a **confidence gate, not
-an unknown-species detector**.
+below **0.61** (equality is accepted). It was selected by the precommitted
+rule on `calibration_v2` and evaluated once on independent `unknown_test_v2`.
+That validation passed its precommitted criteria, but 51% of out-of-scope ant
+photographs still passed, so this is a **confidence gate, not an
+unknown-species detector**. The earlier 50-species bundle and its 0.60 policy
+remain available in `training/artifacts/v1_50species/` for rollback.
 
 The policy is bound to the exact ONNX backbone, prototypes, and taxonomy and is
 validated only for CPU execution. Missing, malformed, stale, or mismatched
@@ -332,16 +358,15 @@ Database writes are idempotent via `ON CONFLICT` on `species.slug` and
 cd training
 pip install -r requirements.txt
 python train.py --config config.yaml      # any config key is CLI-overridable
-python export.py                          # re-export ONNX from artifacts/model.pth
+python export.py                          # re-export ONNX; do not target the live bundle casually
 python evaluate.py                        # top-1/top-3 under the serving cosine path
 python evaluate.py --geo                  # + geographic re-ranking, side by side
-python eval_benchmark.py                  # the reproducible baseline -- see Results above
 ```
 
-`evaluate.py` reads `artifacts/val_split.json` to recover the held-out set and
-warns loudly if it is missing. New training runs pin both train and val
-membership; legacy files may pin only val, and the current checkpoint's
-original split was not preserved. New runs also
+`evaluate.py` reads the run's `val_split.json` to recover its held-out set and
+warns loudly if it is missing. The current 65-species run pinned its
+development split; the previous 50-species checkpoint's original split was
+not preserved. New runs pin both train and val membership and also
 emit `geo_index.json` from train membership only and record
 `source_split: "train"`. An older or externally built file without that field
 has unknown provenance; its coordinates may include validation observations.
@@ -352,10 +377,10 @@ python evaluate.py --geo --geo-source train   # requires a new train+val split p
 ```
 
 `eval_benchmark.py` is different: it doesn't touch `val_split.json` or the
-training manifest at all. It scores the current artifacts against
-`data/benchmark_v1/` — the frozen, independently-scraped set described in
-Results — so its number stays meaningful across retrains without needing any
-split bookkeeping.
+training manifest at all. The `benchmark_v1` result above belongs to the
+previous 50-species bundle. Do not run that frozen one-shot set against the
+current 65-species bundle and present the result as a comparable current
+benchmark.
 
 Two-minute CPU smoke run that exercises the full interface end to end — set
 `LOCAL_DATA_DIR` to any `{species_slug}/{image}.jpg` folder first:
@@ -427,15 +452,18 @@ onto the failure modes that actually occur here:
 | `python train.py --config config.smoke.yaml …` | interface breaks across the whole training→artifact path |
 | the ONNX checker inside `export.py` | shape/opset regressions in the exported graph |
 | `python evaluate.py --geo` | preprocessing drift, prototype misalignment, geo-ranking drift |
-| `python eval_benchmark.py` | the reproducible baseline itself — the only number in Results not tied to a training-manifest split |
+| archived `benchmark_v1` report | historical 50-species baseline; not a current 65-species score |
 | `python training/test_policy_generator.py` | policy evidence, schema, hashing, and generator failure paths |
 | `python training/test_geo_split.py` | pinned train/val integrity, train-only geo export, stale-sidecar replacement, and API compatibility |
 | `python api/test_inference_policy.py`, `python api/test_inference.py`, and `python api/test_main.py` | fail-safe policy loading, boundary semantics, geo independence, and API/health response behavior |
 | `npm run typecheck` | client/API contract drift (strict TypeScript) |
 
-Trained weights and datasets are **not** committed — `training/artifacts/` and
-`data/` are gitignored. Run the pipeline and training steps above to regenerate
-them. The one exception is `data/benchmark_v1/`'s metadata: `benchmark_v1.csv`,
+Trained weights and downloaded image datasets are **not** committed — most of
+`training/artifacts/` and `data/` are gitignored. A fresh clone does not
+contain the full default-serving model bundle; obtain the verified model
+artifacts separately rather than treating the quickstart training command as
+a reproducible way to recover identical weights. One exception is
+`data/benchmark_v1/`'s metadata: `benchmark_v1.csv`,
 `benchmark_v1.json`, and `benchmark_v1_eval.json` are force-added despite the
 `data/` ignore rule, because the benchmark's identity — which exact photos,
 what was verified, what the model scored — needs to travel with the repo even
@@ -470,16 +498,18 @@ on purpose — it selects a *new* set of candidate observations (for building
 
 ## Limitations
 
-- **50 species out of ~14,000 described, and no reliable unknown-species
+- **65 species out of ~14,000 described, and no reliable unknown-species
   detector.** Coverage is
   skewed toward well-photographed North American, European, and Australian
   taxa. The shipped confidence gate can withhold a reliable-match claim, but
   it does not produce a species-independent "none of these" classification.
   It improves accuracy among accepted known-species matches, yet still allows
-  roughly half of out-of-scope ant photographs to pass and receive a supported-
-  species closest match. A better backbone does not fix this by itself;
+  51% of out-of-scope ant photographs in `unknown_test_v2` to pass and receive
+  a supported-species closest match. A better backbone does not fix this by itself;
   broader coverage or an open-set approach is still required. See
-  `training/artifacts/README.md` for the full independent validation.
+  the frozen Gate v2 validation report for details. The 15-species final-test
+  result additionally has incomplete perceptual-independence screening, as
+  labeled above.
 - **Confusable small dark ants are near the resolution limit of the input.**
   Several genera cannot be separated to species from a field photo at all; a
   genus-level answer would be more honest for those, and grouping the weakest

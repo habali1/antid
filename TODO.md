@@ -1883,5 +1883,43 @@ The one-shot run completed on 2026-09-17: 296/450 top-1, 356/450 top-3,
 result are preserved in `data/northeast_final_test_v1/`; do not rerun or
 retune. These numbers describe the 15 newly added species, not all 65.
 Perceptual independence remains **incomplete by decision** (v2 did not pass),
-and this limitation must accompany the result. Serving promotion is separate:
-the live 50-species model has not been replaced by this evaluation.
+and this limitation must accompany the result. Serving promotion was a separate,
+subsequent file-level release; the final-test result itself did not promote the model.
+
+## 65-species default-serving promotion (completed 2026-09-17)
+
+`docs/plans/serve-65species-promotion.md` records the verified 50-species
+rollback hashes and commands, the six-file stage-then-rename release, and
+the isolated API smoke. The default `training/artifacts/` now has the 65-species
+B4 bundle, including the **unchanged** candidate policy byte SHA-256
+`9feeae83013ecf72266084421fc74bbfe21757de528ad7ed258c01dcffc9422d`
+at threshold 0.61. All six destination hashes matched their candidate
+sources; the prior live entries remain in
+`.promotion-stage-849f20b38b634283bfc246a62f68c4e8/previous/` and
+`v1_50species/` remains untouched. `/health`, `/species`, and synthetic
+`/identify` smoke passed against default artifacts with policy and geo active;
+the loopback smoke API was stopped afterward. README now reports the current
+model and the incomplete-independence limitation.
+
+**Separate reviewed follow-up, not a serving blocker:** expose threshold,
+gate-active status, and recognized-cell counts on `/health`; expose the
+unrounded `raw_pre_geo_max_cosine` on `/identify`; add informational current
+runtime metadata to a future v2 policy schema/generator revision; then
+regenerate the policy if its source provenance changes. These are diagnostic
+visibility improvements, not requirements for serving the hash-bound 0.61
+policy. Coupling them to this promotion would have turned a file move into a
+code-change-plus-policy-regeneration cycle. Do not modify `api/inference.py`
+or regenerate the policy as part of this completed release.
+
+The rebuilt training `.venv` has Torch `2.14.0+cpu` (`torch.version.cuda=None`):
+pip's “already satisfied” left the CPU build installed. A future CUDA
+training run must explicitly uninstall that torch build first, then reinstall
+the matching CUDA build from the official `cu130` index and verify
+`torch.cuda.is_available()` before training. The API `.venv` intentionally
+does not need torch and uses ONNX Runtime 1.30.0. The v2 policy has no
+`validated_environment` field; its *historical parity report* recorded ORT
+1.29.0 and Torch 2.14.0+cu130. Before the next v2 policy regeneration, add
+current package versions as separately reviewed informational
+`current_generation_environment` schema/generator metadata, not by editing
+or relabeling the frozen parity evidence or turning versions into a loader
+binding.
