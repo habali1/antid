@@ -1877,3 +1877,11 @@ that point is consumed, not retried. The result must carry
 `perceptual_independence_incomplete_by_decision`, never a v2 screening pass.
 Preflight is metadata-only. The actual one-shot run and subsequent evidence
 commit are separate operations.
+
+The one-shot run completed on 2026-09-17: 296/450 top-1, 356/450 top-3,
+317/450 accepted at 0.61, accepted top-1 252/317. The attempt marker and
+result are preserved in `data/northeast_final_test_v1/`; do not rerun or
+retune. These numbers describe the 15 newly added species, not all 65.
+Perceptual independence remains **incomplete by decision** (v2 did not pass),
+and this limitation must accompany the result. Serving promotion is separate:
+the live 50-species model has not been replaced by this evaluation.
