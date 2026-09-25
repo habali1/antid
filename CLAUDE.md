@@ -246,8 +246,9 @@ Before finishing a substantive session, update
 `C:\dev\brain\🔮 850-Companion\Threads.md` and `Last-Session.md` to reflect
 meaningful changes in current focus, blockers, decisions, or next steps.
 
-Only the `### ` and `**Status:**` lines of active threads are automatically
-injected, so keep the useful current state in those two lines.
+V3 selects the entire Active section of Threads.md, including thread bodies,
+for companion context. The shared character budget may truncate that content;
+selection does not guarantee that every active thread is injected in full.
 
 The AntID repository and this CLAUDE.md remain authoritative for implementation
 details and project-specific instructions.
